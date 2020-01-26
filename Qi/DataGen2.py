@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     ### PARAMETERS ###
     # > Set parameters for grid creation
-    delta_s = 10    # Number of points-1 in one axis for small grid (should be an odd number so the midpoint of geometry lies on a gridpoint
+    delta_s = 100    # Number of points-1 in one axis for small grid (should be an odd number so the midpoint of geometry lies on a gridpoint
     delta_b = 100    # Number of points per axis per cell (around one gridpoint of small grid) for big grid
     height = 1       # Height of small grid
     # Stencil size (sz_x x sz_y) (only odd numbers valid):
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # Create radii from 0.00225 to 0.05 with stepwidth 0.001 and from 0.05 to 0.475 with stepwidth 0.025
     stepwidth1 = 0.001
     stepwidth2 = 0.025
-    radii_1 = np.arange(0.002, 0.05 + stepwidth1, stepwidth1)
+    radii_1 = np.arange(0.005, 0.05 + stepwidth1, stepwidth1)  # Ursprünglich bei 0.001 beginnend
     radii_2 = np.arange(0.075, 0.475 + stepwidth2, stepwidth2)
     radii = np.concatenate((radii_1, radii_2))
     # Ininitalize output list
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         # Pad array with zeros so stencil points do not exceed array index
         vof_grid = np.pad(vof_grid, ((szs_y, szs_y), (szs_x, szs_x)), 'constant', constant_values = (0))
         # Print vof grid
-        print(f'vof_grid:\n{vof_grid}')
+        # print(f'vof_grid:\n{vof_grid}')
         # Get coordinates of cells that lie on geometry edge
         r_edge = np.where((vof_grid > 0) & (vof_grid < 1), 1, 0)
         edge_points = np.argwhere(r_edge)
