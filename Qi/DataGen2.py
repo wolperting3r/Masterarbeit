@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     ### PARAMETERS ###
     # > Set parameters for grid creation
-    delta_s = 100    # Number of points-1 in one axis for small grid (should be an odd number so the midpoint of geometry lies on a gridpoint
+    delta_s = 2000    # Number of points-1 in one axis for small grid (should be an odd number so the midpoint of geometry lies on a gridpoint
     delta_b = 100    # Number of points per axis per cell (around one gridpoint of small grid) for big grid
     height = 1       # Height of small grid
     # Stencil size (sz_x x sz_y) (only odd numbers valid):
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     # Calculate stencil step
     [szs_x, szs_y] = [int((sz_x-1)/2), int((sz_y-1)/2)]
-    # Initialize small grid
+    # Initialize small grid (2001x2001 points)
     [x_s, y_s] = [axisMatrix(delta_s+1, 1), axisMatrix(delta_s+1, 0)]
     # Midpoint of geometry
     [x0, y0] = [height/2*delta_s, height/2*delta_s]
@@ -55,13 +55,14 @@ if __name__ == '__main__':
     # Create radii from 0.00225 to 0.05 with stepwidth 0.001 and from 0.05 to 0.475 with stepwidth 0.025
     stepwidth1 = 0.001
     stepwidth2 = 0.025
-    radii_1 = np.arange(0.005, 0.05 + stepwidth1, stepwidth1)  # Ursprünglich bei 0.001 beginnend
+    radii_1 = np.arange(0.00225, 0.05, stepwidth1)  # Ursprünglich bei 0.00225 beginnend
     radii_2 = np.arange(0.075, 0.475 + stepwidth2, stepwidth2)
-    radii = np.concatenate((radii_1, radii_2))
+    radii = np.round(np.concatenate((radii_1, radii_2)),5)
     # Ininitalize output list
     output_list = []
     # Iterate over radii
     for r in radii:
+        # print(f'Radius: {r}')
         # Get geometry on small grid
         r_mat = np.sqrt(np.power(x_s-x0, 2) + np.power(y_s-y0, 2))
         r_area = np.where(r_mat <= r*delta_s, 1, 0)
@@ -95,6 +96,7 @@ if __name__ == '__main__':
         # Get coordinates of cells that lie on geometry edge
         r_edge = np.where((vof_grid > 0) & (vof_grid < 1), 1, 0)
         edge_points = np.argwhere(r_edge)
+        print(f'Radius: {r},    Number of points: {len(edge_points)}')
         for p in edge_points:
             # Midpoint of stencil:
             [x_p, y_p] = [p[1], p[0]]
@@ -103,7 +105,8 @@ if __name__ == '__main__':
             # Reshape sz_x x sz_y array to 1 x sz_x*sz_y array
             stencil_values = np.reshape(stencil_values, (1, sz_x*sz_y)).tolist()[0]
             # Get curvature (hard coded for circle)
-            curvature = 1/r
+            # curvature = 1/r
+            curvature = height/(delta_s-1)*1/r
             # Insert curvature into list
             stencil_values.insert(0, curvature)
             # Append list with values to output list
@@ -113,6 +116,14 @@ if __name__ == '__main__':
     # Reformat column names as string and rename the curvature column
     output_list.columns = output_list.columns.astype(str)
     output_list = output_list.rename(columns={'0':'Curvature'})
+    # > Generate inverse values
+    output_list_inverse = output_list.copy(deep=True)
+    # Inversed curvature = -curvature
+    output_list_inverse.iloc[:, 0] = -output_list_inverse.iloc[:, 0]
+    # Inversed vof values = 1-vof values
+    output_list_inverse.iloc[:, 1:] = 1-output_list_inverse.iloc[:, 1:]
+    # Glue the two dataframes together
+    output_list = output_list.append(output_list_inverse).reset_index(drop=True)
     # Print output list
     # print(f'output_list:\n{output_list}')
     # Save output list dataframe to feather file
