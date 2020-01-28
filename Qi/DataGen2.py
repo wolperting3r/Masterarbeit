@@ -107,6 +107,7 @@ if __name__ == '__main__':
             # Get curvature (hard coded for circle)
             # curvature = 1/r
             curvature = height/(delta_s-1)*1/r
+            # curvature = np.arctan2(y_p, x_p)
             # Insert curvature into list
             stencil_values.insert(0, curvature)
             # Append list with values to output list
