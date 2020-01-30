@@ -39,6 +39,7 @@ if __name__ == '__main__':
     ### PARAMETERS ###
     # > Set parameters for grid creation
     delta_s = 2000    # Number of points-1 in one axis for small grid (should be an odd number so the midpoint of geometry lies on a gridpoint
+    # delta_s = 100  # For testing
     delta_b = 100    # Number of points per axis per cell (around one gridpoint of small grid) for big grid
     height = 1       # Height of small grid
     # Stencil size (sz_x x sz_y) (only odd numbers valid):
@@ -117,6 +118,28 @@ if __name__ == '__main__':
     # Reformat column names as string and rename the curvature column
     output_list.columns = output_list.columns.astype(str)
     output_list = output_list.rename(columns={'0':'Curvature'})
+    
+    # > Find out for which radius the most tuples exist and duplicate the entries of the other radii (with some noise on the vof values) so the data is well-balanced
+    # Find unique with most values
+    counts = output_list.groupby('Curvature')['1'].count()
+    max_count = counts.max()
+    for c in counts.iteritems():
+        radius = c[0]
+        count = c[1]
+        number_of_dublicates = np.floor(max_count/c[1]) - 1
+        #print(f'count: {count}, nod: {number_of_dublicates}')
+        c_entries = output_list[output_list['Curvature'] == c[0]]
+        #print(c_entries)
+        for n in range(int(number_of_dublicates)):
+            c_new = c_entries.copy()
+            c_new.iloc[:,1:] = np.clip(c_new.iloc[:,1:] + np.random.rand(c_new.shape[0], c_new.shape[1]-1)/1000,0,1)
+            output_list = output_list.append(c_new)
+    counts = output_list.groupby('Curvature')['1'].count()
+    print(counts)
+
+
+
+
     # > Generate inverse values
     output_list_inverse = output_list.copy(deep=True)
     # Inversed curvature = -curvature
