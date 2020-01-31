@@ -59,23 +59,25 @@ def get_data(source):
 def build_model():
     # Build keras model
     model = tf.keras.Sequential([
-        layers.Dense(120, activation='tanh', kernel_initializer='he_normal', input_shape=(9,)),
+        layers.Dense(70, activation='tanh', kernel_initializer='he_normal', input_shape=(27,)),
+        layers.Dense(50, activation='tanh'),
+        layers.Dense(20, activation='tanh'),
         layers.Dense(1, activation='linear')
     ])
 
     # Compile model
-    model.compile(optimizer=tf.keras.optimizers.Adam(0.0004), loss='mse', metrics=['mae', 'mse'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(0.0001), loss='mse', metrics=['mae', 'mse'])
     return model
 
 
 def train_model(model, train_data, train_labels, regenerate=True):
     # Build tensorflow dataset
-    dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels)).batch(32)
+    dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels)).batch(16)
     if regenerate:
         # Train Model
         # model.fit(train_data, train_labels, verbose=0, callbacks=[TqdmCallback(verbose=1)], epochs=1000, batch_size=8192, validation_split=0.2)
-        early_stopping_callback = keras.callbacks.EarlyStopping(monitor='loss', min_delta=10e-8, patience=6, verbose=0, mode='auto', baseline=None)
-        model.fit(dataset, verbose=0, callbacks=[TqdmCallback(verbose=1), early_stopping_callback], epochs=1000)
+        early_stopping_callback = keras.callbacks.EarlyStopping(monitor='loss', min_delta=10e-8, patience=50, verbose=0, mode='auto', baseline=None)
+        model.fit(dataset, verbose=0, callbacks=[TqdmCallback(verbose=1), early_stopping_callback], epochs=10000)
 
         # Save model
         model.save('model.h5')
