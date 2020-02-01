@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 import time
 import pandas as pd
+from progressbar import *
 '''
 Outline:
     1. U = unif[0, 1]
@@ -41,10 +42,10 @@ if __name__ == '__main__':
 
     # ↓↓ Parameters ↓↓ #
     # Script
-    N_values = 10000        # Number of values
+    N_values = 100000       # Number of values
     # Grid
     Delta = 1/1000          # Gridsize
-    Delta_vof = 1/10        # VoF Gridsize 0.1% accuracy: 32 -> ~1000 (1024) points
+    Delta_vof = 1/32        # VoF Gridsize 0.1% accuracy: 32 -> ~1000 (1024) points
     L = 1                   # Length of space
     X_c = np.array([L/2, L/2, L/2])   # Midpoint of geometry
     # Geometry
@@ -64,11 +65,16 @@ if __name__ == '__main__':
                            axismatrix(1/Delta_vof, 2)])*Delta
     # Initialize output list
     output_list = []
+    widgets = ['Data generation: ', Percentage(), ' ', Bar(marker='=',left='[',right=']'),
+           ' ', ETA()] #see docs for other options
+    pbar = ProgressBar(widgets=widgets, maxval=N_values)
+    pbar.start()
     for n in range(N_values):
+        pbar.update(n)
         # Get random radius
         r = R_min + u()*(R_max - R_min)
         # Move midpoint by random amount inside one cell
-        x_c = np.array([u(), u(), u()])*Delta
+        x_c = np.array([u(), u(), u()])*Delta  # Makes 1/4 of generated data invalid
         # Get random spherical angles
         theta = 2*np.pi*u()
         psi = np.arccos(2*u()-1)
@@ -80,7 +86,7 @@ if __name__ == '__main__':
                           x_c[1]+x_rel[1],
                           x_c[2]+x_rel[2]])
         # Round point to get origin of local coordinates in global coordinates relative to geometry origin
-        round_point = np.round(np.floor(x_rel*1/Delta*L)*Delta/L,3)
+        round_point = np.floor(x_rel*1/Delta*L)*Delta/L
         # Get origins of local coordinates of stencil points
         local_origins = np.array([round_point[0]+st_stp[0],
                                  round_point[1]+st_stp[1],
@@ -96,29 +102,32 @@ if __name__ == '__main__':
             # Get origin coordinates too
             lo = local_origins_list[idx]
             # Values of local grid relative to geometry origin
-            [x_l, y_l, z_l] = np.array([local_grid[0] + lo[0],
-                               local_grid[1] + lo[1],
-                               local_grid[2] + lo[2]])
+            [x_l, y_l, z_l] = np.array([local_grid[0] + lo[0] - x_c[0],
+                               local_grid[1] + lo[1] - x_c[1],
+                               local_grid[2] + lo[2] - x_c[2]])
             # Get radii on local grid (np.multiply way faster than np.power) r^2 = x^2 + y^2 + z^2
             r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l) + np.multiply(z_l, z_l)
             # Calculate 1s and 0s on local grid 
             r_area = np.where(r_sqr <= r*r, 1, 0)
             # Get VOF values by integration over local grid
-            vof = np.round(np.sum(r_area)/r_area.size, 3)
+            vof = np.sum(r_area)/r_area.size
             # Write vof value into stencil value array
             vof_array[ill[0], ill[1], ill[2]] = vof
-        # Calculate curvature
-        curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
-        # Invert values by 50% chance
-        if u() > 0.5:
-            curvature = -curvature
-            vof_array = 1-vof_array
-        # Reshape vof_array
-        output_array = np.reshape(vof_array, (1, np.prod(st_sz)))[0].tolist()
-        # Insert curvature value at first position
-        output_array.insert(0, curvature)
-        # Append list to output list
-        output_list.append(output_array)
+        if (vof_array[1, 1, 1] > 0) & (vof_array[1, 1, 1] < 1):
+            # Calculate curvature
+            curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
+            # Invert values by 50% chance
+            if u() > 0.5:
+                iin = 1 
+                curvature = -curvature
+                vof_array = 1-vof_array
+            # Reshape vof_array
+            output_array = np.reshape(vof_array, (1, np.prod(st_sz)))[0].tolist()
+            # Insert curvature value at first position
+            output_array.insert(0, curvature)
+            # Append list to output list
+            output_list.append(output_array)
+    pbar.finish()
     # Convert output list to pandas dataframe
     output_df = pd.DataFrame(output_list)
     # Reformat column names as string and rename curvature column
@@ -127,4 +136,5 @@ if __name__ == '__main__':
     # Write output dataframe to feather file
     output_df.reset_index(drop=True).to_feather('data.feather')
     # Print string with a summary
-    print(f'Generated {N_values} tuples in {gt(time0)} with:\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%')
+    print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%')
+
