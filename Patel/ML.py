@@ -47,11 +47,6 @@ def get_data(source):
     if source == 'self':
         data = pd.read_feather('data.feather')
         return data.copy()
-    elif source == 'paper':
-        csv_data = pd.read_csv('datafra.csv', names=['1', '2', '3', '4', '5', '6', '7', '8', '9']).reset_index()
-        csv_labels = pd.read_csv('datacur.csv', names=['Curvature']).reset_index()
-        data = csv_labels.merge(csv_data, on='index').drop(columns=['index'], axis=1)
-        return data.copy()
     else:
         print('invalid from')
 
@@ -59,7 +54,7 @@ def get_data(source):
 def build_model():
     # Build keras model
     model = tf.keras.Sequential([
-        layers.Dense(512, activation='relu', kernel_initializer='he_normal', input_shape=(27,)),
+        layers.Dense(512, activation='tanh', kernel_initializer='he_normal', input_shape=(27,)),
         layers.Dense(1, activation='linear')
     ])
 
@@ -105,7 +100,7 @@ def validate_model(model, train_data, train_labels):
     plt.scatter(train_labels, train_predictions, alpha=0.1)
     plt.xlabel('True Values [MPG]')
     plt.ylabel('Predictions [MPG]')
-    lims = [-0.25, 0.25]
+    lims = [min(train_labels), max(train_labels)]
     plt.xlim(lims)
     plt.ylim(lims)
     _ = plt.plot(lims, lims)
