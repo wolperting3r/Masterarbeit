@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     # ↓↓ Parameters ↓↓ #
     # Script
-    N_values = 1       # Number of values
+    N_values = 100000       # Number of values
     visualize = True if (N_values == 1) else False
     # Grid
     Delta = 1/1000          # Gridsize
@@ -162,9 +162,9 @@ if __name__ == '__main__':
         vof_array = np.zeros((st_sz[0], st_sz[1]))
         # Create dict to fetch shape of geometry in local coordinates
         vof_dict = {}
-        # Initialize plot
-        fig, (ax1, ax2) = plt.subplots(1, 2)
         if visualize:
+	    # Initialize plot
+            fig, (ax1, ax2) = plt.subplots(1, 2)
             # Plot circle
             plotcircle(r, x_c, x, ax1)
         # Iterate over all stencil indices combinations
