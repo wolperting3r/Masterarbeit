@@ -54,7 +54,7 @@ def get_data(source):
 def build_model():
     # Build keras model
     model = tf.keras.Sequential([
-        layers.Dense(512, activation='tanh', kernel_initializer='he_normal', input_shape=(27,)),
+        layers.Dense(100, activation='tanh', kernel_initializer='he_normal', input_shape=(9,)),
         layers.Dense(1, activation='linear')
     ])
 
