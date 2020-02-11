@@ -21,8 +21,8 @@ def gt(time0):
     return str(f'{np.round(time.time() - time0,3)} s')
 
 
-def u():
-    return np.random.uniform()
+def u(low=0.0, high=1.0):
+    return np.random.uniform(low=low, high=high)
 
 def plotcircle(r, x_c, x, ax1):
     ''' Plot circle with chosen point '''
@@ -117,8 +117,10 @@ if __name__ == '__main__':
     # Geometry
     R_min = 0.0002         # Minimal radius (TBD)
     R_max = 0.5            # Maximal radius
+    kappa_min = L*Delta*2/R_min
+    kappa_max = L*Delta*2/R_max
     # Stencil
-    st_sz = [3, 3]      # Stencil size y, x
+    st_sz = [5, 5]      # Stencil size y, x
     # ↑↑ Parameters ↑↑ #
     
     # Calculate midpoints
@@ -138,8 +140,16 @@ if __name__ == '__main__':
     pbar.start()
     for n in range(N_values):
         pbar.update(n)
+        # Get random curvature
+        curvature = kappa_min + u()*(kappa_max - kappa_min)
+        # Calculate radius
+        r = L*Delta*2/curvature
+        '''
         # Get random radius
         r = R_min + u()*(R_max - R_min)
+        # Calculate curvature
+        curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
+        '''
         # Move midpoint by random amount inside one cell
         x_c = np.array([u(), u()])*Delta
         # Get random spherical angle
@@ -191,8 +201,6 @@ if __name__ == '__main__':
             plt.show()
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         if (vof_array[st_mid[0], st_mid[1]] > 0) & (vof_array[st_mid[0], st_mid[1]] < 1):
-            # Calculate curvature
-            curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
             # Invert values by 50% chance
             '''
             if u() > 0.5:

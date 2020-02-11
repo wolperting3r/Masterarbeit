@@ -8,9 +8,14 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tqdm.keras import TqdmCallback
 from sklearn.preprocessing import MinMaxScaler
+from kerastuner.tuners import Hyperband
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
+
+def relative_mse(y_true, y_pred):
+    return tf.reduce_mean(tf.math.squared_difference(y_pred,y_true))/y_true
+
 
 def split_data(data, ratio):
     '''
@@ -23,6 +28,8 @@ def split_data(data, ratio):
         testdata[pd df]
         traindata[pd df]
     '''
+    # Set seed
+    np.random.seed(42)
     # Generate random indices
     indices = np.random.permutation(len(data))
     # Calculate how many entries the test data will have
@@ -51,17 +58,19 @@ def get_data(source):
         print('invalid from')
 
 
-def build_model():
+def build_model(shape):
     # Build keras model
     model = tf.keras.Sequential([
-        layers.Dense(100, activation='tanh', kernel_initializer='he_normal', input_shape=(9,)),
+        layers.Dense(100, activation='relu', input_shape=(shape,)),
+        layers.Dense(80, activation='relu'),
+        layers.Dense(80, activation='relu'),
         layers.Dense(1, activation='linear')
     ])
 
     # Compile model
-    model.compile(optimizer=tf.keras.optimizers.Adam(1*10e-5),
+    model.compile(optimizer=tf.keras.optimizers.Adam(1e-3),
                   loss='mse',
-                  metrics=['mae', 'mse'])
+                  metrics=['mae', 'mse', relative_mse])
     return model
 
 
@@ -78,10 +87,10 @@ def train_model(model, train_data, train_labels, regenerate=True):
                                                                 baseline=None)
         model.fit(dataset,
                   shuffle=True,
-                  epochs=10000,
+                  epochs=5000,  # war 10000
                   verbose=0,
                   callbacks=[TqdmCallback(verbose=1),
-                             early_stopping_callback])
+                            early_stopping_callback])
 
         # Save model
         model.save('model.h5')
@@ -92,15 +101,17 @@ def train_model(model, train_data, train_labels, regenerate=True):
     return model
 
 
-def validate_model(model, train_data, train_labels):
+def validate_model(model, test_data, test_labels):
     # Validate model
-    train_predictions = model.predict(train_data, batch_size=64).flatten()
+    test_predictions = model.predict(test_data, batch_size=128).flatten()
+    # Print MSE and MAE
+    print(model.evaluate(test_data, test_labels, verbose=2))
 
     plt.axes(aspect='equal')
-    plt.scatter(train_labels, train_predictions, alpha=0.1)
+    plt.scatter(test_labels, test_predictions, alpha=0.1)
     plt.xlabel('True Values [MPG]')
     plt.ylabel('Predictions [MPG]')
-    lims = [min(train_labels), max(train_labels)]
+    lims = [min(test_labels), max(test_labels)]
     plt.xlim(lims)
     plt.ylim(lims)
     _ = plt.plot(lims, lims)
@@ -113,6 +124,9 @@ if __name__ == '__main__':
     print(f'Imported data with shape {data.shape}')
     # Split data
     test_set, train_set = split_data(data, 0.2)
+    # test_set = data[data['Curvature']>9]
+    # train_set = data[data['Curvature']<=9]
+
 
     # Split the training and test data into labels (first column) and data
     test_labels = np.round(test_set.iloc[:, 0].to_numpy(), 3)
@@ -120,14 +134,16 @@ if __name__ == '__main__':
     train_labels = np.round([train_set.iloc[:, 0].to_numpy()], 3).T
     train_data = np.round(train_set.iloc[:, 1:].to_numpy(), 3)
 
+
     # scaler = MinMaxScaler()
     # train_labels = scaler.fit_transform(train_labels)
     # print(f'train_data: \n{train_data}')
     # print(f'train_labels: \n{train_labels}')
     # '''
-    model = build_model()
+    model = build_model(shape=test_data.shape[1])
 
     model = train_model(model, train_data, train_labels)
 
-    validate_model(model, train_data, train_labels)
+    validate_model(model, test_data, test_labels)
+    # validate_model(model, train_data, train_labels)
     # '''
