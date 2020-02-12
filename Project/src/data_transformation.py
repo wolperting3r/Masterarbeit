@@ -15,10 +15,10 @@ from kerastuner.tuners import Hyperband
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 
-def get_data():
+def get_data(filename):
     ''' Import data from files '''
-    path = os.path.dirname(os.path.abspath(__file__))
-    data = pd.read_feather(os.path.join(path, 'data.feather'))
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'datasets', filename)
+    data = pd.read_feather(path)
     return data.copy()
 
 
@@ -47,9 +47,9 @@ def split_data(data, ratio):
     return data.iloc[test_indices], data.iloc[train_indices]
 
 
-def transform_data():
+def transform_data(filename):
     # Read data
-    data = get_data()
+    data = get_data(filename)
     print(f'Imported data with shape {data.shape}')
     # Split data
     test_set, train_set = split_data(data, 0.2)

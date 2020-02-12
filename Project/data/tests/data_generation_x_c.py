@@ -7,7 +7,7 @@ from progressbar import *
 import matplotlib.pyplot as plt
 import os
 
-from .utils import (
+from utils import (
     gt,
     plot_circle,
     plot_vof
@@ -60,7 +60,8 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa):
     # Script
     # N_values = 100000       # Number of values
     N_values = int(N_values)
-    visualize = True if (N_values == 1) else False
+    '''visualize = True if (N_values == 1) else False'''
+    visualize = True
     # Grid
     Delta = 1/1000          # Gridsize
     Delta_vof = 1/32        # VoF Gridsize 0.1% accuracy: 32 -> ~1000 (1024) points
@@ -100,18 +101,21 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa):
         pbar.update(n)
         if equal_kappa:
             # Get random curvature
-            curvature = kappa_min + u()*(kappa_max - kappa_min)
+            '''curvature = kappa_min + u()*(kappa_max - kappa_min)'''
+            curvature = kappa_min + 0.34*(kappa_max - kappa_min)
             # Calculate radius
             r = L*Delta*2/curvature
         else:
             # Get random radius
-            r = R_min + u()*(R_max - R_min)
+            '''r = R_min + u()*(R_max - R_min)'''
+            r = R_min + 0.34*(R_max - R_min)
             # Calculate curvature
             curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
         # Move midpoint by random amount inside one cell
         x_c = np.array([u(), u()])*Delta
         # Get random spherical angle
-        theta = 2*np.pi*u()
+        '''theta = 2*np.pi*u()'''
+        theta = 2*np.pi*0.65
         # Get cartesian coordinates on sphere surface
         x_rel = np.array([r*np.sin(theta),   # y
                           r*np.cos(theta)])  # x
@@ -198,7 +202,7 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa):
 
         if visualize:
 	    # Initialize plot
-            fig, (ax1, ax2) = plt.subplots(1, 2)
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12,6))
             # Plot circle
             plot_circle(ax1, r, x_c, x)
 
@@ -233,8 +237,12 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa):
         if visualize:
             # Plot vof
             plot_vof(ax2, vof_df, vof_array, st_sz_loc, Delta_vof)
-            # Show plot
-            plt.show()
+            # Save figure
+            path = os.path.dirname(os.path.abspath(__file__))
+            file_name = os.path.join(path, 'figures', 'x_c', 'figure_' + str(n) + '.png')
+            fig.tight_layout()
+            fig.savefig(file_name, dpi=150)
+            plt.close()
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         if (vof_array[st_mid_loc[0], st_mid_loc[1]] > 0) & (vof_array[st_mid_loc[0], st_mid_loc[1]] < 1):
             # Invert values by 50% chance
