@@ -7,6 +7,7 @@ import logging
 import os
 import itertools
 import multiprocessing
+import threading
 
 # import threading
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
@@ -33,10 +34,12 @@ def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_r
     # Generate filename string
     parameters['filename'] = param_filename(parameters)
 
+    '''
     # Print start string
     print('\nParameters:')
     for key, value in parameters.items():
         print(str(key) + ': ' + str(value))
+    '''
 
     # Execute learning
     if parameters['network'] != 'auto':
@@ -51,9 +54,10 @@ def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_r
         learning(parameters, silent=True, plot=plot)
 
     # Print finished string
-    print('Finished:')
+    print('\nFinished:')
     for key, value in parameters.items():
         print(str(key) + ': ' + str(value))
+    print('\n')
 
     parameters = None
 
@@ -89,5 +93,4 @@ def exe_ml_plot(network, stencils, layers, activation=['relu'], epochs=[25], bat
     plot = [True]
     job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa)))
     for job in job_list:
-        map(ml, [job])
-        # ml(job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7], job[8])
+        ml(job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7], job[8])

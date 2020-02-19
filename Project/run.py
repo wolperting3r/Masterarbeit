@@ -29,37 +29,13 @@ exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 # '''
 
 ''' Train '''
-epochs = [100]
+epochs = [750]
 stencils = [[5, 5]]
 activation = ['relu']
-learning_rate = [1e-5, 1e-4]
+learning_rate = [1e-4]
 # 1.: Train, 2.: Plot
-for i in range(2):
-    '''
-    # MLP
-    network = ['mlp']
-    layers = [[100, 80], [100, 80, 50]]
-    if i == 0:
-        exe_ml(
-            network=network,
-            stencils=stencils,
-            layers=layers,
-            activation=activation,
-            epochs=epochs,
-            learning_rate=learning_rate
-        )
-    elif i == 1:
-        exe_ml_plot(
-            network=network,
-            stencils=stencils,
-            layers=layers,
-            activation=activation,
-            epochs=epochs,
-            learning_rate=learning_rate
-        )
+for i in range(0, 2):
     # '''
-
-    '''
     # CVN
     network = ['cvn']
     layers = [[32]]
@@ -82,6 +58,31 @@ for i in range(2):
             learning_rate=learning_rate
         )
     # '''
+
+    # '''
+    # MLP
+    network = ['mlp']
+    layers = [[100, 80]]
+    if i == 0:
+        exe_ml(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    elif i == 1:
+        exe_ml_plot(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    # '''
+
 
     '''
     # Autoencoder
@@ -109,6 +110,7 @@ for i in range(2):
             learning_rate=learning_rate
         )
     # '''
+    '''
     # 5x5
     network = ['auto']
     stencils = [[5, 5]]
