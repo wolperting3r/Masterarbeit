@@ -1,116 +1,135 @@
-from src.data_generation import generate_data
-from src.machine_learning import learning
-
-# Suppress tensorflow logging
-import logging
-import os
-import itertools
-import multiprocessing
-
-# import threading
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
-logging.getLogger('tensorflow').setLevel(logging.FATAL)
-
-
-def gendat(inzip):
-    print(f'Generating data: {inzip}')
-    generate_data(N_values=1e6, st_sz=inzip[0], equal_kappa=inzip[1], silent=True)
-    print(f'Generation finished: {inzip}')
-
-
-def ml(stencil, layer, act, plot):
-    # Parameters
-    parameters = {'epochs': 25,
-                  'layers': layer,
-                  'stencil_size': stencil,
-                  'equal_kappa': False,
-                  'learning_rate': 1e-3,
-                  'batch_size': 128,
-                  'activation': act}
-
-    # Get data filename
-    print('\nParameters:')
-    for key, value in parameters.items():
-        print(str(key) + ': ' + str(value))
-    filename = 'data_' + \
-            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-            '.feather'
-
-    print('\nImporting ' + filename)
-    # Execute learning
-    learning(filename, parameters, silent=True, regenerate=(False if plot else True), plot=plot)
-    print('Finished:')
-    for key, value in parameters.items():
-        print(str(key) + ': ' + str(value))
-
-
+from src.execution import exe_ml, exe_ml_plot
+# from src.execution import exe_dg
 
 ''' Data Generation '''
 '''
 stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
 ek = [True, False]
-job_list = list(itertools.product(*(stencils, ek)))
-
-jobs = []
-for job in job_list:
-    process = multiprocessing.Process(target=gendat, args=[job])
-    jobs.append(process)
-for j in jobs:
-    j.start()
-for j in jobs:
-    j.join()
+exe_dg(stencils=stencils, ek=ek)
 # '''
 
 
 ''' Machine Learning '''
 
 '''
-plot = [False]
+# MLP
 
 # relu
+network = ['mlp']
 stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
 layers = [[100], [100, 80], [100, 80, 50]]
-act = ['relu']
-job_list = list(itertools.product(*(stencils, layers, act, plot)))
-jobs = []
-for job in job_list:
-    process = multiprocessing.Process(target=ml, args=job)
-    jobs.append(process)
-for j in jobs:
-    j.start()
-for j in jobs:
-    j.join()
-
+activation = ['relu']
+exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 # tanh
+network = ['mlp']
 stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
 layers = [[100]]
-act = ['tanh']
-job_list = list(itertools.product(*(stencils, layers, act, plot)))
-jobs = []
-for job in job_list:
-    process = multiprocessing.Process(target=ml, args=job)
-    jobs.append(process)
-for j in jobs:
-    j.start()
-for j in jobs:
-    j.join()'''
+activation = ['tanh']
+exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
+# '''
 
+''' Train '''
+epochs = [100]
+stencils = [[5, 5]]
+activation = ['relu']
+learning_rate = [1e-5, 1e-4]
+# 1.: Train, 2.: Plot
+for i in range(2):
+    '''
+    # MLP
+    network = ['mlp']
+    layers = [[100, 80], [100, 80, 50]]
+    if i == 0:
+        exe_ml(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    elif i == 1:
+        exe_ml_plot(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    # '''
 
-plot = [True]
+    '''
+    # CVN
+    network = ['cvn']
+    layers = [[32]]
+    if i == 0:
+        exe_ml(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    elif i == 1:
+        exe_ml_plot(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    # '''
 
-# relu
-stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
-layers = [[100], [100, 80], [100, 80, 50]]
-act = ['relu']
-job_list = list(itertools.product(*(stencils, layers, act, plot)))
-for job in job_list:
-    ml(job[0], job[1], job[2], job[3])
-
-# tanh
-stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
-layers = [[100]]
-act = ['tanh']
-job_list = list(itertools.product(*(stencils, layers, act, plot)))
-for job in job_list:
-    ml(job[0], job[1], job[2], job[3])
+    '''
+    # Autoencoder
+    # 3x3
+    network = ['auto']
+    stencils = [[3, 3]]
+    layers = [[6, 3, 5], [6, 3, 80]]
+    activation = ['relu', 'tanh']
+    if i == 0:
+        exe_ml(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    elif i == 1:
+        exe_ml_plot(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    # '''
+    # 5x5
+    network = ['auto']
+    stencils = [[5, 5]]
+    layers = [[6, 3, 20], [20, 10, 80]]
+    activation = ['relu']
+    if i == 0:
+        exe_ml(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    elif i == 1:
+        exe_ml_plot(
+            network=network,
+            stencils=stencils,
+            layers=layers,
+            activation=activation,
+            epochs=epochs,
+            learning_rate=learning_rate
+        )
+    # '''
