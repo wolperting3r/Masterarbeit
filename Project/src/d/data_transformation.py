@@ -1,18 +1,11 @@
-# MACHINE LEARNING
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import sys
-import inspect
-import re
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tqdm.keras import TqdmCallback
-from sklearn.preprocessing import MinMaxScaler
-from kerastuner.tuners import Hyperband
+from sklearn.pipeline import Pipeline
+from src.d.transformators import TransformData, FindGradient, Rotate
+
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
@@ -59,23 +52,25 @@ def transform_data(parameters, reshape=False):
             '.feather'
     # Read data
     data = get_data(filename)
-    print(f'Imported data with shape {data.shape}')
+    # print(f'Imported data with shape {data.shape}')
     # Split data
     test_set, train_set = split_data(data, 0.2)
-    # test_set = data[data['Curvature']>9]
-    # train_set = data[data['Curvature']<=9]
 
+    data_pipeline = Pipeline([
+        ('transform', TransformData(parameters=parameters, reshape=reshape)),
+        ('findgradient', FindGradient(parameters=parameters)),
+        ('rotate', Rotate(parameters=parameters))
+    ])
 
-    # Split the training and test data into labels (first column) and data
-    test_labels = np.round(test_set.iloc[:, 0].to_numpy(), 3)
-    test_data = np.round(test_set.iloc[:, 1:].to_numpy(), 3)
-    train_labels = np.round([train_set.iloc[:, 0].to_numpy()], 3).T
-    train_data = np.round(train_set.iloc[:, 1:].to_numpy(), 3)
+    [test_labels, test_data, test_angle] = data_pipeline.fit_transform(test_set)
+    [train_labels, train_data, train_angle] = data_pipeline.fit_transform(train_set)
 
-    if reshape:
-        st_sz = parameters['stencil_size']
-        # Reshape data
-        test_data = np.reshape(test_data, (test_data.shape[0], st_sz[0], st_sz[1], 1))
-        train_data = np.reshape(train_data, (train_data.shape[0], st_sz[0], st_sz[1], 1))
+    '''
+    ind = 6
+    # print_data_orig = np.reshape(test_data, (test_data.shape[0], 5, 5, 1)).transpose((0, 1, 3, 2))[ind]
+    print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
+    # print(f'\nOriginal:\n{print_data_orig}')
+    print(f'\nGedreht:\n{print_data_grad}')
+    # '''
 
-    return [[train_labels, train_data], [test_labels, test_data]]
+    return [[train_labels, train_data, train_angle], [test_labels, test_data, test_angle]]

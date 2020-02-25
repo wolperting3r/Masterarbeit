@@ -8,7 +8,9 @@ import sys
 
 def train_model(model, train_data, train_labels, parameters, silent):
     # Build tensorflow dataset
-    dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels)).batch(parameters['batch_size'])
+    dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))\
+            .batch(parameters['batch_size'])\
+            .prefetch(parameters['batch_size']*4)
     # Train Model
     # Early stopping callback
     early_stopping_callback = keras.callbacks.EarlyStopping(monitor='loss',

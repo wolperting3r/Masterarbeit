@@ -53,11 +53,13 @@ def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_r
         parameters['network'] = 'autoenc'
         learning(parameters, silent=True, plot=plot)
 
+    ''' 
     # Print finished string
     print('\nFinished:')
     for key, value in parameters.items():
         print(str(key) + ': ' + str(value))
     print('\n')
+    '''
 
     parameters = None
 
