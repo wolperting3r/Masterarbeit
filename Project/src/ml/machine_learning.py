@@ -18,8 +18,8 @@ def learning(parameters, silent=False, plot=True):
     )
     '''
     ind = 0
-    #print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
-    print_data_grad = test_data[ind]
+    print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
+    # print_data_grad = test_data[ind]
     print(f'\nGedreht:\n{print_data_grad}')
     # '''
     # '''

@@ -6,6 +6,8 @@ import pandas as pd
 from progressbar import *
 import matplotlib.pyplot as plt
 import os
+import sys
+
 
 from .utils import (
     gt,
@@ -52,7 +54,7 @@ def cross(mid_pt, max_pt):
     return np.unique(np.concatenate((cr_x, cr_y), axis=0), axis=0)
 
 
-def generate_data(N_values, st_sz: [int, int], equal_kappa, silent=False):
+def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
 
     time0 = time.time()
 
@@ -239,12 +241,11 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, silent=False):
             plt.show()
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         if (vof_array[st_mid_loc[0], st_mid_loc[1]] > 0) & (vof_array[st_mid_loc[0], st_mid_loc[1]] < 1):
-            # Invert values by 50% chance
-            '''
-            if u() > 0.5:
-                curvature = -curvature
-                vof_array = 1-vof_array
-            '''
+            if neg:
+                # Invert values by 50% chance
+                if u() > 0.5:
+                    curvature = -curvature
+                    vof_array = 1-vof_array
             # Reshape vof_array
             output_array = np.reshape(vof_array, (1, np.prod(st_sz_loc)))[0].tolist()
             # Insert curvature value at first position
@@ -261,8 +262,8 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, silent=False):
         output_df = output_df.rename(columns={'0':'Curvature'})
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        print(f'path:\n{path}')
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+'.feather')
+        print(f'parent_path:\n{parent_path}')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+'.feather')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
-        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%')
+        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}')

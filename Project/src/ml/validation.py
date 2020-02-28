@@ -26,6 +26,8 @@ def validate_model_loss(model, train_data, train_labels, test_data, test_labels,
 
 
 def validate_model_plot(model, test_data, test_labels, parameters):
+    filename = parameters['filename']
+    print(f'Plotting {filename}')
     # Get predictions for test data
     test_predictions = model.predict(test_data, batch_size=parameters['batch_size']).flatten()
 
@@ -37,7 +39,7 @@ def validate_model_plot(model, test_data, test_labels, parameters):
     ax.set_xlabel('True Values [MPG]')
     ax.set_ylabel('Predictions [MPG]')
     # lims = [min(test_labels), max(test_labels)]
-    lims = [-0.2, 4/3+0.2]
+    lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-4/3-0.2, 4/3+0.2])
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.plot(lims, lims)

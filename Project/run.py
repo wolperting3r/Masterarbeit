@@ -5,7 +5,8 @@ from src.execution import exe_ml, exe_ml_plot
 '''
 stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
 ek = [True, False]
-exe_dg(stencils=stencils, ek=ek)
+neg = [True]
+exe_dg(stencils=stencils, ek=ek, neg=neg)
 # '''
 
 
@@ -29,16 +30,18 @@ exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 # '''
 
 ''' Train '''
-epochs = [1]
+epochs = [25]
 stencils = [[5, 5]]
 activation = ['relu']
 learning_rate = [1e-4]
+neg = [True]
+angle = [True, False]
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
-    '''
     # CVN
     network = ['cvn']
     layers = [[32]]
+    '''
     if i == 0:
         exe_ml(
             network=network,
@@ -46,25 +49,29 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
     '''
-    elif i == 1:
+    if i == 1:
         exe_ml_plot(
             network=network,
             stencils=stencils,
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
 
-    # '''
     # MLP
     network = ['mlp']
-    layers = [[100, 80]]
+    layers = [[100, 80], [80], [20, 20], [50, 50]]
+    # '''
     if i == 0:
         exe_ml(
             network=network,
@@ -72,18 +79,22 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
-    '''
-    elif i == 1:
+    # '''
+    if i == 1:
         exe_ml_plot(
             network=network,
             stencils=stencils,
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
 
@@ -101,7 +112,9 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     elif i == 1:
         exe_ml_plot(
@@ -110,7 +123,9 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
     '''
@@ -126,7 +141,9 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     elif i == 1:
         exe_ml_plot(
@@ -135,6 +152,8 @@ for i in range(0, 2):
             layers=layers,
             activation=activation,
             epochs=epochs,
-            learning_rate=learning_rate
+            learning_rate=learning_rate,
+            neg=neg,
+            angle=angle,
         )
     # '''
