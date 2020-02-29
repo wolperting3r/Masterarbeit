@@ -2,20 +2,28 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, FindKappa
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 
-def get_data(filename):
+def get_data(parameters):
     ''' Import data from files '''
+    # Data file to load
+    filename = 'data_' + \
+        str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+        ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+        ('_neg' if parameters['negative'] else '_pos') + \
+        '.feather'
     parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     path = os.path.join(parent_path, 'data', 'datasets', filename)
     data = pd.read_feather(path)
+    # print(f'Imported data with shape {data.shape}')
     return data.copy()
 
 
@@ -44,42 +52,63 @@ def split_data(data, ratio):
     return data.iloc[test_indices], data.iloc[train_indices]
 
 
+def process_data(dataset, parameters, reshape):
+    # Pre-Processing
+    if parameters['rotate']:
+        # Create pipeline
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),
+            ('findgradient', FindGradient(parameters=parameters)),
+            ('findangle', FindAngle(parameters=parameters)),
+            ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+        ])
+        # Execute pipeline
+        [labels, features, angle] = data_pipeline.fit_transform(dataset)
+
+    elif (parameters['angle'] & (not parameters['rotate'])):
+        # Create pipeline
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),
+            ('findgradient', FindGradient(parameters=parameters)),
+            ('findangle', FindAngle(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+        ])
+        # Execute pipeline
+        [labels, features, angle] = data_pipeline.fit_transform(dataset)
+
+    else:
+        # Create pipeline
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),  # Output: [labels, data]
+        ])
+        # Execute pipeline
+        [labels, features] = data_pipeline.fit_transform(dataset)
+        # Dummy angle
+        angle = np.zeros(features.shape)
+
+    if parameters['angle']:
+        # Stack features and angles
+        features = np.hstack((features, angle))
+
+    return [labels, features, angle]
+
+
 def transform_data(parameters, reshape=False):
-    # Data file to load
-    filename = 'data_' + \
-            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-            ('_neg' if parameters['negative'] else '_pos') + \
-            '.feather'
+    time0 = time.time()
     # Read data
-    data = get_data(filename)
-    # print(f'Imported data with shape {data.shape}')
+    data = get_data(parameters)
+
     # Split data
     test_set, train_set = split_data(data, 0.2)
 
-    '''
-    data_pipeline = Pipeline([
-        ('transform', TransformData(parameters=parameters, reshape=reshape)),
-        ('findgradient', FindGradient(parameters=parameters)),
-        ('findangle', FindAngle(parameters=parameters)),
-        ('rotate', Rotate(parameters=parameters)),
-    ])
-    # '''
-    data_pipeline = Pipeline([
-        ('transform', TransformData(parameters=parameters, reshape=reshape)),
-        ('findgradient', FindGradient(parameters=parameters)),
-        ('findangle', FindAngle(parameters=parameters)),
-    ])
+    # Pre-Processing
+    test_labels, test_data, test_angle = process_data(test_set, parameters, reshape)
+    train_labels, train_data, train_angle = process_data(train_set, parameters, reshape)
 
-    [test_labels, test_data, test_angle] = data_pipeline.fit_transform(test_set)
-    # print(f'test_labels:\n{test_labels}')
-    [train_labels, train_data, train_angle] = data_pipeline.fit_transform(train_set)
-    # print(f'train_labels:\n{train_labels}')
-    if parameters['angle']:
-        test_data = np.hstack((test_data, test_angle))
-        train_data = np.hstack((train_data, train_angle))
+    filestring = parameters['filename']
+    print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
 
     '''
+    # Test
     ind = 6
     # print_data_orig = np.reshape(test_data, (test_data.shape[0], 5, 5, 1)).transpose((0, 1, 3, 2))[ind]
     print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]

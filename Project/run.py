@@ -36,6 +36,7 @@ activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [True, False]
+rot = [True, False]
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
     # CVN
@@ -52,6 +53,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''
     '''
@@ -65,12 +67,14 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''
 
     # MLP
     network = ['mlp']
-    layers = [[100, 80], [80], [20, 20], [50, 50]]
+    layers = [[100, 80], [80], [50, 50], [50, 40, 30]]
+    # layers = [[80]]
     # '''
     if i == 0:
         exe_ml(
@@ -82,6 +86,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''
     # '''
@@ -95,6 +100,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''
 
@@ -115,6 +121,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     elif i == 1:
         exe_ml_plot(
@@ -126,6 +133,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''
     '''
@@ -144,6 +152,7 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     elif i == 1:
         exe_ml_plot(
@@ -155,5 +164,6 @@ for i in range(0, 2):
             learning_rate=learning_rate,
             neg=neg,
             angle=angle,
+            rot=rot,
         )
     # '''

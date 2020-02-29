@@ -21,18 +21,19 @@ def gendat(st_sz, equal_kappa=True, neg=False, N_values=1e6, silent=True):
     # print(f'Generation finished: {inzip}')
 
 
-def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_rate=1e-3, equal_kappa=True, neg=False, angle=False):
+def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_rate=1e-3, equal_kappa=True, neg=False, angle=False, rot=False):
     # Parameters
-    parameters = {'network': network,
-                  'epochs': epochs,
+    parameters = {'network': network,       # Network type
+                  'epochs': epochs,         # Number of epochs
                   'layers': layer,  # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
-                  'stencil_size': stencil,
-                  'equal_kappa': equal_kappa,
+                  'stencil_size': stencil,  # Stencil size [x, y]
+                  'equal_kappa': equal_kappa, # P(kappa) = const. or P(r) = const.
                   'learning_rate': learning_rate,
-                  'batch_size': batch_size,
-                  'activation': act,
-                  'negative': neg,
-                  'angle': angle,
+                  'batch_size': batch_size, # Batch size
+                  'activation': act,        # Activation function
+                  'negative': neg,          # Negative values too or only positive
+                  'angle': angle,           # Use the angles of the interface too
+                  'rotate': rot,          # Rotate the data before learning
                  }
     # Generate filename string
     parameters['filename'] = param_filename(parameters)
@@ -78,10 +79,10 @@ def exe_dg(stencils, ek, neg):
     for j in jobs:
         j.join()
 
-def exe_ml(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False):
+def exe_ml(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False, rot=False):
     # Execute machine learning
     plot = [False]
-    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle)))
+    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle, rot)))
     print(f'job_list:\n{job_list}')
 
     jobs = []
@@ -93,9 +94,9 @@ def exe_ml(network, stencils, layers, activation=['relu'], epochs=[25], batch_si
     for j in jobs:
         j.join()
 
-def exe_ml_plot(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False):
+def exe_ml_plot(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False, rot=False):
     # Plot
     plot = [True]
-    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle)))
+    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle, rot)))
     for job in job_list:
-        ml(job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7], job[8], job[9], job[10])
+        ml(job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7], job[8], job[9], job[10], job[11])
