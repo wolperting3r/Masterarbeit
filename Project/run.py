@@ -3,9 +3,10 @@ from src.execution import exe_ml, exe_ml_plot
 
 ''' Data Generation '''
 '''
-stencils = [[3, 3], [5, 5], [7, 3], [3, 7]]
+# stencils = [[3, 3], [5, 5], [7, 3], [3, 7], [7, 7]]
+stencils = [[7, 7]]
 ek = [True, False]
-neg = [True]
+neg = [True, False]
 exe_dg(stencils=stencils, ek=ek, neg=neg)
 # '''
 
@@ -31,11 +32,12 @@ exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 
 ''' Train '''
 epochs = [25]
-stencils = [[5, 5]]
+# stencils = [[5, 5]]
+stencils = [[7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
-angle = [True, False]
+angle = [False]
 rot = [True, False]
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
