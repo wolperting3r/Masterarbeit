@@ -15,8 +15,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
 logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 
-def gendat(st_sz, equal_kappa=True, neg=False, N_values=1, silent=True):  # 1e6
-    print(f'Generating data:\nStencil:\t{st_sz}\nKappa:\t\t{equal_kappa}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}')
+def gendat(st_sz, equal_kappa=True, neg=False, N_values=1e6, silent=True):
+    print(f'Generating data:\nStencil:\t{st_sz}\nKappa:\t{equal_kappa}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}')
     generate_data(N_values=N_values, st_sz=st_sz, equal_kappa=equal_kappa, neg=neg, silent=False)
     # generate_data(N_values=1e6, st_sz=inzip[0], equal_kappa=inzip[1], neg=inzip[2], silent=True)
     # print(f'Generation finished: {inzip}')
@@ -71,18 +71,14 @@ def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_r
 def exe_dg(stencils, ek, neg):
     # Execute data generation
     job_list = list(itertools.product(*(stencils, ek, neg)))
-    if len(job_list)>1:
-        jobs = []
-        for job in job_list:
-            process = multiprocessing.Process(target=gendat, args=job)
-            jobs.append(process)
-        for j in jobs:
-            j.start()
-        for j in jobs:
-            j.join()
-    else:
-        gendat(job_list[0][0], job_list[0][1], job_list[0][2])
-
+    jobs = []
+    for job in job_list:
+        process = multiprocessing.Process(target=gendat, args=job)
+        jobs.append(process)
+    for j in jobs:
+        j.start()
+    for j in jobs:
+        j.join()
 
 def exe_ml(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False, rot=False):
     # Execute machine learning

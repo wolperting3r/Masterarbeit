@@ -1,12 +1,12 @@
-from src.execution import exe_ml, exe_ml_plot
-# from src.execution import exe_dg
+# from src.execution import exe_ml, exe_ml_plot
+from src.execution import exe_dg
 
 ''' Data Generation '''
-'''
+# '''
 # stencils = [[3, 3], [5, 5], [7, 3], [3, 7], [7, 7]]
-stencils = [[7, 7]]
-ek = [True, False]
-neg = [True, False]
+stencils = [[5, 5]]
+ek = [True]
+neg = [True]
 exe_dg(stencils=stencils, ek=ek, neg=neg)
 # '''
 
@@ -77,7 +77,7 @@ for i in range(0, 2):
     network = ['mlp']
     layers = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layers = [[80]]
-    # '''
+    '''
     if i == 0:
         exe_ml(
             network=network,
@@ -91,7 +91,7 @@ for i in range(0, 2):
             rot=rot,
         )
     # '''
-    # '''
+    '''
     if i == 1:
         exe_ml_plot(
             network=network,
