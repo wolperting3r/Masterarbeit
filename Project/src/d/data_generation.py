@@ -12,6 +12,7 @@ import sys
 from .utils import (
     gt,
     plot_circle,
+    plot_ellipse,
     plot_vof
 )
 
@@ -30,7 +31,15 @@ Outline:
 
 
 def u(low=0.0, high=1.0):
+    # np.random.seed(11)
     return np.random.uniform(low=low, high=high)
+
+
+def pm():
+    if u() > 0.5:
+        return 1
+    else:
+        return -1
 
 
 def axismatrix(n_grid, axis):
@@ -43,6 +52,7 @@ def axismatrix(n_grid, axis):
     elif axis == 1:
         return return_matrix
 
+
 def cross(mid_pt, max_pt):
     # Generate cross values mid_pt - max_pt to mid_pt + max_pt in both axis
     # Generate points in direction of both axis
@@ -54,7 +64,7 @@ def cross(mid_pt, max_pt):
     return np.unique(np.concatenate((cr_x, cr_y), axis=0), axis=0)
 
 
-def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
+def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False):
 
     time0 = time.time()
 
@@ -69,11 +79,14 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
     X_c = np.array([L/2, L/2])         # Midpoint of geometry
     # Geometry
     # R_min = max(st_sz)/2*Delta       # Minimal radius (so the circle is not smaller than the stencil)
-    R_min = 3/2*Delta
+    R_min = 7/2*Delta
     R_max = 0.5                        # Maximal radius
-    kappa_min = L*Delta*2/R_min
-    kappa_max = L*Delta*2/R_max
+    kappa_min = L*Delta*2/R_max
+    kappa_max = L*Delta*2/R_min
     equal_kappa = equal_kappa          # Equal kappa or equal radius
+    e_min = 1                          # Minimal side ratio of ellipse (1 = circle)
+    e_maxmin = 1.5                     # Minimal maximal side ratio (for kappa=kappa_max)
+    e_maxmax = 5                      # Maximal maximal side ratio (for kappa=kappa_min)
     # Stencil
     st_sz = st_sz                      # Stencil size [y, x]
     cr_sz = [3, 3]                     # Cross size (for gradient calculation)
@@ -103,24 +116,61 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
         if not silent:
             pbar.update(n)
         if equal_kappa:
-            # Get random curvature
-            curvature = kappa_min + u()*(kappa_max - kappa_min)
-            # Calculate radius
-            r = L*Delta*2/curvature
+            if ellipse:
+                # Get random curvature
+                curvature = -(kappa_min + u()*(kappa_max - kappa_min))
+                # Get random side ratio
+                e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
+                e = e_min+u()*(e_max-e_min)
+                # Calculate ellipse radius
+                # r = L*Delta/(-curvature*e) + u()**4*((e**2*L*Delta)/(-curvature) - L*Delta/(-curvature*e))
+                # r = -L*Delta*2/curvature*e**(-1 + 3*u()**1.5)
+                r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
+                if visualize:
+                    print(f'\nkappa_max:\n{-kappa_max}')
+                    print(f'curvature/kappa_max:\n{(curvature/-kappa_max)}')
+                    print(f'e_max:\n{e_max}')
+                    print(f'kappa:\t{curvature}\ne:\t{e}\nr:\t{r}')
+            else:
+                # Get random curvature
+                curvature = -(kappa_min + u()*(kappa_max - kappa_min))
+                # Calculate radius
+                r = -L*Delta*2/curvature
         else:
             # Get random radius
             r = R_min + u()*(R_max - R_min)
             # Calculate curvature
-            curvature = L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
+            curvature = -L*Delta*2/r  # Stimmt das auch, wenn der Stencil anders gewählt wird?
         # Move midpoint by random amount inside one cell
         x_c = np.array([u(), u()])*Delta
-        # Get random spherical angle
-        theta = 2*np.pi*u()
-        # Get cartesian coordinates on sphere surface
-        x_rel = np.array([r*np.sin(theta),   # y
-                          r*np.cos(theta)])  # x
-        x = np.array([x_c[0]+x_rel[0],
-                      x_c[1]+x_rel[1]])
+        # x_c = np.array([0, 0])
+
+        # Get point on geometry
+        if ellipse:
+            # Get x and y coordinates of point on ellipse with the given curvature 
+            # (and flip x and y coordinates randomly with pm)
+            pt_x = pm()*np.sqrt((((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2)/(e**4-e**2))
+            pt_y = pm()*np.sqrt(r**2-e**2*(pt_x)**2)
+            # print(f'pt_x:\n{pt_x}')
+            
+            # Rotate with random angle
+            rot = u()*2*np.pi
+            rot_matrix = [[np.cos(rot), -np.sin(rot)],
+                          [np.sin(rot), np.cos(rot)]]
+            [pt_x, pt_y] = np.matmul(rot_matrix, [pt_x, pt_y])
+            
+            # Make x array and add random shift of origin x_c
+            x = np.array([pt_y, pt_x])
+            x = x+x_c
+        else:
+            # Get random spherical angle
+            theta = 2*np.pi*u()
+            # Get cartesian coordinates on sphere surface
+            x_rel = np.array([r*np.sin(theta),   # y
+                              r*np.cos(theta)])  # x
+            x = np.array([x_c[0]+x_rel[0],
+                          x_c[1]+x_rel[1]])
+
         # Round point to get origin of local coordinates in global coordinates relative to geometry origin
         round_point = np.floor(x*1/Delta*L)*Delta/L
             
@@ -147,6 +197,9 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
                 r_area = np.where(r_sqr <= r*r, 1, 0)
                 # Get VOF values by integration over local grid
                 vof = np.sum(r_area)/r_area.size
+                '''
+                AB HIER SIND X UND Y NOCH VERTAUSCHT (GANZE GRADIENTENBILDUNG)
+                '''
                 # Write vof value into stencil value array
                 vof_array[ill[0], ill[1]] = vof
                 if visualize:
@@ -203,12 +256,16 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
         if visualize:
 	    # Initialize plot
             fig, (ax1, ax2) = plt.subplots(1, 2)
-            # Plot circle
-            plot_circle(ax1, r, x_c, x)
+            if ellipse:
+                # Plot ellipse
+                plot_ellipse(ax1, r, e, x, x_c, rot, curvature)
+            else:
+                # Plot circle
+                plot_circle(ax1, r, x_c, x)
 
         # Get origins of local coordinates of stencil points
         local_origin_points = np.array([round_point[0]+st_stp_loc[0],
-                                  round_point[1]+st_stp_loc[1]])
+                                        round_point[1]+st_stp_loc[1]])
         # Get list of all origins in stencil
         local_origins = np.array(list(itertools.product(*local_origin_points)))
         # Get list of all stencil indices combinations
@@ -217,23 +274,33 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
         # Iterate over all stencil indices combinations
         for idx, ill in enumerate(local_indices):
             # Skip values that were already calculated for the gradient
-            if np.isnan(vof_array[ill[0], ill[1]]):
+            if np.isnan(vof_array[ill[1], ill[0]]):
                 # Get origin coordinates too
                 lo = local_origins[idx]
                 # Values of local grid relative to geometry origin
                 [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
                                        local_grid[1] + lo[1] - x_c[1]])
-                # Get radii on local grid (np.multiply way faster than np.power) r^2 = x^2 + y^2 + z^2
-                r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                if ellipse:
+                    # Rotate geometry back to calculate ellipse
+                    x_ltmp = x_l.copy()
+                    y_ltmp = y_l.copy()
+                    x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
+                    y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
+
+                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = e^2*x^2 + y^2
+                    r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                else:
+                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = x^2 + y^2 + z^2
+                    r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
                 # Calculate 1s and 0s on local grid 
                 r_area = np.where(r_sqr <= r*r, 1, 0)
                 # Get VOF values by integration over local grid
                 vof = np.sum(r_area)/r_area.size
                 # Write vof value into stencil value array
-                vof_array[ill[0], ill[1]] = vof
+                vof_array[ill[1], ill[0]] = vof
                 if visualize:
                     # Save the r_area array for plotting
-                    vof_df.iloc[ill[0], ill[1]] = r_area
+                    vof_df.iloc[ill[1], ill[0]] = r_area
         if visualize:
             # Plot vof
             plot_vof(ax2, vof_df, vof_array, st_sz_loc, Delta_vof)
@@ -263,7 +330,8 @@ def generate_data(N_values, st_sz: [int, int], equal_kappa, neg, silent=False):
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         print(f'parent_path:\n{parent_path}')
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+'.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'.feather')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
-        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}')
+        geometry = ('Ellipse' if ellipse else 'Circle')
+        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}')

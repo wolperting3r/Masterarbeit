@@ -14,15 +14,37 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def get_data(parameters):
     ''' Import data from files '''
-    # Data file to load
-    filename = 'data_' + \
-        str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-        ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-        ('_neg' if parameters['negative'] else '_pos') + \
-        '.feather'
-    parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    path = os.path.join(parent_path, 'data', 'datasets', filename)
-    data = pd.read_feather(path)
+    if parameters['data'] == 'both':
+        # Data file to load
+        filename_cir = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            '_cir' + \
+            '.feather'
+        filename_ell = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            '_ell' + \
+            '.feather'
+        parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+        path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir)
+        path_ell = os.path.join(parent_path, 'data', 'datasets', filename_ell)
+        data_cir = pd.read_feather(path_cir)
+        data_ell = pd.read_feather(path_ell)
+        data = pd.concat([data_cir, data_ell], ignore_index=True)
+    else:
+        # Data file to load
+        filename = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            ('_ell' if parameters['data'] == 'ellipse' else '_cir') + \
+            '.feather'
+        parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+        path = os.path.join(parent_path, 'data', 'datasets', filename)
+        data = pd.read_feather(path)
     # print(f'Imported data with shape {data.shape}')
     return data.copy()
 

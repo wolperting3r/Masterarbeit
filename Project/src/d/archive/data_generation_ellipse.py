@@ -198,6 +198,7 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False):
         # '''
         if visualize:
             # Plot vof
+
             plot_vof(ax2, vof_df, vof_array, st_sz_loc, Delta_vof)
             # Show plot
             plt.show()

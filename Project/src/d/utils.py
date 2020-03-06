@@ -29,7 +29,7 @@ def plot_circle(ax1, r, x_c, x):
     ax1.set_aspect('equal')
 
 
-def plot_ellipse(ax1, r, e, x, rot, curvature):
+def plot_ellipse(ax1, r, e, x, x_c, rot, curvature):
     # Number of values for circle edge
     n_val = 250
     # Generate evenly distributed values around circle
@@ -41,6 +41,8 @@ def plot_ellipse(ax1, r, e, x, rot, curvature):
     y_plt_tmp = y_plt.copy()
     x_plt = x_plt_tmp*np.cos(-rot) - y_plt_tmp*np.sin(-rot)
     y_plt = x_plt_tmp*np.sin(-rot) + y_plt_tmp*np.cos(-rot)
+    x_plt = x_plt + x_c[1]
+    y_plt = y_plt - x_c[0]
     # Plot circle
     ax1.fill(x_plt, y_plt, color='w', zorder=-1)
     # Plot point [-y, x]
