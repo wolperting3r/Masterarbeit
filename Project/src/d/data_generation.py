@@ -83,6 +83,8 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
     R_max = 0.5                        # Maximal radius
     kappa_min = L*Delta*2/R_max
     kappa_max = L*Delta*2/R_min
+    # kappa_min = 0.49
+    # kappa_max = 0.52
     equal_kappa = equal_kappa          # Equal kappa or equal radius
     e_min = 1                          # Minimal side ratio of ellipse (1 = circle)
     e_maxmin = 1.5                     # Minimal maximal side ratio (for kappa=kappa_max)
@@ -121,6 +123,7 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
                 curvature = -(kappa_min + u()*(kappa_max - kappa_min))
                 # Get random side ratio
                 e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
+                # e_max = 2
                 e = e_min+u()*(e_max-e_min)
                 # Calculate ellipse radius
                 # r = L*Delta/(-curvature*e) + u()**4*((e**2*L*Delta)/(-curvature) - L*Delta/(-curvature*e))
@@ -255,7 +258,7 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
 
         if visualize:
 	    # Initialize plot
-            fig, (ax1, ax2) = plt.subplots(1, 2)
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5), dpi=150)
             if ellipse:
                 # Plot ellipse
                 plot_ellipse(ax1, r, e, x, x_c, rot, curvature)
@@ -305,6 +308,7 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
             # Plot vof
             plot_vof(ax2, vof_df, vof_array, st_sz_loc, Delta_vof)
             # Show plot
+            fig.tight_layout() 
             plt.show()
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         if (vof_array[st_mid_loc[0], st_mid_loc[1]] > 0) & (vof_array[st_mid_loc[0], st_mid_loc[1]] < 1):
@@ -317,6 +321,12 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
             output_array = np.reshape(vof_array, (1, np.prod(st_sz_loc)))[0].tolist()
             # Insert curvature value at first position
             output_array.insert(0, curvature)
+            if debug:
+                # DEBUGGING: Insert r, e, pt_x, pt_y
+                output_array.insert(0, r)
+                output_array.insert(0, e)
+                output_array.insert(0, pt_y)
+                output_array.insert(0, pt_x)
             # Append list to output list
             output_list.append(output_array)
     if not silent:
@@ -326,11 +336,15 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
         output_df = pd.DataFrame(output_list)
         # Reformat column names as string and rename curvature column
         output_df.columns = output_df.columns.astype(str)
-        output_df = output_df.rename(columns={'0':'Curvature'})
+        if debug:
+            output_df = output_df.rename(columns={'0':'pt_x', '1': 'pt_y', '2': 'e', '3': 'r', '4': 'curvature'})
+        else:
+            output_df = output_df.rename(columns={'0':'Curvature'})
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         print(f'parent_path:\n{parent_path}')
         file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'.feather')
+        # file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'_flat_e'+'.feather')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         geometry = ('Ellipse' if ellipse else 'Circle')

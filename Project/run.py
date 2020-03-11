@@ -1,15 +1,16 @@
-from src.execution import exe_ml, exe_ml_plot
-# from src.execution import exe_dg
+# from src.execution import exe_ml, exe_ml_plot
+from src.execution import exe_dg
 
 ''' Data Generation '''
-'''
+# '''
 # stencils = [[3, 3], [5, 5], [7, 3], [3, 7], [7, 7]]
-stencils = [[5, 5], [3, 3], [7, 7]]
+stencils = [[5, 5]]
 ek = [True]
 neg = [True]
-N_values = [1e6]
+# N_values = [1e6]
+N_values = [1]
 silent = [False]
-ellipse = [False]
+ellipse = [True]
 exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, ellipse=ellipse)
 # '''
 
@@ -34,14 +35,14 @@ exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 # '''
 
 ''' Train '''
-epochs = [50]
+epochs = [25]
+# stencils = [[3, 3]]
 stencils = [[5, 5]]
-# stencils = [[7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [False]
-rot = [False]
+rot = [True]
 data = ['both']
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
@@ -82,9 +83,9 @@ for i in range(0, 2):
     # MLP
     network = ['mlp']
     # layers = [[100, 80], [80], [50, 50], [50, 40, 30]]
-    layers = [[75, 150, 100, 50]]
+    layers = [[100, 80]]
     # layers = [[80]]
-    # '''
+    '''
     if i == 0:
         exe_ml(
             network=network,
@@ -99,7 +100,7 @@ for i in range(0, 2):
             data=data,
         )
     # '''
-    # '''
+    '''
     if i == 1:
         exe_ml_plot(
             network=network,

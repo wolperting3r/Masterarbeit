@@ -16,4 +16,5 @@ def param_filename(parameters):
             filename_string = filename_string + '_' + ('rot' if value else 'nrt')
         else:
             filename_string = filename_string + '_' + str(value)
+    # filename_string = filename_string + '_' + '_flat_e'
     return filename_string

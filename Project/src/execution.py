@@ -16,7 +16,7 @@ logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 
 def gendat(st_sz, equal_kappa=True, neg=False, N_values=1, silent=True, ellipse=False):  # 1e6
-    print(f'Generating data:\Ellipse:\t{ellipse}\nStencil:\t{st_sz}\nKappa:\t\t{equal_kappa}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}')
+    print(f'Generating data:\nEllipse:\t{ellipse}\nStencil:\t{st_sz}\nKappa:\t\t{equal_kappa}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}')
     generate_data(N_values=N_values, st_sz=st_sz, equal_kappa=equal_kappa, neg=neg, silent=False, ellipse=ellipse)
     # generate_data(N_values=1e6, st_sz=inzip[0], equal_kappa=inzip[1], neg=inzip[2], silent=True)
     # print(f'Generation finished: {inzip}')
