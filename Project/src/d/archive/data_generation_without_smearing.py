@@ -54,23 +54,22 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False, smearing=False):
-    time0 = time.time()
+def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False):
 
     # Script
     N_values = int(N_values)
     visualize = True if (N_values == 1) else False
-    debug = False
 
     # Initialize progress bar
-    widgets = ['Data generation: ', Percentage(), ' ', Bar(marker='=',left='[',right=']'), ' ', ETA()]
+    widgets = ['Data generation: ', Percentage(), ' ', Bar(marker='=',left='[',right=']'),
+           ' ', ETA()] #see docs for other options
     if not silent:
         pbar = ProgressBar(widgets=widgets, maxval=N_values)
         pbar.start()
 
     # Grid
     Delta = 1/1000
-    Delta_vof = 1/32
+    Delta_vof = 1/10
     L = 1
 
     # Geometry
@@ -88,23 +87,20 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
     # Stencil
     st_sz = st_sz   # y, x
     cr_sz = [3, 3]  # y, x
-    if smearing:
-        # Increase stencil size by two until smearing is applied
-        st_sz = np.add(st_sz, [2, 2])
-
+    
     # Calculate midpoints of stencil and cross
-    st_mid = [int((st_sz[0]-1)/2), int((st_sz[1]-1)/2)]
-    cr_mid = [int((cr_sz[0]-1)/2), int((cr_sz[1]-1)/2)]
+    st_mid = [int((st_sz[0]-1)/2), int((st_sz[1]-1)/2)]  # y, x
+    cr_mid = [int((cr_sz[0]-1)/2), int((cr_sz[1]-1)/2)]  # y, x
 
     # Generate x and y for origins of local grid for cross points relative to local point
-    st_crp = np.array([np.arange(-cr_mid[0], (cr_mid[0]+1)),
-                       np.arange(-cr_mid[1], (cr_mid[1]+1))])*Delta
+    st_crp = np.array([np.arange(-cr_mid[0], (cr_mid[0]+1)),        # y
+                       np.arange(-cr_mid[1], (cr_mid[1]+1))])*Delta # x
     # Generate x and y for origins of local grid for stencils points relative to local point
-    st_stp = np.array([np.arange(-st_mid[0], (st_mid[0]+1)),
-                       np.arange(-st_mid[1], (st_mid[1]+1))])*Delta
+    st_stp = np.array([np.arange(-st_mid[0], (st_mid[0]+1)),        # y
+                       np.arange(-st_mid[1], (st_mid[1]+1))])*Delta # x
     # Generate local grid (y from bottom to top, x from left to right)
-    local_grid = np.array([axismatrix(1/Delta_vof, 0),
-                           axismatrix(1/Delta_vof, 1)])*Delta
+    local_grid = np.array([axismatrix(1/Delta_vof, 0),              # y
+                           axismatrix(1/Delta_vof, 1)])*Delta       # x
 
     # Initialize list for output vectors
     output_list = []
@@ -229,12 +225,10 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
                 st_mid_tmp = st_mid
                 if visualize:
                     # Extend index of dataframe by padding
-                    # First shift index/columns by half the difference between new and old dimensions, so the cross dataframe stays in the middle
+                    # First shift index by half the difference between new and old dimensions, so the cross dataframe stayes in the middle
                     vof_df.index = vof_df.index+(st_sz_tmp[0]-cr_sz[0])/2
-                    vof_df.columns = vof_df.columns+(st_sz_tmp[1]-cr_sz[1])/2
                     # Then reindex the dataframe to create the indices before and after the old indices
                     vof_df = vof_df.reindex(range(st_sz_tmp[0]))
-                    vof_df = vof_df.reindex(range(st_sz_tmp[1]), axis='columns').astype(object)
             else:
                 # If gradient points more to x_direction
                 # Set direction to 1 (x)
@@ -245,10 +239,7 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
                 st_mid_tmp = np.flip(st_mid)
                 if visualize:
                     # Extend columns of dataframe by padding
-                    vof_df.index = vof_df.index+(st_sz_tmp[0]-cr_sz[0])/2
                     vof_df.columns = vof_df.columns+(st_sz_tmp[1]-cr_sz[1])/2
-
-                    vof_df = vof_df.reindex(range(st_sz_tmp[0]))
                     vof_df = vof_df.reindex(range(st_sz_tmp[1]), axis='columns').astype(object)
             # Pad vof_array so it fits the stencil dimensions
             pad_y = int((st_sz_tmp[0] - vof_array.shape[0])*1/2)
@@ -311,28 +302,6 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
                 if visualize:
                     # Save the r_area array for plotting
                     vof_df.iloc[ill[0], ill[1]] = r_area
-        # Apply smearing
-        if smearing:
-            # Define smearing kernel
-            kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
-            # kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
-            vof_array_smear = vof_array.copy()
-            vof_array_smear[:] = np.nan
-            for column in range(1, st_sz_tmp[0]-1):
-                for row in range(1, st_sz_tmp[1]-1):
-                    # Calculate smeared vof field: sum(weights * vof_array_slice)/sum(weights)
-                    vof_array_smear[column, row] = np.sum(np.multiply(
-                        kernel,
-                        vof_array[column-1:column+2, row-1:row+2]
-                    ))/np.sum(kernel)
-            # Cut edges of vof_array
-            vof_array = vof_array_smear[1:st_sz_tmp[0]-1, 1:st_sz_tmp[1]-1]
-            if visualize:
-                # Cut vof_df too
-                vof_df = vof_df.iloc[1:-1, 1:-1]
-            # Shrink st_sz
-            st_sz_tmp = np.add(st_sz_tmp, [-2, -2])
-            st_mid_tmp = np.add(st_mid_tmp, [-1, -1])
 
         ''' Plot VoF field and show plot '''
         if visualize:
@@ -366,8 +335,6 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
     if not silent:
         pbar.finish()
     if not visualize:
-        # Shrink st_sz to create right filename
-        st_sz = np.add(st_sz, [-2, -2])
         ''' Export data to feather file '''
         # Convert output list to pandas dataframe
         output_df = pd.DataFrame(output_list)
@@ -379,10 +346,10 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
             output_df = output_df.rename(columns={'0':'Curvature'})
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+('_smr' if smearing else '_nsm')+'.feather')
-        print(f'File:\n{file_name}')
+        print(f'parent_path:\n{parent_path}')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'.feather')
         # file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'_flat_e'+'.feather')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         geometry = ('Ellipse' if ellipse else 'Circle')
-        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')
+        print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}')

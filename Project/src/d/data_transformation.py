@@ -5,7 +5,7 @@ import sys
 import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, FindKappa
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
@@ -21,12 +21,14 @@ def get_data(parameters):
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
             ('_neg' if parameters['negative'] else '_pos') + \
             '_cir' + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         filename_ell = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
             ('_neg' if parameters['negative'] else '_pos') + \
             '_ell' + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir)
@@ -41,6 +43,7 @@ def get_data(parameters):
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
             ('_neg' if parameters['negative'] else '_pos') + \
             ('_ell' if parameters['data'] == 'ellipse' else '_cir') + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         path = os.path.join(parent_path, 'data', 'datasets', filename)
@@ -75,6 +78,17 @@ def split_data(data, ratio):
 
 
 def process_data(dataset, parameters, reshape):
+    '''
+    # Calculate kappa with traditional methods
+    # Create pipeline
+    data_pipeline = Pipeline([
+        ('transform', TransformData(parameters=parameters, reshape=reshape)),
+        ('findkappa', FindKappa(parameters=parameters)),
+    ])
+    # Execute pipeline
+    [labels, features, angle] = data_pipeline.fit_transform(dataset)
+    # '''
+    # '''
     # Pre-Processing
     if parameters['rotate']:
         # Create pipeline
@@ -106,6 +120,7 @@ def process_data(dataset, parameters, reshape):
         [labels, features] = data_pipeline.fit_transform(dataset)
         # Dummy angle
         angle = np.zeros(features.shape)
+    # '''
 
     if parameters['angle']:
         # Stack features and angles

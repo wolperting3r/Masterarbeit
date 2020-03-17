@@ -275,50 +275,57 @@ class FindKappa(BaseEstimator, TransformerMixin):
 
     def fit(self, dataset):
         return self
-    
-    def transform(self, dataset):
-        '''
-        NOT WORKING YET
-        '''
-        # Seperate dataset
-        grad_x = dataset[2].copy()
-        grad_y = dataset[3].copy()
 
+    def transform(self, dataset):
+        # time0 = time.time()
         # Get stencil size
         st_sz = self.parameters['stencil_size']
+        # Seperate data from labels
+        data = dataset[1].copy()
         # Get shape of data
-        shape = grad_x.shape
+        shape = data.shape
         # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
         if len(shape) == 2:
-            grad_x = np.reshape(grad_x, (shape[0], st_sz[0], st_sz[1], 1))
-            grad_y = np.reshape(grad_y, (shape[0], st_sz[0], st_sz[1], 1))
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
 
-        # Calculate midpoint
-        mp = [int((st_sz[0]-1)/2), int((st_sz[1]-1)/2)]
+        i = int((st_sz[0]-1)/2)
+        j = int((st_sz[1]-1)/2)
+        c_dx = (data[:, i+1, j, 0] - data[:, i-1, j, 0])/2
+        c_dy = (data[:, i, j+1, 0] - data[:, i, j-1, 0])/2
 
-        # Calculate angle
-        angle_matrix = np.arctan2(-grad_y, -grad_x)
-        dnxdx1 = angle_matrix[:, mp[0],   mp[1]+1, 0] - angle_matrix[:, mp[0],   mp[1]-1, 0]
-        dnydy1 = angle_matrix[:, mp[0]+1, mp[1],   0] - angle_matrix[:, mp[0]-1, mp[1],   0]
-        dnxdx2 = angle_matrix[:, mp[0]+1, mp[1]+1, 0] - angle_matrix[:, mp[0]-1, mp[1]-1, 0]
-        dnydy2 = angle_matrix[:, mp[0]+1, mp[1]-1, 0] - angle_matrix[:, mp[0]-1, mp[1]+1, 0]
-        kappa = dnxdx1-dnydy1+dnxdx2-dnydy2
+        c_dxx = (data[:, i+2, j, 0] - 2*data[:, i, j, 0] + data[:, i-2, j, 0])/4
+        c_dyy = (data[:, i, j+2, 0] - 2*data[:, i, j, 0] + data[:, i, j-2, 0])/4
+        c_dxy = (data[:, i+1, j+1, 0] - data[:, i-1, j+1, 0] - data[:, i+1, j-1, 0] + data[:, i-1, j-1, 0])/4
+
+        kappa = -1*np.divide(
+            np.multiply(c_dxx, np.multiply(c_dy, c_dy)) -
+            np.multiply(c_dxy, np.multiply(c_dx, c_dy))*2 +
+            np.multiply(c_dyy, np.multiply(c_dy, c_dy))
+            ,
+            (np.multiply(c_dx, c_dx) + np.multiply(c_dy, c_dy))**(3/2)
+        )
+
+        labels = dataset[0][:10]
+        kappa_pr = kappa[:10]
+
+        # print(f'lables:\n{labels}')
+        # print(f'kappa_pr:\n{kappa_pr}')
 
         '''
-        # Calculate normal vector
-        # n_x = grad_x/(np.sqrt(grad_x*grad_x + grad_y*grad_y))
-        # n_y = grad_y/(np.sqrt(grad_x*grad_x + grad_y*grad_y))
-        n_x = grad_x
-        n_y = grad_y
-        # Calculate dn_xi/dxi
-        dnxdx1 = n_x[:, mp[0],   mp[1]+1, 0] - n_x[:, mp[0],   mp[1]-1, 0]
-        dnydy1 = n_y[:, mp[0]+1, mp[1],   0] - n_x[:, mp[0]-1, mp[1],   0]
-        dnxdx2 = n_x[:, mp[0]+1, mp[1]+1, 0] - n_x[:, mp[0]-1, mp[1]-1, 0]
-        dnydy2 = n_y[:, mp[0]+1, mp[1]-1, 0] - n_x[:, mp[0]-1, mp[1]+1, 0]
-        # Calculate kappa
-        # kappa = -1/2*(dnxdx1+dnydy1)
-        kappa = -1/4*(dnxdx1+dnydy1+dnxdx2+dnydy2)
-        print(f'kappa:\n{kappa}')
+        # Test
+        ind = 1
+        print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
+        print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
+        print_data_grad = data.transpose((0, 1, 3, 2))[ind]
+        print(f'\nGrad_x:\n{print_data_gradx}')
+        print(f'\nGrad_y:\n{print_data_grady}')
+        print(f'\nData:\n{print_data_grad}')
         # '''
+        # Reshape to tensor if angle matrix is needed, otherwise just output vectors
+        if (data.shape != shape) & (self.parameters['angle']):
+            # Reshape transformed data to original shape
+            data = np.reshape(data, shape)
+
+        kappa = 1
 
         return [dataset[0], dataset[1], kappa]

@@ -14,6 +14,8 @@ def param_filename(parameters):
             filename_string = filename_string + '_' + ('ang' if value else 'nag')
         elif key == 'rotate':
             filename_string = filename_string + '_' + ('rot' if value else 'nrt')
+        elif key == 'smear':
+            filename_string = filename_string + '_' + ('smr' if value else 'nsm')
         else:
             filename_string = filename_string + '_' + str(value)
     # filename_string = filename_string + '_' + '_flat_e'

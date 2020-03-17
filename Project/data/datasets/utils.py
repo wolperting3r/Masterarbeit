@@ -7,8 +7,7 @@ def gt(time0):
 
 
 def u(low=0.0, high=1.0):
-    # np.random.seed(11)
-    # np.random.seed(13)
+    np.random.seed(11)
     return np.random.uniform(low=low, high=high)
 
 
@@ -52,14 +51,14 @@ def plot_ellipse(ax1, r, e, x, x_c, rot, curvature):
     [x_plt, y_plt] = [r/e*np.cos(theta_plt), r*np.sin(theta_plt)]
     x_plt_tmp = x_plt.copy()
     y_plt_tmp = y_plt.copy()
-    x_plt = x_plt_tmp*np.cos(rot) - y_plt_tmp*np.sin(rot)
-    y_plt = x_plt_tmp*np.sin(rot) + y_plt_tmp*np.cos(rot)
+    x_plt = x_plt_tmp*np.cos(-rot) - y_plt_tmp*np.sin(-rot)
+    y_plt = x_plt_tmp*np.sin(-rot) + y_plt_tmp*np.cos(-rot)
     x_plt = x_plt + x_c[1]
-    y_plt = y_plt + x_c[0]
+    y_plt = y_plt - x_c[0]
     # Plot circle
     ax1.fill(x_plt, y_plt, color='w', zorder=-1)
-    # Plot point [y, x]
-    ax1.scatter(x[1], x[0], color='r')
+    # Plot point [-y, x]
+    ax1.scatter(x[1], -x[0], color='r')
     ax1.set_facecolor('k')
     # Print radius 
     ax1.text(0.5, 0.5, f'r = {np.round(r,3)}\nk = {np.round(curvature,3)}', transform=ax1.transAxes, color='k', ha='center')
@@ -81,9 +80,13 @@ def plot_vof(ax2, vof_df, vof_array, st_sz, Delta_vof):
         # Glue arrays in vof_df together
         for row in range(st_sz[1]):  # x
             if len(column_values) == 0:
-                column_values = vof_df.iloc[column, row]
+                # row_values = vof_df[row*st_sz[1]+column]
+                # row_values = vof_df.iloc[row, column]
+                column_values = vof_df.iloc[row, column]
             else:
-                column_values = np.concatenate((column_values, vof_df.iloc[column, row]), axis=1)
+                # row_values = np.concatenate((row_values, vof_df[row*st_sz[1]+column]), axis=1)
+                # row_values = np.concatenate((row_values, vof_df.iloc[row, column]), axis=1)
+                column_values = np.concatenate((column_values, vof_df.iloc[row, column]), axis=1)
         # Glue rows together
         if len(image) == 0:
             image = column_values
@@ -100,10 +103,10 @@ def plot_vof(ax2, vof_df, vof_array, st_sz, Delta_vof):
     ax2.grid(which='both')
     # Generate vof labels
     vs = vof_array.shape
-    for row in range(vs[1]):
-        for column in range(vs[0]):
+    for row in range(vs[0]):
+        for column in range(vs[1]):
             # Calculate position of text
-            txt_pt = [row*1/Delta_vof+(1/Delta_vof)/10, column*1/Delta_vof+(1/Delta_vof)/10]
+            txt_pt = [column*1/Delta_vof+(1/Delta_vof)/10, row*1/Delta_vof+(1/Delta_vof)/10]
             # Write vof value at that position
             ax2.text(txt_pt[0], txt_pt[1],
                  np.round(vof_array[column, row], 3),
