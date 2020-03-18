@@ -269,7 +269,7 @@ class Rotate(BaseEstimator, TransformerMixin):
         return [dataset[0], data, dataset[2]]
 
 
-class FindKappa(BaseEstimator, TransformerMixin):
+class CDS(BaseEstimator, TransformerMixin):
     def __init__(self, parameters):
         self.parameters = parameters
 
@@ -320,6 +320,121 @@ class FindKappa(BaseEstimator, TransformerMixin):
         print(f'\nGrad_x:\n{print_data_gradx}')
         print(f'\nGrad_y:\n{print_data_grady}')
         print(f'\nData:\n{print_data_grad}')
+        # '''
+        # Reshape to tensor if angle matrix is needed, otherwise just output vectors
+        if (data.shape != shape) & (self.parameters['angle']):
+            # Reshape transformed data to original shape
+            data = np.reshape(data, shape)
+
+        kappa = 1
+
+        return [dataset[0], dataset[1], kappa]
+
+
+class HF(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        # time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate data from labels
+        data = dataset[1].copy()
+        grad_x = dataset[2][0]
+        grad_y = dataset[3][0]
+        print(f'grad_x.shape:\n{grad_x.shape}')
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
+
+        # Get midpoint
+        i = int((st_sz[0]-1)/2)
+        j = int((st_sz[1]-1)/2)
+        
+        # Find stencils where gradient points more in y direction (g_y) or x direction (g_x)
+        g_y = np.nonzero((np.abs(grad_y) > np.abs(grad_x)) == True)
+        g_x = np.nonzero((np.abs(grad_y) > np.abs(grad_x)) == False)
+
+        # Initialize height function vectors
+        h1 = np.zeros((data.shape[0]))
+        h2 = np.zeros((data.shape[0]))
+        h3 = np.zeros((data.shape[0]))
+        # Hier läuft noch irgendwas schief
+        # Calculate height function values for stencils in y-direction
+        for a in np.arange(0, 2*i+1):
+            h1[g_y] = np.sum([h1[g_y], data[g_y, a, j-1, 0]], axis=0)
+            h2[g_y] = np.sum([h2[g_y], data[g_y, a, j, 0]], axis=0)
+            h3[g_y] = np.sum([h3[g_y], data[g_y, a, j+1, 0]], axis=0)
+        # Calculate height function values for stencils in x-direction
+        for b in np.arange(0, 2*j+1):
+            h1[g_x] = np.sum([h1[g_x], data[g_x, i-1, b, 0]], axis=0)
+            h2[g_x] = np.sum([h2[g_x], data[g_x, i, b, 0]], axis=0)
+            h3[g_x] = np.sum([h3[g_x], data[g_x, i+1, b, 0]], axis=0)
+
+        # Delta = 1/1000  # see data generation
+        Delta = 1
+
+        # Calculate derivatives
+        h_x = (h1-h3)/(2*Delta)
+        h_xx = (h3-2*h2+h1)/(Delta**2)
+        # h_x = (h1-h3)/(2)
+        # h_xx = (h3-2*h2+h1)
+
+        # Calculate kappa
+        kappa = np.round(
+            2/Delta*h_xx/((1+np.multiply(h_x, h_x))**(3/2))
+            , 3)
+
+        '''
+        labels = dataset[0][:10]
+        kappa_pr = kappa[:10]
+        h_x_pr = h_x[:10]
+        h_xx_pr = h_xx[:10]
+        h1_pr = h1[:10]
+        h2_pr = h2[:10]
+        h3_pr = h3[:10]
+        g_x_pr = g_x[:10]
+        g_y_pr = g_y[:10]
+
+        print(f'h_x_pr:\n{h_x_pr}')
+        print(f'h_xx_pr:\n{h_xx_pr}')
+        print(f'labels:\n{labels}')
+        print(f'kappa_pr:\n{kappa_pr}')
+        print(f'h1:\n{h1_pr}')
+        print(f'h2:\n{h2_pr}')
+        print(f'h3:\n{h3_pr}')
+        print(f'g_x:\n{g_x}')
+        print(f'g_y:\n{g_y}')
+        # '''
+
+        '''
+        # Test
+        ind = 4
+
+        # print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
+        # print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
+        print_data = data.transpose((0, 1, 3, 2))[ind]
+        print_h1 = h1[ind]
+        print_h2 = h2[ind]
+        print_h3 = h3[ind]
+        prt_grad_x = grad_x[ind]
+        prt_grad_y = grad_y[ind]
+        prt_kappa = kappa[ind]
+        # print(f'\nGrad_x:\n{print_data_gradx}')
+        # print(f'\nGrad_y:\n{print_data_grady}')
+        print(f'\nData:\n{print_data}')
+        print(f'h1:\n{print_h1}')
+        print(f'h2:\n{print_h2}')
+        print(f'h3:\n{print_h3}')
+        print(f'prt_grad_x:\n{prt_grad_x}')
+        print(f'prt_grad_y:\n{prt_grad_y}')
+        print(f'prt_kappa:\n{prt_kappa}')
         # '''
         # Reshape to tensor if angle matrix is needed, otherwise just output vectors
         if (data.shape != shape) & (self.parameters['angle']):

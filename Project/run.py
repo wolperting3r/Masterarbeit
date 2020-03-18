@@ -39,7 +39,7 @@ exe_ml(network=network, stencils=stencils, layers=layers, activation=activation)
 ''' Train '''
 epochs = [25]
 # stencils = [[3, 3]]
-stencils = [[5, 5]]
+stencils = [[7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]

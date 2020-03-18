@@ -5,7 +5,7 @@ import sys
 import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, FindKappa
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
@@ -79,16 +79,27 @@ def split_data(data, ratio):
 
 def process_data(dataset, parameters, reshape):
     '''
-    # Calculate kappa with traditional methods
+    # Calculate kappa with CDS
     # Create pipeline
     data_pipeline = Pipeline([
         ('transform', TransformData(parameters=parameters, reshape=reshape)),
-        ('findkappa', FindKappa(parameters=parameters)),
+        ('findkappacds', CDS(parameters=parameters)),
     ])
     # Execute pipeline
     [labels, features, angle] = data_pipeline.fit_transform(dataset)
     # '''
-    # '''
+
+    # Calculate kappa with HF
+    # Create pipeline
+    data_pipeline = Pipeline([
+        ('transform', TransformData(parameters=parameters, reshape=reshape)),
+        ('findgradient', FindGradient(parameters=parameters)),
+        ('findkappahf', HF(parameters=parameters)),
+    ])
+    # Execute pipeline
+    [labels, features, angle] = data_pipeline.fit_transform(dataset)
+
+    '''
     # Pre-Processing
     if parameters['rotate']:
         # Create pipeline

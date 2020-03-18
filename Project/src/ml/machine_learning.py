@@ -22,7 +22,7 @@ def learning(parameters, silent=False, plot=True):
     # print_data_grad = test_data[ind]
     print(f'\nGedreht:\n{print_data_grad}')
     # '''
-    # '''
+    '''
     # Make output = input to train autoencoder
     if parameters['network'] == 'autoencdec':
         train_labels = train_data
