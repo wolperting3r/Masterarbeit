@@ -12,17 +12,18 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def learning(parameters, silent=False, plot=True):
     # Get data (reshape if network is convolutional network)
-    [[train_labels, train_data, train_angle], [test_labels, test_data, test_angle]] = transform_data(
-        parameters,
-        reshape=(True if parameters['network'] == 'cvn' else False)
-    )
+    [[train_labels, train_data, train_angle, train_kappa],
+     [test_labels, test_data, test_angle, test_kappa]] = transform_data(
+         parameters,
+         reshape=(True if parameters['network'] == 'cvn' else False)
+     )  # kappa = 0 if parameters['hf'] == False
     '''
     ind = 0
     print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
     # print_data_grad = test_data[ind]
     print(f'\nGedreht:\n{print_data_grad}')
     # '''
-    '''
+    # '''
     # Make output = input to train autoencoder
     if parameters['network'] == 'autoencdec':
         train_labels = train_data
@@ -39,5 +40,5 @@ def learning(parameters, silent=False, plot=True):
         # Load model
         model = load_model(parameters)
         # Create validation plot
-        validate_model_plot(model, test_data, test_labels, parameters)
+        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa)
     # '''

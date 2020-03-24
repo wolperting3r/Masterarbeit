@@ -60,7 +60,7 @@ class FindGradient(BaseEstimator, TransformerMixin):
         else:
             mp = [int((data.shape[1]-1)/2), int((data.shape[2]-1)/2)]  # y, x
             # Calculate gradient x
-            for y in range(mp[0]-1, mp[0]+2): 
+            for y in range(mp[0]-1, mp[0]+2):
                 # Backward difference quotient
                 grad_x[:, y, mp[1]-1, 0] = np.array([
                     data[:, y, mp[1], 0] -
@@ -76,7 +76,7 @@ class FindGradient(BaseEstimator, TransformerMixin):
                     data[:, y, mp[1]+1, 0] -
                     data[:, y, mp[1], 0]
                 ])/1
-            for x in range(mp[1]-1, mp[1]+2): 
+            for x in range(mp[1]-1, mp[1]+2):
                 # Backward difference quotient
                 grad_y[:, mp[0]-1, x, 0] = np.array([
                     data[:, mp[0]-1, x, 0] -
@@ -346,7 +346,6 @@ class HF(BaseEstimator, TransformerMixin):
         data = dataset[1].copy()
         grad_x = dataset[2][0]
         grad_y = dataset[3][0]
-        print(f'grad_x.shape:\n{grad_x.shape}')
         # Get shape of data
         shape = data.shape
         # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
@@ -356,7 +355,7 @@ class HF(BaseEstimator, TransformerMixin):
         # Get midpoint
         i = int((st_sz[0]-1)/2)
         j = int((st_sz[1]-1)/2)
-        
+
         # Find stencils where gradient points more in y direction (g_y) or x direction (g_x)
         g_y = np.nonzero((np.abs(grad_y) > np.abs(grad_x)) == True)
         g_x = np.nonzero((np.abs(grad_y) > np.abs(grad_x)) == False)
@@ -441,6 +440,41 @@ class HF(BaseEstimator, TransformerMixin):
             # Reshape transformed data to original shape
             data = np.reshape(data, shape)
 
-        kappa = 1
+        return [dataset[0], dataset[1], np.array([kappa]).T]
 
-        return [dataset[0], dataset[1], kappa]
+
+class TwoLayers(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        # time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate data from labels
+        data = dataset[1].copy()
+        kappa = dataset[2]
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
+
+        # Get midpoint
+        i = int((st_sz[0]-1)/2)
+        j = int((st_sz[1]-1)/2)
+
+        kappa_array = np.zeros((data.shape))
+        kappa_array[:, i, j, 0] = kappa[:, 0]
+
+        data = np.concatenate((data, kappa_array), axis=3)
+
+        '''
+        ind = 0
+        print(f'pd_out:\n{output_array[ind, :, :, :]}')
+        # '''
+
+        return [dataset[0], data]

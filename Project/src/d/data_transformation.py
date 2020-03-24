@@ -5,7 +5,7 @@ import sys
 import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF, TwoLayers
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
@@ -88,18 +88,20 @@ def process_data(dataset, parameters, reshape):
     # Execute pipeline
     [labels, features, angle] = data_pipeline.fit_transform(dataset)
     # '''
+    if parameters['hf']:
+        # Calculate kappa with HF
+        # Create pipeline
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),
+            ('findgradient', FindGradient(parameters=parameters)),
+            ('findkappahf', HF(parameters=parameters)),
+        ])
+        # Execute pipeline
+        [labels, features, kappa] = data_pipeline.fit_transform(dataset)
+    else:
+        kappa = 0
 
-    # Calculate kappa with HF
-    # Create pipeline
-    data_pipeline = Pipeline([
-        ('transform', TransformData(parameters=parameters, reshape=reshape)),
-        ('findgradient', FindGradient(parameters=parameters)),
-        ('findkappahf', HF(parameters=parameters)),
-    ])
-    # Execute pipeline
-    [labels, features, angle] = data_pipeline.fit_transform(dataset)
-
-    '''
+    # '''
     # Pre-Processing
     if parameters['rotate']:
         # Create pipeline
@@ -137,7 +139,19 @@ def process_data(dataset, parameters, reshape):
         # Stack features and angles
         features = np.hstack((features, angle))
 
-    return [labels, features, angle]
+    if parameters['hf_correction']:
+        if parameters['network'] == 'cvn':
+            # Write kappa into second layer on 3rd axis
+            data_pipeline = Pipeline([
+                ('twolayers', TwoLayers(parameters=parameters)),
+            ])
+            [labels, features] = data_pipeline.fit_transform([labels, features, kappa])
+        else:
+            # Stack features and height function
+            features = np.concatenate((features, kappa), axis=1)
+
+    return [labels, features, angle, kappa]
+
 
 
 def transform_data(parameters, reshape=False):
@@ -149,11 +163,13 @@ def transform_data(parameters, reshape=False):
     test_set, train_set = split_data(data, 0.2)
 
     # Pre-Processing
-    test_labels, test_data, test_angle = process_data(test_set, parameters, reshape)
-    train_labels, train_data, train_angle = process_data(train_set, parameters, reshape)
+    test_labels, test_data, test_angle, test_kappa = process_data(test_set, parameters, reshape)
+    train_labels, train_data, train_angle, train_kappa = process_data(train_set, parameters, reshape)
 
     filestring = parameters['filename']
     print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
+
+    return [[train_labels, train_data, train_angle, train_kappa], [test_labels, test_data, test_angle, test_kappa]]
 
     '''
     # Test
@@ -164,4 +180,3 @@ def transform_data(parameters, reshape=False):
     print(f'\nGedreht:\n{print_data_grad}')
     # '''
 
-    return [[train_labels, train_data, train_angle], [test_labels, test_data, test_angle]]

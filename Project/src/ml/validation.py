@@ -25,7 +25,7 @@ def validate_model_loss(model, train_data, train_labels, test_data, test_labels,
         # logfile.write('\n')
 
 
-def validate_model_plot(model, test_data, test_labels, parameters):
+def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=False):
     filename = parameters['filename']
     print(f'Plotting {filename}')
     # Get predictions for test data
@@ -35,11 +35,14 @@ def validate_model_plot(model, test_data, test_labels, parameters):
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     # Create scatterplot test_predictions vs test_labels
-    ax.scatter(test_labels, test_predictions, alpha=0.05)
+    if parameters['hf']:
+        plt.scatter(test_labels, test_kappa, alpha=0.05, color='r')
+    plt.scatter(test_labels, test_predictions, alpha=0.05, color='b')
     ax.set_xlabel('True Values [MPG]')
     ax.set_ylabel('Predictions [MPG]')
     # lims = [min(test_labels), max(test_labels)]
-    lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-4/3-0.2, 4/3+0.2])
+    # lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-4/3-0.2, 4/3+0.2])
+    lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-0.4, 0.4])
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.plot(lims, lims)

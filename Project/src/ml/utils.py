@@ -16,6 +16,11 @@ def param_filename(parameters):
             filename_string = filename_string + '_' + ('rot' if value else 'nrt')
         elif key == 'smear':
             filename_string = filename_string + '_' + ('smr' if value else 'nsm')
+        elif key == 'hf':
+            # filename_string = filename_string + '_' + ('hef' if value else 'nhf')
+            filename_string = filename_string
+        elif key == 'hf_correction':
+            filename_string = filename_string + '_' + ('hfc' if value else 'nhc')
         else:
             filename_string = filename_string + '_' + str(value)
     # filename_string = filename_string + '_' + '_flat_e'

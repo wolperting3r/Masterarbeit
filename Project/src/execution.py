@@ -6,51 +6,63 @@ from src.ml.utils import param_filename
 # Suppress tensorflow logging
 import logging
 import os
-import itertools
-import multiprocessing
-import threading
+from itertools import product as itpd
+from multiprocessing import Process
 
 # import threading
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
 logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 
-def gendat(st_sz, equal_kappa=True, neg=False, N_values=1, silent=True, ellipse=False, smearing=False):  # 1e6
-    print(f'Generating data:\nEllipse:\t{ellipse}\nStencil:\t{st_sz}\nKappa:\t\t{equal_kappa}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
-    generate_data(N_values=N_values, st_sz=st_sz, equal_kappa=equal_kappa, neg=neg, silent=False, ellipse=ellipse, smearing=smearing)
+def ml(
+    plot,
+    network,
+    stencil,
+    layer,
+    activation,
+    epochs=25,
+    learning_rate=1e-3,
+    neg=False,
+    angle=False,
+    rot=False,
+    data=['circle'],
+    smearing=False,
+    hf=False,
+    hf_correction=False,
+):
 
+    batch_size = 128
+    equal_kappa = True
 
-def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_rate=1e-3, equal_kappa=True, neg=False, angle=False, rot=False, data=['circle'], smearing=False):
     # Parameters
-    parameters = {'network': network,       # Network type
-                  'epochs': epochs,         # Number of epochs
-                  'layers': layer,  # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
-                  'stencil_size': stencil,  # Stencil size [x, y]
-                  'equal_kappa': equal_kappa, # P(kappa) = const. or P(r) = const.
-                  'learning_rate': learning_rate,
-                  'batch_size': batch_size, # Batch size
-                  'activation': act,        # Activation function
-                  'negative': neg,          # Negative values too or only positive
-                  'angle': angle,           # Use the angles of the interface too
-                  'rotate': rot,          # Rotate the data before learning
-                  'data': data,             # 'ellipse', 'circle', 'both'
-                  'smear': smearing,        # Use smeared data
-                 }
+    parameters = {
+        'network': network,              # Network type
+        'epochs': epochs,                # Number of epochs
+        'layers': layer,                 # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
+        'stencil_size': stencil,         # Stencil size [x, y]
+        'equal_kappa': equal_kappa,      # P(kappa) = const. or P(r) = const.
+        'learning_rate': learning_rate,  # Learning Rate
+        'batch_size': batch_size,        # Batch size
+        'activation': activation,        # Activation function
+        'negative': neg,                 # Negative values too or only positive
+        'angle': angle,                  # Use the angles of the interface too
+        'rotate': rot,                   # Rotate the data before learning
+        'data': data,                    # 'ellipse', 'circle', 'both'
+        'smear': smearing,               # Use smeared data
+        'hf': hf,                        # Use height function
+        'hf_correction': hf_correction,  # Use height function as input for NN
+    }
+
+    # print(f'parameters:\n{parameters}')
     # Generate filename string
     parameters['filename'] = param_filename(parameters)
-
-    '''
-    # Print start string
-    print('\nParameters:')
-    for key, value in parameters.items():
-        print(str(key) + ': ' + str(value))
-    '''
 
     # Execute learning
     if parameters['network'] != 'auto':
         learning(parameters, silent=True, plot=plot)
+
     elif parameters['network'] == 'auto':
-        if plot == False:
+        if not plot:
             parameters['network'] = 'autoencdec'
             parameters['epochs'] = int(parameters['epochs']*2)
             learning(parameters, silent=True, plot=plot)
@@ -58,50 +70,41 @@ def ml(network, stencil, layer, act, plot, epochs=25, batch_size=128, learning_r
         parameters['network'] = 'autoenc'
         learning(parameters, silent=True, plot=plot)
 
-    ''' 
-    # Print finished string
-    print('\nFinished:')
-    for key, value in parameters.items():
-        print(str(key) + ': ' + str(value))
-    print('\n')
-    '''
-
     parameters = None
 
-def exe_dg(stencils, ek, neg, N_values, silent, ellipse, smearing):
-    # Execute data generation
-    job_list = list(itertools.product(*(stencils, ek, neg, N_values, silent, ellipse, smearing)))
-    if len(job_list)>1:
+
+def exe_dg(**kwargs):
+    print(f'kwargs:\n{kwargs}')
+    # Sort input keyword arguments
+    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'ellipse', 'smearing']
+    kwargs = {k: kwargs[k] for k in order}
+    # Create job list according to input arguments
+    job_list = list(itpd(*kwargs.values()))
+    if len(job_list) > 1:
+        # Execute job list with multithreading
         jobs = []
-        for job in job_list:
-            process = multiprocessing.Process(target=gendat, args=job)
-            jobs.append(process)
-        for j in jobs:
-            j.start()
-        for j in jobs:
-            j.join()
+        [jobs.append(Process(target=gendat, args=job)) for job in job_list]
+        [j.start() for j in jobs]
+        [j.join() for j in jobs]
     else:
-        gendat(job_list[0][0], job_list[0][1], job_list[0][2], job_list[0][3], job_list[0][4], job_list[0][5], job_list[0][6])
+        # Execute job
+        generate_data(**dict(zip(kwargs.keys(), job_list[0])))
 
 
-def exe_ml(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False, rot=False, data=['circle'], smearing=False):
+def exe_ml(**kwargs):
+    # Sort input keyword arguments
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction']
+    kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
-    plot = [False]
-    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle, rot, data, smearing)))
-    print(f'job_list:\n{job_list}')
-
-    jobs = []
-    for job in job_list:
-        process = multiprocessing.Process(target=ml, args=job)
-        jobs.append(process)
-    for j in jobs:
-        j.start()
-    for j in jobs:
-        j.join()
-
-def exe_ml_plot(network, stencils, layers, activation=['relu'], epochs=[25], batch_size=[128], learning_rate=[1e-3], equal_kappa=[True], neg=False, angle=False, rot=False, data=['circle'], smearing=False):
-    # Plot
-    plot = [True]
-    job_list = list(itertools.product(*(network, stencils, layers, activation, plot, epochs, batch_size, learning_rate, equal_kappa, neg, angle, rot, data, smearing)))
-    for job in job_list:
-        ml(job[0], job[1], job[2], job[3], job[4], job[5], job[6], job[7], job[8], job[9], job[10], job[11], job[12], job[13])
+    plot = kwargs.get('plot')
+    if not plot[0]:
+        # Execute training job list with multithreading
+        jobs = []
+        for job in list(itpd(*kwargs.values())):
+            jobs.append(Process(target=ml, args=job))
+        [j.start() for j in jobs]
+        [j.join() for j in jobs]
+    elif plot[0]:
+        # Execute validation job list with multithreading
+        for job in list(itpd(*kwargs.values())):
+            ml(**dict(zip(kwargs.keys(), job)))

@@ -15,7 +15,7 @@ def train_model(model, train_data, train_labels, parameters, silent):
     # Early stopping callback
     early_stopping_callback = keras.callbacks.EarlyStopping(monitor='loss',
                                                             min_delta=10e-8,
-                                                            patience=50,
+                                                            patience=10,
                                                             verbose=0,
                                                             mode='auto',
                                                             baseline=None)

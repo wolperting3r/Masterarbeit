@@ -54,7 +54,15 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False, smearing=False):
+def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
+    print(f'N_values:\n{N_values}')
+    print(f'stencils:\n{stencils}')
+    print(f'ek:\n{ek}')
+    print(f'neg:\n{neg}')
+    print(f'silent:\n{silent}')
+    print(f'ellipse:\n{ellipse}')
+    print(f'smearing:\n{smearing}')
+    print(f'Generating data:\nEllipse:\t{ellipse}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
     # Script
@@ -74,19 +82,19 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
     L = 1
 
     # Geometry
-    R_min = 7/2*Delta
+    R_min = 13/2*Delta
     R_max = 0.5
 
     kappa_min = L*Delta*2/R_max
     kappa_max = L*Delta*2/R_min
-    equal_kappa = equal_kappa
+    equal_kappa = ek
 
-    e_min = 1
-    e_maxmin = 1.5
+    e_min = 1.0000001
+    e_maxmin = 1.2
     e_maxmax = 5
 
     # Stencil
-    st_sz = st_sz   # y, x
+    st_sz = stencils   # y, x
     cr_sz = [3, 3]  # y, x
     if smearing:
         # Increase stencil size by two until smearing is applied
@@ -366,8 +374,9 @@ def generate_data(N_values, st_sz, equal_kappa, neg, silent=False, ellipse=False
     if not silent:
         pbar.finish()
     if not visualize:
-        # Shrink st_sz to create right filename
-        st_sz = np.add(st_sz, [-2, -2])
+        if smearing:
+            # Shrink st_sz to create right filename
+            st_sz = np.add(st_sz, [-2, -2])
         ''' Export data to feather file '''
         # Convert output list to pandas dataframe
         output_df = pd.DataFrame(output_list)

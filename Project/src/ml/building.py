@@ -19,7 +19,12 @@ def create_model(parameters, shape):
     # Convolutional network
     elif parameters['network'] == 'cvn':
         model = tf.keras.Sequential()
-        model.add(layers.InputLayer(input_shape=(shape[1], shape[2], 1)))
+        if not parameters['hf_correction']:
+            # Add one input layer
+            model.add(layers.InputLayer(input_shape=(shape[1], shape[2], 1)))
+        else:
+            # Add two input layers (one additional for curvature value calculated with height function)
+            model.add(layers.InputLayer(input_shape=(shape[1], shape[2], 2)))
         # Add convolutional layers as defined in parameters['layers']
         for l in parameters['layers']:
             model.add(layers.Conv2D(l, (2, 2), activation=parameters['activation']))
