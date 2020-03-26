@@ -29,6 +29,7 @@ def ml(
     smearing=False,
     hf=False,
     hf_correction=False,
+    dropout=0,
 ):
 
     batch_size = 128
@@ -51,6 +52,7 @@ def ml(
         'smear': smearing,               # Use smeared data
         'hf': hf,                        # Use height function
         'hf_correction': hf_correction,  # Use height function as input for NN
+        'dropout': dropout               # dropout fraction
     }
 
     # print(f'parameters:\n{parameters}')
@@ -83,7 +85,7 @@ def exe_dg(**kwargs):
     if len(job_list) > 1:
         # Execute job list with multithreading
         jobs = []
-        [jobs.append(Process(target=gendat, args=job)) for job in job_list]
+        [jobs.append(Process(target=generate_data, args=job)) for job in job_list]
         [j.start() for j in jobs]
         [j.join() for j in jobs]
     else:
@@ -93,7 +95,7 @@ def exe_dg(**kwargs):
 
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction']
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout']
     kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
     plot = kwargs.get('plot')

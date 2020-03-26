@@ -14,6 +14,8 @@ def create_model(parameters, shape):
         model.add(layers.InputLayer(input_shape=(shape[1],)))
         for l in parameters['layers']:
             model.add(layers.Dense(l, activation=parameters['activation']))
+            if parameters['dropout'] > 0:
+                model.add(layers.Dropout(parameters['dropout']))
         model.add(layers.Dense(1, activation='linear'))
 
     # Convolutional network
@@ -28,6 +30,8 @@ def create_model(parameters, shape):
         # Add convolutional layers as defined in parameters['layers']
         for l in parameters['layers']:
             model.add(layers.Conv2D(l, (2, 2), activation=parameters['activation']))
+            if parameters['dropout'] > 0:
+                model.add(layers.Dropout(parameters['dropout']))
         # Add flatten layer and final layers
         model.add(layers.Flatten())
         model.add(layers.Dense(100, activation=parameters['activation']))

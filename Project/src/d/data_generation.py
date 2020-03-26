@@ -55,13 +55,15 @@ def cross(mid_pt, max_pt, rev_y=False):
 
 
 def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
-    print(f'N_values:\n{N_values}')
-    print(f'stencils:\n{stencils}')
-    print(f'ek:\n{ek}')
-    print(f'neg:\n{neg}')
-    print(f'silent:\n{silent}')
-    print(f'ellipse:\n{ellipse}')
-    print(f'smearing:\n{smearing}')
+    '''
+    print(f'N_values:\t{N_values}')
+    print(f'stencils:\t{stencils}')
+    print(f'ek:\t{ek}')
+    print(f'neg:\t{neg}')
+    print(f'silent:\t{silent}')
+    print(f'ellipse:\t{ellipse}')
+    print(f'smearing:\t{smearing}')
+    # '''
     print(f'Generating data:\nEllipse:\t{ellipse}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
@@ -81,24 +83,27 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
     Delta_vof = 1/32
     L = 1
 
-    # Geometry
-    R_min = 13/2*Delta
-    R_max = 0.5
-
-    kappa_min = L*Delta*2/R_max
-    kappa_max = L*Delta*2/R_min
-    equal_kappa = ek
-
-    e_min = 1.0000001
-    e_maxmin = 1.2
-    e_maxmax = 5
-
     # Stencil
     st_sz = stencils   # y, x
     cr_sz = [3, 3]  # y, x
     if smearing:
         # Increase stencil size by two until smearing is applied
         st_sz = np.add(st_sz, [2, 2])
+
+    # Geometry
+    R_min = max(st_sz)/2*Delta
+    R_max = 0.5
+
+    # kappa_min = L*Delta*2/R_max
+    kappa_min = 1e-5
+    kappa_max = L*Delta*2/R_min
+    equal_kappa = ek
+
+    e_min = 1.0000001
+    e_max = 10
+    # e_maxmin = 5
+    # e_maxmax = 10
+
 
     # Calculate midpoints of stencil and cross
     st_mid = [int((st_sz[0]-1)/2), int((st_sz[1]-1)/2)]
@@ -126,11 +131,26 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
             # Get random side ratio
-            e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
+            # e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
             # e_max = 2
             e = e_min+u()*(e_max-e_min)
             # Calculate ellipse radius
-            r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
+            # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
+            # '''
+            r_min = max([2*L*Delta/(-curvature*e), (max(st_sz)*Delta*e**2)/2])
+            r_max = 2*e**2*L*Delta/(-curvature)
+            r = r_min + u()**1* (r_max - r_min)
+            '''
+            r_min_b = 2*L*Delta/(-curvature*e)
+            print(f'curvature:\t{curvature}')
+            print(f'e:\t\t{e}')
+            print(f'\nr_max:\t\t{np.round(r_max, 5)}')
+            print(f'r_min:\t\t{np.round(r_min, 5)}')
+            print(f'r_min_b:\t{np.round(r_min_b, 5)}')
+            print(f'r:\t\t{np.round(r, 5)}')
+            # '''
+            # '''
+            # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
         else:
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
@@ -145,6 +165,8 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
         if ellipse:
             # Get x and y coordinates of point on ellipse with the given curvature
             # (and flip x and y coordinates randomly with pm)
+            nenner = ((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2
+            # print(f'nenner:\n{nenner}')
             pt_x = pm()*np.sqrt((((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2)/(e**4-e**2))
             pt_y = pm()*np.sqrt(r**2-e**2*(pt_x)**2)
 
@@ -354,6 +376,10 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         # Invalid values are created when the interface is flat and exactly between two cells
         if (vof_array[st_mid_tmp[0], st_mid_tmp[1]] > 0) & (vof_array[st_mid_tmp[0], st_mid_tmp[1]] < 1):
+            '''
+                e = 100
+            if True:
+            # '''
             if neg:
                 # Invert values by 50% chance
                 if u() > 0.5:
@@ -371,6 +397,9 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
                 output_array.insert(0, pt_x)
             # Append list to output list
             output_list.append(output_array)
+        else:
+            if debug:
+                print(f'thrown away')
     if not silent:
         pbar.finish()
     if not visualize:
@@ -388,7 +417,7 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
             output_df = output_df.rename(columns={'0':'Curvature'})
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+('_smr' if smearing else '_nsm')+'.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+('_smr' if smearing else '_nsm')+'_opt.feather')
         print(f'File:\n{file_name}')
         # file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'_flat_e'+'.feather')
         output_df.reset_index(drop=True).to_feather(file_name)
