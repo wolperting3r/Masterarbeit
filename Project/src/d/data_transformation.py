@@ -67,14 +67,31 @@ def split_data(data, ratio):
     np.random.seed(42)
     # Generate random indices
     indices = np.random.permutation(len(data))
-    # Calculate how many entries the test data will have
-    test_size = int(len(data)*ratio)
-    # Get the test indices from the randomly generated indices
-    test_indices = indices[:test_size]
-    # Get the train indices from the randomly generated indices
-    train_indices = indices[test_size:]
-    # Return the data corresponding to the indices
-    return data.iloc[test_indices], data.iloc[train_indices]
+
+    if isinstance(ratio, list):
+        # [test_ratio, val_ratio, train_ratio] as list
+        # Calculate how many entries the test data will have
+        test_size = int(len(data)*ratio[1])
+        val_size = int(len(data)*ratio[2])
+    
+        # Get the test indices from the randomly generated indices
+        test_indices = indices[:test_size]
+        # Get the validation indices from the randomly generated indices
+        val_indices = indices[test_size:val_size+test_size]
+        # Get the train indices from the randomly generated indices
+        train_indices = indices[val_size+test_size:]
+        # Return the data corresponding to the indices
+        return data.iloc[test_indices], data.iloc[val_indices], data.iloc[train_indices]
+    else:
+        # test_ratio as float
+        # Calculate how many entries the test data will have
+        test_size = int(len(data)*ratio)
+        # Get the test indices from the randomly generated indices
+        test_indices = indices[:test_size]
+        # Get the train indices from the randomly generated indices
+        train_indices = indices[test_size:]
+        # Return the data corresponding to the indices
+        return data.iloc[test_indices], data.iloc[train_indices]
 
 
 def process_data(dataset, parameters, reshape):
@@ -160,16 +177,21 @@ def transform_data(parameters, reshape=False):
     data = get_data(parameters)
 
     # Split data
-    test_set, train_set = split_data(data, 0.2)
+    test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
 
     # Pre-Processing
     test_labels, test_data, test_angle, test_kappa = process_data(test_set, parameters, reshape)
     train_labels, train_data, train_angle, train_kappa = process_data(train_set, parameters, reshape)
+    val_labels, val_data, val_angle, val_kappa = process_data(val_set, parameters, reshape)
 
     filestring = parameters['filename']
     print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
 
-    return [[train_labels, train_data, train_angle, train_kappa], [test_labels, test_data, test_angle, test_kappa]]
+    return [
+        [train_labels, train_data, train_angle, train_kappa],
+        [test_labels, test_data, test_angle, test_kappa],
+        [val_labels, val_data, val_angle, val_kappa],
+    ]
 
     '''
     # Test

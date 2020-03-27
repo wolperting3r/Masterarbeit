@@ -13,7 +13,8 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 def learning(parameters, silent=False, plot=True):
     # Get data (reshape if network is convolutional network)
     [[train_labels, train_data, train_angle, train_kappa],
-     [test_labels, test_data, test_angle, test_kappa]] = transform_data(
+     [test_labels, test_data, test_angle, test_kappa],
+     [val_labels, val_data, val_angle, val_kappa]] = transform_data(
          parameters,
          reshape=(True if parameters['network'] == 'cvn' else False)
      )  # kappa = 0 if parameters['hf'] == False
@@ -33,7 +34,7 @@ def learning(parameters, silent=False, plot=True):
         # Build model
         model = build_model(parameters, train_data.shape)
         # Train model
-        model = train_model(model, train_data, train_labels, parameters, silent)
+        model = train_model(model, train_data, train_labels, val_data, val_labels, parameters, silent)
         # Validate model
         validate_model_loss(model, train_data, train_labels, test_data, test_labels, parameters)
     else:

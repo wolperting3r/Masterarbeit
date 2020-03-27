@@ -5,7 +5,6 @@ from sklearn.base import (
     TransformerMixin     # for fit_transform
 )
 
-
 class TransformData(BaseEstimator, TransformerMixin):
     def __init__(self, parameters, reshape=False):
         self.parameters = parameters
@@ -16,6 +15,7 @@ class TransformData(BaseEstimator, TransformerMixin):
 
     def transform(self, dataset):
         # Split the training and test data into labels (first column) and data
+        # dataset = dataset[dataset.iloc[:, 0] > 0]  # Pos values only
         labels = np.round(dataset.iloc[:, 0].to_numpy(), 3)
         data = np.round(dataset.iloc[:, 1:].to_numpy(), 3)
 

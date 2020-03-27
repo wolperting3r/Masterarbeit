@@ -1,18 +1,18 @@
-from src.execution import exe_ml
-# from src.execution import exe_dg
+# from src.execution import exe_ml
+from src.execution import exe_dg
 
 ''' Data Generation '''
-'''
+# '''
 # stencils = [[13, 13]]
-# stencils = [[7, 7]]
-stencils = [[5, 5], [3, 3], [7, 7], [13, 13]]
+stencils = [[7, 7]]
+# stencils = [[13, 13]]
 ek = [True]
 neg = [True]
-N_values = [1e6]
+N_values = [1]
 # N_values = [100]
-silent = [False]
-ellipse = [True, False]
-smearing = [False, True]
+silent = [True]
+ellipse = [True]
+smearing = [False]
 exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, ellipse=ellipse, smearing=smearing)
 # '''
 
@@ -20,10 +20,10 @@ exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, elli
 ''' Machine Learning '''
 
 ''' Train '''
-epochs = [100]
+epochs = [1000]
 # stencils = [[7, 7], [3, 3], [5, 5]]
 stencil = [[7, 7]]
-activation = ['tanh']
+activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [False]
@@ -32,7 +32,7 @@ data = ['ellipse']
 smearing = [True]
 hf = [True]
 hf_correction = [False]
-dropout = [0.2, 0.3]
+dropout = [0]
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
     # CVN
@@ -53,13 +53,13 @@ for i in range(0, 2):
     network = ['mlp']
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
-    layer = [[500, 200, 100], [100, 80, 50], [100, 80]]
-    # '''
+    layer = [[100, 80]]
+    '''
     if i == 0:
         plot = [False]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
     # '''
-    # '''
+    '''
     if i == 1:
         plot = [True]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)

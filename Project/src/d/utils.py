@@ -69,10 +69,38 @@ def plot_ellipse(ax1, r, e, x, x_c, rot, curvature):
     ax1.set_aspect('equal')
 
 
+def plot_sinus(ax1, f, a, x, x_c, rot, curvature):
+    ''' Plot circle with chosen point '''
+    # Number of values for circle edge
+    n_val = 1000
+    # Generate evenly distributed values around circle
+    values = np.arange(0, n_val+1)/n_val
+    x_plt = 10*values/f
+    # Get x and y values of circle edge
+    # !! x_c = [-x_c_y, x_c_x]
+    [x_plt, y_plt] = [x_plt, a*np.sin(f*np.pi*(x_plt))]
+    x_plt_tmp = x_plt.copy()
+    y_plt_tmp = y_plt.copy()
+    x_plt = x_plt_tmp*np.cos(rot) - y_plt_tmp*np.sin(rot)
+    y_plt = x_plt_tmp*np.sin(rot) + y_plt_tmp*np.cos(rot)
+    x_plt = x_plt + x_c[1]
+    y_plt = y_plt + x_c[0]
+    # Plot sinus
+    ax1.plot(x_plt, y_plt, color='w')
+    # Plot point [-y, x]
+    ax1.scatter(x[1], x[0], color='r')
+    ax1.set_facecolor('k')
+    # Print radius 
+    ax1.text(0.05, 0.05, f'kappa = {np.round(curvature,3)}', transform=ax1.transAxes, color='w')
+    # Make axis equally long
+    # ax1.set_xlim([0-0.1, 2*np.pi+0.1])
+    # ax1.set_ylim([-a-0.1, a+0.1])
+    ax1.set_aspect('equal')
+    # plt.show()
+
 
 def plot_vof(ax2, vof_df, vof_array, st_sz, Delta_vof):
     ''' Plot stencil with geometry and vof values '''
-    # print(f'vof_df:\n{vof_df}')
     # Initialize image array
     image = np.array([])
     for column in range(st_sz[0]):  # y
