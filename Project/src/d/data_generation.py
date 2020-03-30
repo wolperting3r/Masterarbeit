@@ -57,17 +57,8 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
-    '''
-    print(f'N_values:\t{N_values}')
-    print(f'stencils:\t{stencils}')
-    print(f'ek:\t{ek}')
-    print(f'neg:\t{neg}')
-    print(f'silent:\t{silent}')
-    print(f'ellipse:\t{ellipse}')
-    print(f'smearing:\t{smearing}')
-    # '''
-    print(f'Generating data:\nEllipse:\t{ellipse}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
+def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
+    print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
     # Script
@@ -76,7 +67,7 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
     debug = False
 
     # Initialize progress bar
-    widgets = ['Data generation: ', Percentage(), ' ', Bar(marker='=',left='[',right=']'), ' ', ETA(), '\n']
+    widgets = ['Data generation: ', Percentage(), ' ', Bar(marker='=',left='[',right=']'), ' ', ETA(), ('\n' if visualize else '')]
     if not silent:
         pbar = ProgressBar(widgets=widgets, maxval=N_values)
         pbar.start()
@@ -101,17 +92,14 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
     kappa_min = 1e-5
     kappa_max = L*Delta*2/R_min
     equal_kappa = ek
-
+    
+    # Limits of side ratio of ellipse
     e_min = 1.0000001
     e_max = 10
-    # e_maxmin = 5
-    # e_maxmax = 10
-
-    a_max = 10
-    a_min = 1
-
-    f_min = 1
-
+    
+    # Limits of sinus frequency
+    f_min = 30
+    f_max = 150
 
     # Calculate midpoints of stencil and cross
     st_mid = [int((st_sz[0]-1)/2), int((st_sz[1]-1)/2)]
@@ -130,58 +118,37 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
     # Initialize list for output vectors
     output_list = []
      
-    ellipse = 'sinus'
-
     for n in range(N_values):
         if not silent:
             # Update progress bar
             pbar.update(n)
         ''' Get random curvature and radius '''
-        if ellipse == 'sinus':
+        if geometry == 'sinus':
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
             # Get random frequency
-            # Je größer f ist, desto mehr von der Sinuskurve wird sichtbar
-            f_min = 30
-            f_max = 150
-            f = f_min + u()*(f_max - f_min)
+            f = f_min + u()*(f_max - f_min)  # bigger f -> more of sinus 'wobble' visible
             # Get random amplitude
-            # A limit so the curvature can be found on the curve
-            a_limit = -curvature/(2*L*Delta*f**2*np.pi**2)
+            a_limit = -curvature/(2*L*Delta*f**2*np.pi**2)  # min a so curvature can be found on curve
             a_min = a_limit
             a_max = 2*a_limit
             a = a_min + u()*(a_max - a_min)
 
-
-            cur_max = -2*L*Delta*a*f**2*np.pi**2
-            print(f'cur_max:\t{cur_max}')
-            print(f'f_max:\t\t{f_max}')
-            print(f'f:\t\t{f}')
-            print(f'a:\t\t{a}')
-        elif ellipse == 'ellipse':
+        elif geometry == 'ellipse':
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
             # Get random side ratio
             # e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
             # e_max = 2
             e = e_min+u()*(e_max-e_min)
-            # Calculate ellipse radius
+            # Calculate geometry radius
             # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
             # '''
             r_min = max([2*L*Delta/(-curvature*e), (max(st_sz)*Delta*e**2)/2])
             r_max = 2*e**2*L*Delta/(-curvature)
             r = r_min + u()**1* (r_max - r_min)
-            '''
-            r_min_b = 2*L*Delta/(-curvature*e)
-            print(f'curvature:\t{curvature}')
-            print(f'e:\t\t{e}')
-            print(f'\nr_max:\t\t{np.round(r_max, 5)}')
-            print(f'r_min:\t\t{np.round(r_min, 5)}')
-            print(f'r_min_b:\t{np.round(r_min_b, 5)}')
-            print(f'r:\t\t{np.round(r, 5)}')
-            # '''
             # '''
             # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
-        else:
+        elif geometry == 'circle':
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
             # Calculate radius
@@ -192,7 +159,7 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
         x_c = np.array([0, 0])
 
         ''' Get random point on geometry '''
-        if ellipse == 'sinus':
+        if geometry == 'sinus':
             '''
             # Get random x 
             pt_x = 0 + u()*2/f
@@ -201,18 +168,17 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
             # Calculate curvature 
             curvature = -2*L*Delta*(f**2*np.pi**2*pt_y)/(((a*f*np.pi)**2*(np.cos(f*np.pi*pt_x))**2+1)**(3/2))
             # '''
-
-
-            func = lambda x_sol: - curvature -2*L*Delta*(f**2*np.pi**2*a*np.sin(f*np.pi*x_sol))/(((a*f*np.pi)**2*(np.cos(f*np.pi*x_sol))**2+1)**(3/2))
+            # > Find approximation of x where the sine wave has the given curvature, then find the exact y value and the exact curvature
+            # Solve equation for x
+            func = lambda x_sol: curvature -2*L*Delta*(f**2*np.pi**2*a*np.sin(f*np.pi*x_sol))/(((a*f*np.pi)**2*(np.cos(f*np.pi*x_sol))**2+1)**(3/2))
+            # With initial guess
             x_initial_guess = np.pi/(f*2)
-            pt_x = fsolve(func, x_initial_guess)[0]
+            # Approximate x
+            pt_x = fsolve(func, x_initial_guess, xtol=1e-4)[0]
+            # Calculate corresponding y
             pt_y = a*np.sin(f*np.pi*pt_x)
-            print(f'pt_x:\t\t{pt_x}')
-            print(f'pt_y:\t\t{pt_y}')
-            print(f'curvature:\t{curvature}')
-            # Calculate actual curvature
-            curvature = -2*L*Delta*(f**2*np.pi**2*pt_y)/(((a*f*np.pi)**2*(np.cos(f*np.pi*pt_x))**2+1)**(3/2))
-            print(f'curvature:\t{curvature}')
+            # Calculate actual curvature of x/y
+            curvature = 2*L*Delta*(f**2*np.pi**2*pt_y)/(((a*f*np.pi)**2*(np.cos(f*np.pi*pt_x))**2+1)**(3/2))
 
             # Rotate with random angle
             rot = u()*2*np.pi
@@ -223,19 +189,11 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
             # Make x array and add random shift of origin x_c
             x = np.array([pt_y, pt_x])
             x = x+x_c
-        elif ellipse == 'ellipse':
-            # Get x and y coordinates of point on ellipse with the given curvature
+        elif geometry == 'ellipse':
+            # Get x and y coordinates of point on geometry with the given curvature
             # (and flip x and y coordinates randomly with pm)
-            # nenner = ((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2
-            # print(f'nenner:\n{nenner}')
             pt_x = pm()*np.sqrt((((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2)/(e**4-e**2))
             pt_y = pm()*np.sqrt(r**2-e**2*(pt_x)**2)
-            # y_test = np.sqrt(r**2 - e**2*pt_x**2)
-            # x_test = np.sqrt(np.abs((r**2-pt_y**2)/(e**2)))
-            # print(f'pt_y:\t{pt_y}')
-            # print(f'y_test:\t{y_test}')
-            # print(f'pt_x:\t{pt_x}')
-            # print(f'x_test:\t{x_test}')
 
             # Rotate with random angle
             rot = u()*2*np.pi
@@ -262,13 +220,13 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
         if visualize:
             # Initialize plot
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5), dpi=150)
-            if ellipse == 'sinus':
-                # Plot ellipse
+            if geometry == 'sinus':
+                # Plot sinus
                 plot_sinus(ax1, f, a, x, x_c, rot, curvature)
-            elif ellipse == 'ellipse':
+            elif geometry == 'ellipse':
                 # Plot ellipse
                 plot_ellipse(ax1, r, e, x, x_c, rot, curvature)
-            else:
+            elif geometry == 'circle':
                 # Plot circle
                 plot_circle(ax1, r, x_c, x)
 
@@ -293,17 +251,31 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
                 # (!! y on global grid = local grid origins is from top to bottom!)
                 [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
                                        local_grid[1] + lo[1] - x_c[1]])
-                if ellipse:
-                    # Rotate geometry back to calculate ellipse
+                if (geometry == 'sinus') or (geometry == 'ellipse'):
+                    # Rotate geometry back to calculate geometry
                     x_ltmp = x_l.copy()
                     y_ltmp = y_l.copy()
                     x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
                     y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
 
-                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = e^2*x^2 + y^2
+                if geometry == 'sinus':
+                    # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
+                    r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= 0, 1, 0)
+
+                elif geometry == 'ellipse':
+                    # Get radii on local grid r^2 = e^2*x^2 + y^2
                     r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
-                # Calculate 1s and 0s on local grid
-                r_area = np.where(r_sqr <= r*r, 1, 0)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= r*r, 1, 0)
+
+                elif geometry == 'circle':
+                    # Get radii on local grid r^2 = x^2 + y^2 + z^2
+                    r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= r*r, 1, 0)
+
                 # Get VOF values by integration over local grid
                 vof = np.sum(r_area)/r_area.size
                 # Write vof value into stencil value array
@@ -390,39 +362,34 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
                 # Values of local grid relative to geometry origin (see above for note on order)
                 [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
                                        local_grid[1] + lo[1] - x_c[1]])
-                if ellipse == 'sinus':
-                    # Rotate geometry back to calculate ellipse
+
+                if (geometry == 'sinus') or (geometry == 'ellipse'):
+                    # Rotate geometry back to calculate geometry
                     x_ltmp = x_l.copy()
                     y_ltmp = y_l.copy()
                     x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
                     y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
 
-                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = e^2*x^2 + y^2
+                if geometry == 'sinus':
+                    # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
                     r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
                     # Calculate 1s and 0s on local grid
                     r_area = np.where(r_sqr <= 0, 1, 0)
-                    # Get VOF values by integration over local grid
-                    vof = np.sum(r_area)/r_area.size
-                elif ellipse == 'ellipse':
-                    # Rotate geometry back to calculate ellipse
-                    x_ltmp = x_l.copy()
-                    y_ltmp = y_l.copy()
-                    x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
-                    y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
 
-                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = e^2*x^2 + y^2
+                elif geometry == 'ellipse':
+                    # Get radii on local grid r^2 = e^2*x^2 + y^2
                     r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
                     # Calculate 1s and 0s on local grid
                     r_area = np.where(r_sqr <= r*r, 1, 0)
-                    # Get VOF values by integration over local grid
-                    vof = np.sum(r_area)/r_area.size
-                else:
-                    # Get radii on local grid (np.multiply way faster than np.power) r^2 = x^2 + y^2 + z^2
+
+                elif geometry == 'circle':
+                    # Get radii on local grid r^2 = x^2 + y^2 + z^2
                     r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
                     # Calculate 1s and 0s on local grid
                     r_area = np.where(r_sqr <= r*r, 1, 0)
-                    # Get VOF values by integration over local grid
-                    vof = np.sum(r_area)/r_area.size
+
+                # Get VOF values by integration over local grid
+                vof = np.sum(r_area)/r_area.size
                 # Write vof value into stencil value array
                 vof_array[ill[0], ill[1]] = vof
                 if visualize:
@@ -504,10 +471,17 @@ def generate_data(N_values, stencils, ek, neg, silent, ellipse, smearing):
             output_df = output_df.rename(columns={'0':'Curvature'})
         # Write output dataframe to feather file
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+('_smr' if smearing else '_nsm')+'_opt.feather')
+        # Find string for geometry
+        if geometry == 'ellipse':
+            geom_str = '_ell'
+        elif geometry == 'sinus':
+            geom_str = '_sin'
+        elif geometry == 'circle':
+            geom_str = '_cir'
+        # Create file name
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_n.feather')
         print(f'File:\n{file_name}')
-        # file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+('_ell' if ellipse else '_cir')+'_flat_e'+'.feather')
+        # Export file
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
-        geometry = ('Ellipse' if ellipse else 'Circle')
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

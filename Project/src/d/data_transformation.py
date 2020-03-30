@@ -14,13 +14,13 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def get_data(parameters):
     ''' Import data from files '''
-    if parameters['data'] == 'both':
+    if parameters['data'] == 'all':
         # Data file to load
         filename_cir = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
             ('_neg' if parameters['negative'] else '_pos') + \
-            '_cir' + \
+            '_sin' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         filename_ell = 'data_' + \
@@ -31,20 +31,29 @@ def get_data(parameters):
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir)
+        print(f'filename_cir:\n{filename_cir}')
+        print(f'filename_ell:\n{filename_ell}')
+        path_sin = os.path.join(parent_path, 'data', 'datasets', filename_cir)
         path_ell = os.path.join(parent_path, 'data', 'datasets', filename_ell)
-        data_cir = pd.read_feather(path_cir)
+        data_sin = pd.read_feather(path_sin)
         data_ell = pd.read_feather(path_ell)
-        data = pd.concat([data_cir, data_ell], ignore_index=True)
+        data = pd.concat([data_sin, data_ell], ignore_index=True)
     else:
+        if parameters['data'] == 'ellipse':
+            geom_str = '_ell'
+        elif parameters['data'] == 'sinus':
+            geom_str = '_sin'
+        elif parameters['data'] == 'circle':
+            geom_str = '_cir'
         # Data file to load
         filename = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
             ('_neg' if parameters['negative'] else '_pos') + \
-            ('_ell' if parameters['data'] == 'ellipse' else '_cir') + \
+            geom_str + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
+        print(f'filename:\n{filename}')
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         path = os.path.join(parent_path, 'data', 'datasets', filename)
         data = pd.read_feather(path)

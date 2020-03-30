@@ -1,26 +1,27 @@
-# from src.execution import exe_ml
-from src.execution import exe_dg
+from src.execution import exe_ml
+# from src.execution import exe_dg
 
 ''' Data Generation '''
-# '''
+'''
 # stencils = [[13, 13]]
-stencils = [[7, 7]]
-# stencils = [[13, 13]]
+stencils = [[7, 7], [5, 5]]
+# stencils = [[7, 7]]
 ek = [True]
 neg = [True]
-N_values = [1]
-# N_values = [100]
-silent = [True]
-ellipse = [True]
-smearing = [False]
-exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, ellipse=ellipse, smearing=smearing)
+N_values = [1e6]
+# N_values = [1]
+silent = [False]
+geometry = ['sinus', 'ellipse']
+smearing = [True, False]
+exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing)
 # '''
 
 
 ''' Machine Learning '''
 
 ''' Train '''
-epochs = [1000]
+epochs = [50]
+# epochs = [1]
 # stencils = [[7, 7], [3, 3], [5, 5]]
 stencil = [[7, 7]]
 activation = ['relu']
@@ -28,7 +29,8 @@ learning_rate = [1e-4]
 neg = [True]
 angle = [False]
 rot = [True]
-data = ['ellipse']
+# data = ['all']
+data = ['circle']
 smearing = [True]
 hf = [True]
 hf_correction = [False]
@@ -53,13 +55,14 @@ for i in range(0, 2):
     network = ['mlp']
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
-    layer = [[100, 80]]
+    epochs = [1000]
+    layer = [[1000, 1000, 500, 250]]
     '''
     if i == 0:
         plot = [False]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
     # '''
-    '''
+    # '''
     if i == 1:
         plot = [True]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)

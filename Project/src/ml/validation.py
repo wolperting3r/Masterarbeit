@@ -42,7 +42,7 @@ def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=Fa
     ax.set_ylabel('Predictions [MPG]')
     # lims = [min(test_labels), max(test_labels)]
     # lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-4/3-0.2, 4/3+0.2])
-    lims = ([-0.2, 4/3+0.2] if not parameters['negative'] else [-0.4, 0.4])
+    lims = ([-0.2, 0.42+0.2] if not parameters['negative'] else [-0.5, 0.5])
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.plot(lims, lims)

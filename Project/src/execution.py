@@ -52,7 +52,7 @@ def ml(
         'smear': smearing,               # Use smeared data
         'hf': hf,                        # Use height function
         'hf_correction': hf_correction,  # Use height function as input for NN
-        'dropout': dropout               # dropout fraction
+        # 'dropout': dropout               # dropout fraction
     }
 
     # print(f'parameters:\n{parameters}')
@@ -78,7 +78,7 @@ def ml(
 def exe_dg(**kwargs):
     print(f'kwargs:\n{kwargs}')
     # Sort input keyword arguments
-    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'ellipse', 'smearing']
+    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'geometry', 'smearing']
     kwargs = {k: kwargs[k] for k in order}
     # Create job list according to input arguments
     job_list = list(itpd(*kwargs.values()))
