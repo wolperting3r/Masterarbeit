@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from tqdm.keras import TqdmCallback
+from .utils import param_filename
 
 import os
 import sys
@@ -51,10 +52,10 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
 def load_model(parameters):
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-    # '''
+    '''
     param_str = parameters['filename']
     # '''
-    '''
+    # '''
     param_tmp = parameters.copy()
     param_tmp['data'] = 'all'
     param_tmp.pop('filename')

@@ -16,7 +16,8 @@ def learning(parameters, silent=False, plot=True):
      [test_labels, test_data, test_angle, test_kappa],
      [val_labels, val_data, val_angle, val_kappa]] = transform_data(
          parameters,
-         reshape=(True if parameters['network'] == 'cvn' else False)
+         reshape=(True if parameters['network'] == 'cvn' else False),
+         plot=plot
      )  # kappa = 0 if parameters['hf'] == False
     '''
     ind = 0
@@ -41,5 +42,5 @@ def learning(parameters, silent=False, plot=True):
         # Load model
         model = load_model(parameters)
         # Create validation plot
-        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa)
+        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0])
     # '''

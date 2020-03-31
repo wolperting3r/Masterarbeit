@@ -20,7 +20,7 @@ exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geom
 ''' Machine Learning '''
 
 ''' Train '''
-epochs = [50]
+epochs = [1000]
 # epochs = [1]
 # stencils = [[7, 7], [3, 3], [5, 5]]
 stencil = [[7, 7]]
@@ -29,8 +29,8 @@ learning_rate = [1e-4]
 neg = [True]
 angle = [False]
 rot = [True]
-# data = ['all']
-data = ['circle']
+data = ['all', 'sinus', 'ellipse', 'circle']
+# data = ['ellipse']
 smearing = [True]
 hf = [True]
 hf_correction = [False]
@@ -55,8 +55,7 @@ for i in range(0, 2):
     network = ['mlp']
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
-    epochs = [1000]
-    layer = [[1000, 1000, 500, 250]]
+    layer = [[100, 80]]
     '''
     if i == 0:
         plot = [False]

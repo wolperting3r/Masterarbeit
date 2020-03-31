@@ -180,7 +180,7 @@ def process_data(dataset, parameters, reshape):
 
 
 
-def transform_data(parameters, reshape=False):
+def transform_data(parameters, reshape=False, plot=False):
     time0 = time.time()
     # Read data
     data = get_data(parameters)
@@ -190,8 +190,13 @@ def transform_data(parameters, reshape=False):
 
     # Pre-Processing
     test_labels, test_data, test_angle, test_kappa = process_data(test_set, parameters, reshape)
-    train_labels, train_data, train_angle, train_kappa = process_data(train_set, parameters, reshape)
-    val_labels, val_data, val_angle, val_kappa = process_data(val_set, parameters, reshape)
+    if not plot:
+        train_labels, train_data, train_angle, train_kappa = process_data(train_set, parameters, reshape)
+        val_labels, val_data, val_angle, val_kappa = process_data(val_set, parameters, reshape)
+    else:
+        train_labels, train_data, train_angle, train_kappa = 0, 0, 0, 0
+        val_labels, val_data, val_angle, val_kappa = 0, 0, 0, 0
+
 
     filestring = parameters['filename']
     print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')

@@ -16,8 +16,11 @@ class TransformData(BaseEstimator, TransformerMixin):
     def transform(self, dataset):
         # Split the training and test data into labels (first column) and data
         # dataset = dataset[dataset.iloc[:, 0] > 0]  # Pos values only
-        labels = np.round(dataset.iloc[:, 0].to_numpy(), 3)
-        data = np.round(dataset.iloc[:, 1:].to_numpy(), 3)
+        labels = dataset.iloc[:, 0].to_numpy()
+        data = dataset.iloc[:, 1:].to_numpy()
+
+        labels = np.round(labels, 5)
+        data = np.round(data, 5)
 
         if self.reshape:
             st_sz = self.parameters['stencil_size']
@@ -388,7 +391,7 @@ class HF(BaseEstimator, TransformerMixin):
         # Calculate kappa
         kappa = np.round(
             2/Delta*h_xx/((1+np.multiply(h_x, h_x))**(3/2))
-            , 3)
+            , 5)
 
         '''
         labels = dataset[0][:10]
