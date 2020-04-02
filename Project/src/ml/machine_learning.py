@@ -1,7 +1,7 @@
 # MACHINE LEARNING
 import numpy as np
 
-from src.d.data_transformation import transform_data
+from src.d.data_transformation import transform_data, transform_kappa
 from src.ml.building import build_model
 from src.ml.training import train_model, load_model
 from src.ml.validation import validate_model_loss, validate_model_plot
@@ -12,9 +12,15 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def learning(parameters, silent=False, plot=True):
     # Get data (reshape if network is convolutional network)
-    [[train_labels, train_data, train_angle, train_kappa],
-     [test_labels, test_data, test_angle, test_kappa],
-     [val_labels, val_data, val_angle, val_kappa]] = transform_data(
+    [[train_labels, train_data, train_angle],
+     [test_labels, test_data, test_angle],
+     [val_labels, val_data, val_angle]] = transform_data(
+         parameters,
+         reshape=(True if parameters['network'] == 'cvn' else False),
+         plot=plot
+     )  # kappa = 0 if parameters['hf'] == False
+
+    [[train_k_labels, train_kappa], [test_k_labels, test_kappa], [val_k_labels, val_kappa]] = transform_kappa(
          parameters,
          reshape=(True if parameters['network'] == 'cvn' else False),
          plot=plot
@@ -42,5 +48,6 @@ def learning(parameters, silent=False, plot=True):
         # Load model
         model = load_model(parameters)
         # Create validation plot
-        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0])
+        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0], test_k_labels=test_k_labels)
     # '''
+

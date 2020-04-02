@@ -27,7 +27,7 @@ def ml(
     rot=False,
     data=['circle'],
     smearing=False,
-    hf=False,
+    hf='hf',
     hf_correction=False,
     dropout=0,
 ):

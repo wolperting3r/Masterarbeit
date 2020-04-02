@@ -285,53 +285,131 @@ class CDS(BaseEstimator, TransformerMixin):
         st_sz = self.parameters['stencil_size']
         # Seperate data from labels
         data = dataset[1].copy()
+        labels = dataset[0].copy()
         # Get shape of data
         shape = data.shape
         # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
         if len(shape) == 2:
             data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
 
+        # Was hier gemacht werden muss: 1. dynamisch an input angepasst 2. Glättungen eingefügt
+        # Find midpoint
         i = int((st_sz[0]-1)/2)
         j = int((st_sz[1]-1)/2)
-        c_dx = (data[:, i+1, j, 0] - data[:, i-1, j, 0])/2
-        c_dy = (data[:, i, j+1, 0] - data[:, i, j-1, 0])/2
+        ds = data.shape
 
-        c_dxx = (data[:, i+2, j, 0] - 2*data[:, i, j, 0] + data[:, i-2, j, 0])/4
-        c_dyy = (data[:, i, j+2, 0] - 2*data[:, i, j, 0] + data[:, i, j-2, 0])/4
-        c_dxy = (data[:, i+1, j+1, 0] - data[:, i-1, j+1, 0] - data[:, i+1, j-1, 0] + data[:, i-1, j-1, 0])/4
+        # Smoothing of data
+        # weights
+        w = np.array([-1, 4, 10])
+        w4 = 2*w[0]+2*w[1]+w[2]
+        w = w/w4
 
-        kappa = -1*np.divide(
-            np.multiply(c_dxx, np.multiply(c_dy, c_dy)) -
-            np.multiply(c_dxy, np.multiply(c_dx, c_dy))*2 +
-            np.multiply(c_dyy, np.multiply(c_dy, c_dy))
-            ,
-            (np.multiply(c_dx, c_dx) + np.multiply(c_dy, c_dy))**(3/2)
-        )
+        kernel = np.array([[   0,    0,   w[0],    0,    0],
+                           [   0,    0,   w[1],    0,    0],
+                           [w[0], w[1], 2*w[2], w[1], w[0]],
+                           [   0,    0,   w[1],    0,    0],
+                           [   0,    0,   w[0],    0,    0]])/2
+        kernel = np.tile(kernel, (ds[0], 1, 1, 1)).transpose((0, 2, 3, 1))
 
-        labels = dataset[0][:10]
-        kappa_pr = kappa[:10]
+        data_sm = np.zeros((ds[0], ds[1]-4, ds[2]-4, ds[3]))
+        for x in range(2, ds[1]-2):
+            for y in range(2, ds[2]-2):
+                data_sm[:, y-2, x-2, :] = np.sum(np.multiply(kernel, data[:, y-2:y+3, x-2:x+3, :]), axis=(1, 2))
 
-        # print(f'lables:\n{labels}')
-        # print(f'kappa_pr:\n{kappa_pr}')
+        dss = data_sm.shape
+
+        # 1st derivative
+        c_dy = np.zeros((dss[0], dss[1]-4, dss[2]-4, dss[3]))  # Eig. nur -2 nötig, aber Rand wird für kappa eh nicht gebraucht
+        c_dx = np.zeros((dss[0], dss[1]-4, dss[2]-4, dss[3]))
+        for x in range(2, dss[2]-2):
+            for y in range(2, dss[1]-2):
+                c_dy[:, y-2, x-2, 0] = (data_sm[:, y+1, x, 0] - data_sm[:, y-1, x, 0])/2
+                c_dx[:, y-2, x-2, 0] = (data_sm[:, y, x+1, 0] - data_sm[:, y, x-1, 0])/2
+
+
+        # 2nd derivative
+        c_dyy = np.zeros((dss[0], dss[1]-4, dss[2]-4, dss[3]))
+        c_dxx = np.zeros((dss[0], dss[1]-4, dss[2]-4, dss[3]))
+        c_dxy = np.zeros((dss[0], dss[1]-4, dss[2]-4, dss[3]))
+        for x in range(2, dss[2]-2):
+            for y in range(2, dss[1]-2):
+                c_dxx[:, y-2, x-2, 0] = (data_sm[:, y+2, x, 0] - 2*data_sm[:, y, x, 0] + data_sm[:, y-2, x, 0])/4
+                c_dyy[:, y-2, x-2, 0] = (data_sm[:, y, x+2, 0] - 2*data_sm[:, y, x, 0] + data_sm[:, y, x-2, 0])/4
+                c_dxy[:, y-2, x-2, 0] = (data_sm[:, y+1, x+1, 0] - data_sm[:, y-1, x+1, 0] - data_sm[:, y+1, x-1, 0] + data_sm[:, y-1, x-1, 0])/4
+
+        cds = c_dxx.shape
+
+        kappa = np.zeros((cds[0], cds[1], cds[2], cds[3]))
+        for x in range(0, cds[2]):
+            for y in range(0, cds[1]):
+                kappa[:, y, x, :] = 2*np.divide(
+                    np.multiply(c_dxx[:, y, x, :], np.multiply(c_dx[:, y, x, :], c_dx[:, y, x, :])) -
+                    np.multiply(c_dxy[:, y, x, :], np.multiply(c_dx[:, y, x, :], c_dy[:, y, x, :]))*2 +
+                    np.multiply(c_dyy[:, y, x, :], np.multiply(c_dy[:, y, x, :], c_dy[:, y, x, :]))
+                    ,
+                    (np.multiply(c_dx[:, y, x, :], c_dx[:, y, x, :]) + np.multiply(c_dy[:, y, x, :], c_dy[:, y, x, :]))**(3/2)
+                )
+
+        kappa = np.nan_to_num(kappa)
+
+        '''
+        values = (np.multiply(c_dx[:, y, x, :], c_dx[:, y, x, :]) + np.multiply(c_dy[:, y, x, :], c_dy[:, y, x, :]))**(3/2)
+        values = np.where(values == 0)
+        print(f'values:\n{values}')
+        # '''
+
+        ks = kappa.shape
+
+        # Smoothing of kappa
+        # weights
+        w = np.array([1, 4, 6])
+        w4 = 2*w[0]+2*w[1]+w[2]
+        w = w/w4
+
+        kernel = np.array([[   0,    0,   w[0],    0,    0],
+                           [   0,    0,   w[1],    0,    0],
+                           [w[0], w[1], 2*w[2], w[1], w[0]],
+                           [   0,    0,   w[1],    0,    0],
+                           [   0,    0,   w[0],    0,    0]])/2
+        kernel = np.tile(kernel, (ks[0], 1, 1, 1)).transpose((0, 2, 3, 1))
+
+        kappa_sm = np.zeros((ks[0], ks[1]-4, ks[2]-4, ks[3]))
+        for x in range(2, ks[1]-2):
+            for y in range(2, ks[2]-2):
+                kappa_sm[:, y-2, x-2, :] = np.sum(np.multiply(kernel, kappa[:, y-2:y+3, x-2:x+3, :]), axis=(1, 2))
+        kappa_sm = kappa_sm[:, 0, 0, :]
+
+
 
         '''
         # Test
-        ind = 1
-        print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
-        print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
+        ind = 95912
+        datapoint = data[ind, 0, 5, 0]
+        print(f'datapoint:\n{datapoint}')
         print_data_grad = data.transpose((0, 1, 3, 2))[ind]
-        print(f'\nGrad_x:\n{print_data_gradx}')
-        print(f'\nGrad_y:\n{print_data_grady}')
         print(f'\nData:\n{print_data_grad}')
+        print_data_sm = data_sm.transpose((0, 1, 3, 2))[ind]
+        print(f'print_data_sm:\n{print_data_sm}')
+        print_kappa = kappa.transpose((0, 1, 3, 2))[ind]
+        print(f'print_kappa:\n{print_kappa}')
+        print_kappa_sm = kappa_sm[ind]
+        print(f'print_kappa_sm:\n{print_kappa_sm}')
+        label = labels[ind]
+        print(f'label:\n{label}')
+        # '''
+
+        '''
+        prt_labels = labels[:10]
+        prt_kappas = kappa_sm[:10]
+        print(f'prt_labels:\n{prt_labels}')
+        print(f'prt_kappas:\n{prt_kappas}')
         # '''
         # Reshape to tensor if angle matrix is needed, otherwise just output vectors
         if (data.shape != shape) & (self.parameters['angle']):
             # Reshape transformed data to original shape
             data = np.reshape(data, shape)
 
-        kappa = 1
-
-        return [dataset[0], dataset[1], kappa]
+        return [dataset[0], dataset[1], kappa_sm]
 
 
 class HF(BaseEstimator, TransformerMixin):

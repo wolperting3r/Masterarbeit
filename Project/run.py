@@ -3,19 +3,18 @@ from src.execution import exe_ml
 
 ''' Data Generation '''
 '''
-# stencils = [[13, 13]]
-stencils = [[7, 7], [5, 5]]
+stencils = [[13, 13]]
+# stencils = [[7, 7], [5, 5]]
 # stencils = [[7, 7]]
 ek = [True]
 neg = [True]
 N_values = [1e6]
 # N_values = [1]
 silent = [False]
-geometry = ['sinus', 'ellipse']
+geometry = ['sinus', 'ellipse', 'circle']
 smearing = [True, False]
 exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing)
 # '''
-
 
 ''' Machine Learning '''
 
@@ -29,10 +28,10 @@ learning_rate = [1e-4]
 neg = [True]
 angle = [False]
 rot = [True]
-data = ['all', 'sinus', 'ellipse', 'circle']
-# data = ['ellipse']
+# data = ['circle']
+data = ['all', 'sinus', 'circle', 'ellipse']
 smearing = [True]
-hf = [True]
+hf = ['hf']
 hf_correction = [False]
 dropout = [0]
 # 1.: Train, 2.: Plot

@@ -101,9 +101,9 @@ def split_data(data, ratio):
         train_indices = indices[test_size:]
         # Return the data corresponding to the indices
         return data.iloc[test_indices], data.iloc[train_indices]
-
-
-def process_data(dataset, parameters, reshape):
+    
+    
+def process_kappa(dataset, parameters, reshape):
     '''
     # Calculate kappa with CDS
     # Create pipeline
@@ -112,11 +112,15 @@ def process_data(dataset, parameters, reshape):
         ('findkappacds', CDS(parameters=parameters)),
     ])
     # Execute pipeline
-    [labels, features, angle] = data_pipeline.fit_transform(dataset)
+    [labels, features, kappa] = data_pipeline.fit_transform(dataset)
+    angle = 0
     # '''
-    if parameters['hf']:
+
+    # '''
+    if parameters['hf'] == 'hf':
         # Calculate kappa with HF
         # Create pipeline
+        # '''
         data_pipeline = Pipeline([
             ('transform', TransformData(parameters=parameters, reshape=reshape)),
             ('findgradient', FindGradient(parameters=parameters)),
@@ -124,10 +128,37 @@ def process_data(dataset, parameters, reshape):
         ])
         # Execute pipeline
         [labels, features, kappa] = data_pipeline.fit_transform(dataset)
+    elif parameters['hf'] == 'cd':
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),
+            ('findkappacds', CDS(parameters=parameters)),
+        ])
+        # Execute pipeline
+        [labels, features, kappa] = data_pipeline.fit_transform(dataset)
     else:
         kappa = 0
 
+    return [labels, kappa]
+
+
+def process_data(dataset, parameters, reshape):
+
     # '''
+    if parameters['hf'] == 'hf':
+        # Calculate kappa with HF
+        # Create pipeline
+        # '''
+        data_pipeline = Pipeline([
+            ('transform', TransformData(parameters=parameters, reshape=reshape)),
+            ('findgradient', FindGradient(parameters=parameters)),
+            ('findkappahf', HF(parameters=parameters)),
+        ])
+        # '''
+        # Execute pipeline
+        [labels, features, kappa] = data_pipeline.fit_transform(dataset)
+    else:
+        kappa = 0
+
     # Pre-Processing
     if parameters['rotate']:
         # Create pipeline
@@ -159,7 +190,6 @@ def process_data(dataset, parameters, reshape):
         [labels, features] = data_pipeline.fit_transform(dataset)
         # Dummy angle
         angle = np.zeros(features.shape)
-    # '''
 
     if parameters['angle']:
         # Stack features and angles
@@ -175,9 +205,42 @@ def process_data(dataset, parameters, reshape):
         else:
             # Stack features and height function
             features = np.concatenate((features, kappa), axis=1)
+    # '''
 
-    return [labels, features, angle, kappa]
+    return [labels, features, angle]
 
+
+def transform_kappa(parameters, reshape=False, plot=False):
+    time0 = time.time()
+
+    parameters_loc = parameters.copy()
+    # Load 13x13 data for cds 
+    if parameters['hf'] == 'cd':
+        parameters_loc['stencil_size'] = [13, 13]
+        parameters_loc['smearing'] = False
+    # Read data
+    data = get_data(parameters_loc)
+
+    # Split data
+    test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
+
+    # Pre-Processing
+    [test_labels, test_kappa] = process_kappa(test_set, parameters_loc, reshape)
+    # '''
+    if not plot:
+        [train_labels, train_kappa] = process_kappa(train_set, parameters_loc, reshape)
+        [val_labels, val_kappa] = process_kappa(val_set, parameters_loc, reshape)
+    else:
+        [train_labels, train_kappa] = 0, 0
+        [val_labels, val_kappa] = 0, 0
+    # '''
+
+    filestring = parameters['filename']
+    print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
+
+    return [[train_labels, train_kappa],
+            [test_labels, test_kappa],
+            [val_labels, val_kappa]]
 
 
 def transform_data(parameters, reshape=False, plot=False):
@@ -189,22 +252,24 @@ def transform_data(parameters, reshape=False, plot=False):
     test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
 
     # Pre-Processing
-    test_labels, test_data, test_angle, test_kappa = process_data(test_set, parameters, reshape)
+    test_labels, test_data, test_angle = process_data(test_set, parameters, reshape)
+    # '''
     if not plot:
-        train_labels, train_data, train_angle, train_kappa = process_data(train_set, parameters, reshape)
-        val_labels, val_data, val_angle, val_kappa = process_data(val_set, parameters, reshape)
+        train_labels, train_data, train_angle = process_data(train_set, parameters, reshape)
+        val_labels, val_data, val_angle = process_data(val_set, parameters, reshape)
     else:
-        train_labels, train_data, train_angle, train_kappa = 0, 0, 0, 0
-        val_labels, val_data, val_angle, val_kappa = 0, 0, 0, 0
+        train_labels, train_data, train_angle = 0, 0, 0
+        val_labels, val_data, val_angle = 0, 0, 0
+    # '''
 
 
     filestring = parameters['filename']
     print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
 
     return [
-        [train_labels, train_data, train_angle, train_kappa],
-        [test_labels, test_data, test_angle, test_kappa],
-        [val_labels, val_data, val_angle, val_kappa],
+        [train_labels, train_data, train_angle],
+        [test_labels, test_data, test_angle],
+        [val_labels, val_data, val_angle],
     ]
 
     '''

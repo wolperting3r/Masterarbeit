@@ -33,7 +33,7 @@ def as_si(x, ndp):
     st = r'{m:s}\times 10^{{{e:d}}}'.format(m=m, e=int(e))
     return st
 
-def create_plot(labels, predictions, color, file_name, parameters, hf):
+def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels=False):
     # Create plot
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
@@ -41,7 +41,8 @@ def create_plot(labels, predictions, color, file_name, parameters, hf):
     alpha = 0.3
     marker = ','
     size = 1.5
-    plt.scatter(labels, predictions, alpha=alpha, color=color, edgecolors='none', marker=marker, s=size)  # darkseagreen
+    plt.scatter((hf_labels if hf else labels), predictions, alpha=alpha, color=color, edgecolors='none', marker=marker, s=size)  # darkseagreen
+
 
     lims = ([-0.2, 0.42+0.2] if not parameters['negative'] else [-0.5, 0.5])
     ax.set_xlim(lims)
@@ -103,10 +104,11 @@ def create_plot(labels, predictions, color, file_name, parameters, hf):
     # plt.show()
     plt.close()
 
-def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=False):
+def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=False, test_k_labels=False):
     filename = parameters['filename']
     # Get predictions for test data
     test_predictions = model.predict(test_data, batch_size=parameters['batch_size']).flatten()
+
 
     # Calculate error norm (L2, L infinity)
     error_ml = test_labels - test_predictions
@@ -115,22 +117,24 @@ def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=Fa
     L2_hf = 1/max(test_labels) * np.sqrt( np.sum(np.multiply(error_hf, error_hf))/test_labels.shape[0])
     Linf_ml = 1/max(test_labels) * max(np.abs(error_ml, error_ml))
     Linf_hf = 1/max(test_labels) * max(np.abs(error_hf, error_hf))
+    '''
     print(f'L2 ml:\t\t{Decimal(L2_ml):.2E}')
     print(f'L2 hf:\t\t{Decimal(L2_hf):.2E}')
     print(f'Linf ml:\t{Decimal(Linf_ml):.2E}')
     print(f'Linf hf:\t{Decimal(Linf_hf):.2E}')
+    # '''
 
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
     param_str = parameters['filename']
 
-    if parameters['hf']:
+    if (parameters['hf'] == 'hf') or (parameters['hf'] == 'cd'):
         # Create ML Plot
         file_name_ml = os.path.join(path, 'models', 'figures', 'fig' + param_str + '_ml.png')
         create_plot(labels=test_labels, predictions=test_predictions, color='aqua', file_name=file_name_ml, parameters=parameters, hf=False)  # steelblue
 
         # Create HF Plot
         file_name_hf = os.path.join(path, 'models', 'figures', 'fig' + param_str + '_hf.png')
-        create_plot(labels=test_labels, predictions=test_kappa, color='deeppink', file_name=file_name_hf, parameters=parameters, hf=True)  # darkgoldenrod
+        create_plot(labels=test_labels, predictions=test_kappa, color='deeppink', file_name=file_name_hf, parameters=parameters, hf=True, hf_labels = test_k_labels)  # darkgoldenrod
 
         # Blend the two plots with image magick
         file_name = os.path.join(path, 'models', 'figures', 'fig' + param_str + '.png')
