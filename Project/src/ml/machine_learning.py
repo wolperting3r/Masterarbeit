@@ -5,6 +5,7 @@ from src.d.data_transformation import transform_data, transform_kappa
 from src.ml.building import build_model
 from src.ml.training import train_model, load_model
 from src.ml.validation import validate_model_loss, validate_model_plot
+from src.ml.utils import param_filename
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
@@ -12,30 +13,45 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def learning(parameters, silent=False, plot=True):
     # Get data (reshape if network is convolutional network)
+    if plot:
+        param_tmp = parameters.copy()
+        # Set data to plotdata to load correct data file for plotting
+        param_tmp['data'] = param_tmp['plotdata']
+        param_tmp['filename'] = param_filename(param_tmp, plotdata_as_data=True)
+    else:
+        param_tmp = parameters
+    # '''
     [[train_labels, train_data, train_angle],
      [test_labels, test_data, test_angle],
      [val_labels, val_data, val_angle]] = transform_data(
-         parameters,
+         param_tmp,
          reshape=(True if parameters['network'] == 'cvn' else False),
          plot=plot
      )  # kappa = 0 if parameters['hf'] == False
+    # '''
 
-    [[train_k_labels, train_kappa], [test_k_labels, test_kappa], [val_k_labels, val_kappa]] = transform_kappa(
-         parameters,
-         reshape=(True if parameters['network'] == 'cvn' else False),
-         plot=plot
-     )  # kappa = 0 if parameters['hf'] == False
+    # '''
+    if plot:
+        [[train_k_labels, train_kappa], [test_k_labels, test_kappa], [val_k_labels, val_kappa]] = transform_kappa(
+             param_tmp,
+             reshape=(True if parameters['network'] == 'cvn' else False),
+             plot=plot
+         )  # kappa = 0 if parameters['hf'] == False
+    else:
+        print(f'Training data: {train_data.shape}')
+    # '''
     '''
     ind = 0
     print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
     # print_data_grad = test_data[ind]
     print(f'\nGedreht:\n{print_data_grad}')
     # '''
-    # '''
+    '''
     # Make output = input to train autoencoder
     if parameters['network'] == 'autoencdec':
         train_labels = train_data
         test_labels = test_data
+    # '''
 
     if not plot:
         # Build model
@@ -50,4 +66,3 @@ def learning(parameters, silent=False, plot=True):
         # Create validation plot
         validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0], test_k_labels=test_k_labels)
     # '''
-

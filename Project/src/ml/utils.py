@@ -1,4 +1,4 @@
-def param_filename(parameters):
+def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
     # Generate filename string
     filename_string = ''
     for key, value in parameters.items():
@@ -19,8 +19,14 @@ def param_filename(parameters):
         elif key == 'hf':
             # filename_string = filename_string + '_' + ('hef' if value else 'nhf')
             filename_string = filename_string
+        elif (key == 'plotdata') and (not include_plotdata):
+            filename_string = filename_string
         elif key == 'hf_correction':
             filename_string = filename_string + '_' + ('hfc' if value else 'nhc')
+        elif key == 'filename':
+            filename_string = filename_string
+        elif (key == 'data') and (plotdata_as_data):
+            filename_string = filename_string + '_' + parameters['plotdata']
         else:
             filename_string = filename_string + '_' + str(value)
     # filename_string = filename_string + '_' + '_flat_e'

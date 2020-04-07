@@ -30,6 +30,7 @@ def ml(
     hf='hf',
     hf_correction=False,
     dropout=0,
+    plotdata=False,
 ):
 
     batch_size = 128
@@ -53,6 +54,7 @@ def ml(
         'hf': hf,                        # Use height function
         'hf_correction': hf_correction,  # Use height function as input for NN
         # 'dropout': dropout               # dropout fraction
+        'plotdata': plotdata,
     }
 
     # print(f'parameters:\n{parameters}')
@@ -95,12 +97,12 @@ def exe_dg(**kwargs):
 
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout']
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata']
     kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
     plot = kwargs.get('plot')
-    if not plot[0]:
-        # Execute training job list with multithreading
+    if not plot[0]: # Execute training job list with multithreading
+        kwargs['plotdata'] = [False]
         jobs = []
         for job in list(itpd(*kwargs.values())):
             jobs.append(Process(target=ml, args=job))

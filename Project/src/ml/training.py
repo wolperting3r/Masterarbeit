@@ -52,15 +52,16 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
 def load_model(parameters):
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-    '''
+    # '''
     param_str = parameters['filename']
     # '''
-    # '''
+    '''
     param_tmp = parameters.copy()
-    param_tmp['data'] = 'all'
-    param_tmp.pop('filename')
+    # param_tmp['data'] = 'all'
+    # param_tmp.pop('filename')
     param_str = param_filename(param_tmp)
     # '''
+    print(f'param_str:\n{param_str}')
 
     file_name = os.path.join(path, 'models', 'models', 'model' + param_str + '.h5')
     model = tf.keras.models.load_model(file_name)

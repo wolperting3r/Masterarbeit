@@ -5,6 +5,7 @@ import sys
 import numpy as np
 from contextlib import redirect_stdout
 from decimal import Decimal
+from .utils import param_filename
 
 
 def validate_model_loss(model, train_data, train_labels, test_data, test_labels, parameters):
@@ -38,13 +39,19 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
     # Create scatterplot test_predictions vs test_labels
-    alpha = 0.3
+    alpha = 0.1
     marker = ','
-    size = 1.5
+    size = 1
     plt.scatter((hf_labels if hf else labels), predictions, alpha=alpha, color=color, edgecolors='none', marker=marker, s=size)  # darkseagreen
 
 
-    lims = ([-0.2, 0.42+0.2] if not parameters['negative'] else [-0.5, 0.5])
+    # lims = ([-0.2, 0.42+0.2] if not parameters['negative'] else [-0.5, 0.5])
+    if parameters['stencil_size'][0] == 5:
+        lims = [-0.6, 0.6]
+    elif parameters['stencil_size'][0] == 7:
+        lims = [-0.5, 0.5]
+    else:
+        lims = [-1, 1]
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.set_xlabel('True Values')
@@ -104,37 +111,33 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
     # plt.show()
     plt.close()
 
+
 def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=False, test_k_labels=False):
-    filename = parameters['filename']
+
+    # parameters['filename'] = param_filename(parameters)
+
     # Get predictions for test data
     test_predictions = model.predict(test_data, batch_size=parameters['batch_size']).flatten()
 
-
-    # Calculate error norm (L2, L infinity)
-    error_ml = test_labels - test_predictions
-    error_hf = test_labels - test_kappa
-    L2_ml = 1/max(test_labels) * np.sqrt( np.sum(np.multiply(error_ml, error_ml))/test_labels.shape[0])
-    L2_hf = 1/max(test_labels) * np.sqrt( np.sum(np.multiply(error_hf, error_hf))/test_labels.shape[0])
-    Linf_ml = 1/max(test_labels) * max(np.abs(error_ml, error_ml))
-    Linf_hf = 1/max(test_labels) * max(np.abs(error_hf, error_hf))
-    '''
-    print(f'L2 ml:\t\t{Decimal(L2_ml):.2E}')
-    print(f'L2 hf:\t\t{Decimal(L2_hf):.2E}')
-    print(f'Linf ml:\t{Decimal(Linf_ml):.2E}')
-    print(f'Linf hf:\t{Decimal(Linf_hf):.2E}')
-    # '''
-
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    param_str = parameters['filename']
+    param_str = param_filename(parameters, include_plotdata=True)
+    # param_str = parameters['filename']
 
     if (parameters['hf'] == 'hf') or (parameters['hf'] == 'cd'):
+        # Calculate error norm (L2, L infinity)
+        error_ml = test_labels - test_predictions
+        error_hf = test_k_labels - test_kappa
+        L2_ml = 1/max(test_labels) * np.sqrt( np.sum(np.multiply(error_ml, error_ml))/test_labels.shape[0])
+        L2_hf = 1/max(test_labels) * np.sqrt( np.sum(np.multiply(error_hf, error_hf))/test_labels.shape[0])
+        Linf_ml = 1/max(test_labels) * max(np.abs(error_ml, error_ml))
+        Linf_hf = 1/max(test_labels) * max(np.abs(error_hf, error_hf))
         # Create ML Plot
         file_name_ml = os.path.join(path, 'models', 'figures', 'fig' + param_str + '_ml.png')
         create_plot(labels=test_labels, predictions=test_predictions, color='aqua', file_name=file_name_ml, parameters=parameters, hf=False)  # steelblue
 
         # Create HF Plot
         file_name_hf = os.path.join(path, 'models', 'figures', 'fig' + param_str + '_hf.png')
-        create_plot(labels=test_labels, predictions=test_kappa, color='deeppink', file_name=file_name_hf, parameters=parameters, hf=True, hf_labels = test_k_labels)  # darkgoldenrod
+        create_plot(labels=test_k_labels, predictions=test_kappa, color='deeppink', file_name=file_name_hf, parameters=parameters, hf=True, hf_labels = test_k_labels)  # darkgoldenrod
 
         # Blend the two plots with image magick
         file_name = os.path.join(path, 'models', 'figures', 'fig' + param_str + '.png')

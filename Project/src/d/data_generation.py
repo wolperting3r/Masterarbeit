@@ -156,7 +156,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
 
         # Move midpoint by random amount inside one cell
         x_c = np.array([u(), u()])*Delta
-        x_c = np.array([0, 0])
+        # x_c = np.array([0, 0])
 
         ''' Get random point on geometry '''
         if geometry == 'sinus':

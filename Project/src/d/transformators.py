@@ -377,9 +377,18 @@ class CDS(BaseEstimator, TransformerMixin):
         for x in range(2, ks[1]-2):
             for y in range(2, ks[2]-2):
                 kappa_sm[:, y-2, x-2, :] = np.sum(np.multiply(kernel, kappa[:, y-2:y+3, x-2:x+3, :]), axis=(1, 2))
-        kappa_sm = kappa_sm[:, 0, 0, :]
+        # kappa_sm = kappa_sm[:, 0, 0, :]
+        j = int((data_sm.shape[1]-1)/2)
+        i = int((data_sm.shape[2]-1)/2)
 
+        weights = 1-2*np.abs(0.5 - data_sm[:, j-1:j+2, i-1:i+2, :])
 
+        kappa_out = np.divide(
+            np.sum(np.multiply(weights, kappa_sm), axis=(1, 2))
+            ,
+            np.sum(weights, axis=(1, 2))
+        )
+        print(f'kappa_out.shape:\n{kappa_out.shape}')
 
         '''
         # Test
@@ -409,7 +418,7 @@ class CDS(BaseEstimator, TransformerMixin):
             # Reshape transformed data to original shape
             data = np.reshape(data, shape)
 
-        return [dataset[0], dataset[1], kappa_sm]
+        return [dataset[0], dataset[1], kappa_out]
 
 
 class HF(BaseEstimator, TransformerMixin):

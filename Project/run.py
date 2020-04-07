@@ -3,16 +3,16 @@ from src.execution import exe_ml
 
 ''' Data Generation '''
 '''
-stencils = [[13, 13]]
-# stencils = [[7, 7], [5, 5]]
+stencils = [[7, 7]]
 # stencils = [[7, 7]]
 ek = [True]
 neg = [True]
 N_values = [1e6]
 # N_values = [1]
 silent = [False]
-geometry = ['sinus', 'ellipse', 'circle']
-smearing = [True, False]
+geometry = ['ellipse', 'sinus']
+# geometry = ['sinus']
+smearing = [True]
 exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing)
 # '''
 
@@ -22,14 +22,15 @@ exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geom
 epochs = [1000]
 # epochs = [1]
 # stencils = [[7, 7], [3, 3], [5, 5]]
-stencil = [[7, 7]]
+stencil = [[5, 5], [7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [False]
 rot = [True]
-# data = ['circle']
-data = ['all', 'sinus', 'circle', 'ellipse']
+data = ['sinus']
+# data = ['all', 'sinus', 'circle', 'ellipse']
+# plotdata = ['all', 'sinus', 'circle', 'ellipse']
 smearing = [True]
 hf = ['hf']
 hf_correction = [False]
@@ -47,7 +48,7 @@ for i in range(0, 2):
     '''
     if i == 1:
         plot = [True]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
 
     # MLP
@@ -58,12 +59,12 @@ for i in range(0, 2):
     '''
     if i == 0:
         plot = [False]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
     # '''
     if i == 1:
         plot = [True]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
 
     '''

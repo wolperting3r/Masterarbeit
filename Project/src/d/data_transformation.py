@@ -31,8 +31,8 @@ def get_data(parameters):
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        print(f'filename_cir:\n{filename_cir}')
-        print(f'filename_ell:\n{filename_ell}')
+        print(f'Dataset 1:\t{filename_cir}')
+        print(f'Dataset 2:\t{filename_ell}')
         path_sin = os.path.join(parent_path, 'data', 'datasets', filename_cir)
         path_ell = os.path.join(parent_path, 'data', 'datasets', filename_ell)
         data_sin = pd.read_feather(path_sin)
@@ -53,7 +53,7 @@ def get_data(parameters):
             geom_str + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
-        print(f'filename:\n{filename}')
+        print(f'Dataset:\t{filename}')
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         path = os.path.join(parent_path, 'data', 'datasets', filename)
         data = pd.read_feather(path)
@@ -80,8 +80,8 @@ def split_data(data, ratio):
     if isinstance(ratio, list):
         # [test_ratio, val_ratio, train_ratio] as list
         # Calculate how many entries the test data will have
-        test_size = int(len(data)*ratio[1])
-        val_size = int(len(data)*ratio[2])
+        test_size = int(len(data)*ratio[0])
+        val_size = int(len(data)*ratio[1])
     
         # Get the test indices from the randomly generated indices
         test_indices = indices[:test_size]
@@ -210,19 +210,30 @@ def process_data(dataset, parameters, reshape):
     return [labels, features, angle]
 
 
-def transform_kappa(parameters, reshape=False, plot=False):
+def transform_kappa(parameters, reshape=False, plot=False, **kwargs):
     time0 = time.time()
 
     parameters_loc = parameters.copy()
     # Load 13x13 data for cds 
     if parameters['hf'] == 'cd':
-        parameters_loc['stencil_size'] = [13, 13]
+        parameters_loc['stencil_size'] = [15, 15]
         parameters_loc['smearing'] = False
     # Read data
-    data = get_data(parameters_loc)
+    if 'data' in kwargs:
+        data = kwargs.get('data')
+    else:
+        data = get_data(parameters_loc)
 
-    # Split data
-    test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
+    if 'data' in kwargs:  # And use all of that data in test set
+        # Split data
+        test_set = data
+        val_set = data
+        train_set = data
+    else:
+        # Split data
+        test_set, val_set, train_set = split_data(data, [1.0, 0.0, 0.0])
+
+    print(f'Dataset Shape:\t{test_set.shape}')
 
     # Pre-Processing
     [test_labels, test_kappa] = process_kappa(test_set, parameters_loc, reshape)
@@ -236,20 +247,30 @@ def transform_kappa(parameters, reshape=False, plot=False):
     # '''
 
     filestring = parameters['filename']
-    print(f'Time needed for pre-processing of {filestring}:\t{np.round(time.time()-time0,3)}s')
+    print(f'Time needed for finding kappa of {filestring}:\t{np.round(time.time()-time0,3)}s')
+    print(f'Kappa Shape:\t{test_kappa.shape}')
 
     return [[train_labels, train_kappa],
             [test_labels, test_kappa],
             [val_labels, val_kappa]]
 
 
-def transform_data(parameters, reshape=False, plot=False):
+def transform_data(parameters, reshape=False, plot=False, **kwargs):
     time0 = time.time()
     # Read data
-    data = get_data(parameters)
+    if 'data' in kwargs:  # If data is passed explicitly, use that (usually for plotting purposes)
+        data = kwargs.get('data')
+    else:
+        data = get_data(parameters)
 
-    # Split data
-    test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
+    if 'data' in kwargs:  # And use all of that data in test set
+        # Split data
+        test_set = data
+        val_set = data
+        train_set = data
+    else:
+        # Split data
+        test_set, val_set, train_set = split_data(data, [0.15, 0.15, 0.7])
 
     # Pre-Processing
     test_labels, test_data, test_angle = process_data(test_set, parameters, reshape)
