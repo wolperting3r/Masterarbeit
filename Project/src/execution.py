@@ -1,6 +1,6 @@
 # from src.d.data_generation import generate_data
 from src.d.data_generation import generate_data
-from src.ml.machine_learning import learning
+from src.ml.machine_learning import learning, saving
 from src.ml.utils import param_filename
 
 # Suppress tensorflow logging
@@ -77,6 +77,60 @@ def ml(
     parameters = None
 
 
+def save(
+    plot,
+    network,
+    stencil,
+    layer,
+    activation,
+    epochs=25,
+    learning_rate=1e-3,
+    neg=False,
+    angle=False,
+    rot=False,
+    data=['circle'],
+    smearing=False,
+    hf='hf',
+    hf_correction=False,
+    dropout=0,
+    plotdata=False,
+):
+
+    batch_size = 128
+    equal_kappa = True
+
+    # Parameters
+    parameters = {
+        'network': network,              # Network type
+        'epochs': epochs,                # Number of epochs
+        'layers': layer,                 # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
+        'stencil_size': stencil,         # Stencil size [x, y]
+        'equal_kappa': equal_kappa,      # P(kappa) = const. or P(r) = const.
+        'learning_rate': learning_rate,  # Learning Rate
+        'batch_size': batch_size,        # Batch size
+        'activation': activation,        # Activation function
+        'negative': neg,                 # Negative values too or only positive
+        'angle': angle,                  # Use the angles of the interface too
+        'rotate': rot,                   # Rotate the data before learning
+        'data': data,                    # 'ellipse', 'circle', 'both'
+        'smear': smearing,               # Use smeared data
+        'hf': hf,                        # Use height function
+        'hf_correction': hf_correction,  # Use height function as input for NN
+        # 'dropout': dropout               # dropout fraction
+        'plotdata': plotdata,
+    }
+
+    # Generate filename string
+    parameters['filename'] = param_filename(parameters)
+
+    # Execute learning
+    saving(parameters)
+
+
+    parameters = None
+
+
+
 def exe_dg(**kwargs):
     print(f'kwargs:\n{kwargs}')
     # Sort input keyword arguments
@@ -112,3 +166,12 @@ def exe_ml(**kwargs):
         # Execute validation job list with multithreading
         for job in list(itpd(*kwargs.values())):
             ml(**dict(zip(kwargs.keys(), job)))
+
+
+def exe_save(**kwargs):
+    # Sort input keyword arguments
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata']
+    kwargs = {k: kwargs[k] for k in order}
+    # Execute saving job list with multithreading
+    for job in list(itpd(*kwargs.values())):
+        save(**dict(zip(kwargs.keys(), job)))

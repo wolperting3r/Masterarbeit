@@ -36,12 +36,12 @@ def as_si(x, ndp):
 
 def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels=False):
     # Create plot
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+    fig, ax = plt.subplots(1, 1, figsize=(7, 7))
 
     # Create scatterplot test_predictions vs test_labels
     alpha = 0.1
     marker = ','
-    size = 1
+    size = 0.5
     plt.scatter((hf_labels if hf else labels), predictions, alpha=alpha, color=color, edgecolors='none', marker=marker, s=size)  # darkseagreen
 
 
@@ -87,21 +87,21 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
     prt_str6 = '$\,=' + f'{MSE}$'
     # Print error on plot
     if hf:
-        ax.text(0.83, 0.225, 'HF:', transform=ax.transAxes, color=color, ha='left')
-        ax.text(0.85, 0.20, prt_str1, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.20, prt_str2, transform=ax.transAxes, color='k', ha='left')
-        ax.text(0.85, 0.175, prt_str3, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.175, prt_str4, transform=ax.transAxes, color='k', ha='left')
-        ax.text(0.85, 0.15, prt_str5, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.15, prt_str6, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.80, 0.225, 'HF:', transform=ax.transAxes, color=color, ha='left')
+        ax.text(0.82, 0.20, prt_str1, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.20, prt_str2, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.82, 0.175, prt_str3, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.175, prt_str4, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.82, 0.15, prt_str5, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.15, prt_str6, transform=ax.transAxes, color='k', ha='left')
     else:
-        ax.text(0.83, 0.11, 'ML:', transform=ax.transAxes, color='darkturquoise', ha='left')
-        ax.text(0.85, 0.085, prt_str1, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.085, prt_str2, transform=ax.transAxes, color='k', ha='left')
-        ax.text(0.85, 0.06, prt_str3, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.06, prt_str4, transform=ax.transAxes, color='k', ha='left')
-        ax.text(0.85, 0.035, prt_str5, transform=ax.transAxes, color='k', ha='right')
-        ax.text(0.85, 0.035, prt_str6, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.80, 0.11, 'ML:', transform=ax.transAxes, color='darkturquoise', ha='left')
+        ax.text(0.82, 0.085, prt_str1, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.085, prt_str2, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.82, 0.06, prt_str3, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.06, prt_str4, transform=ax.transAxes, color='k', ha='left')
+        ax.text(0.82, 0.035, prt_str5, transform=ax.transAxes, color='k', ha='right')
+        ax.text(0.82, 0.035, prt_str6, transform=ax.transAxes, color='k', ha='left')
 
     # Save plot
     path = os.path.dirname(os.path.abspath(sys.argv[0]))

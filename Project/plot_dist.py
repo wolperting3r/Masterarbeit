@@ -252,7 +252,7 @@ def ex_plot(parameters, **kwargs):
     f = 50
     a = 0.4/(2*L*Delta*f**2*np.pi**2)
 
-    n_val = 1000
+    n_val = 10000
     x = (np.arange(0, n_val+1)/n_val)*2/f
     y = a*np.sin(f*np.pi*x)
 
@@ -285,20 +285,47 @@ def ex_plot(parameters, **kwargs):
     # Create plot
     fig, ax = plt.subplots(1, 1, figsize=(5, 5))
 
-    alpha = 0.9
-    ax.plot(x, kappa_an, alpha=alpha, color='orange', label = 'Analytic solution')
-    alpha = 0.8
+    ax.plot(x, kappa_an, alpha=0.9, color='orange', label = 'Analytic solution')
+    alpha = 0.3
     marker = 'o'
-    size = 5
-    ax.scatter(x, kappa_hf, alpha=alpha, color='deeppink', label = 'Height function', s=size, marker=marker, edgecolors='none')
-    ax.scatter(x, kappa_ml, alpha=alpha, color='midnightblue', label = 'Machine learning', s=size, marker=marker, edgecolors='none')
+    size = 2
+    ax.scatter(x, kappa_ml, alpha=alpha, color='aqua', s=size, marker=marker, edgecolors='none')
+    ax.scatter(x[0], kappa_ml[0], alpha=1, color='aqua', label = 'Machine learning', s=size, marker=marker, edgecolors='none')
+    ax.scatter(x[0], kappa_hf[0], alpha=1, color='deeppink', label = 'Height function', s=size, marker=marker, edgecolors='none')
     ax.xaxis.label.set_color('white')
     ax.tick_params(axis='x', colors='white')
     ax.set_ylabel('kappa')
     ax.set_ylim([-0.42, 0.42])
-    ax.legend()
+    plt.legend()
+    path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_name_1 = os.path.join(path, 'models', 'x_plots', 'fig_' + str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][0]) + '_rot-' + ((str(c[1]/np.pi) + 'pi') if c[1] != 10 else 'rand') + '_xc-' + ('T' if c[0] else 'F') + '2.png')
+    fig.tight_layout()
+    fig.savefig(file_name_1, dpi=150)
+    plt.close()
+
+    # Create plot
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    ax.plot(x, kappa_an, alpha=0.9, color='orange', label = 'Analytic solution')
+    ax.scatter(x, kappa_hf, alpha=alpha, color='deeppink', label = 'Height function', s=size, marker=marker, edgecolors='none')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    ax.spines['bottom'].set_color('white')
+    ax.spines['top'].set_color('white') 
+    ax.spines['right'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.set_ylabel('kappa')
+    ax.set_ylim([-0.42, 0.42])
     # plt.plot(x, test_k_labels, alpha=alpha, color='blue')
     # plt.plot(x, y, alpha=alpha, color='green')
+    path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_name_2 = os.path.join(path, 'models', 'x_plots', 'fig_' + str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][0]) + '_rot-' + ((str(c[1]/np.pi) + 'pi') if c[1] != 10 else 'rand') + '_xc-' + ('T' if c[0] else 'F') + '3.png')
+    fig.tight_layout()
+    fig.savefig(file_name_2, dpi=150)
+
+    file_name_3 = os.path.join(path, 'models', 'x_plots', 'result_' + str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][0]) + '_rot-' + ((str(c[1]/np.pi) + 'pi') if c[1] != 10 else 'rand') + '_xc-' + ('T' if c[0] else 'F') + '.png')
+    os.system(f"convert {file_name_1} {file_name_2} -compose stamp -composite {file_name_3}")
 
     return fig, ax
 
@@ -306,7 +333,7 @@ parameters = {
     'network': 'mlp',              # Network type
     'epochs': 1000,                # Number of epochs
     'layers': [100, 80],                 # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
-    'stencil_size': [5, 5],         # Stencil size [x, y]
+    'stencil_size': [7, 7],         # Stencil size [x, y]
     'equal_kappa': True,      # P(kappa) = const. or P(r) = const.
     'learning_rate': 1e-4,  # Learning Rate
     'batch_size': 128,        # Batch size
@@ -321,8 +348,8 @@ parameters = {
     'plotdata': 'all',
 }
 
-rot = [10, 0.25*np.pi, 2*np.pi]
-xc = [False, True]
+rot = [0.25*np.pi]
+xc = [True]
 
 l = [xc, rot]
 
@@ -333,7 +360,3 @@ for c in combinations:
     fig, ax = ex_plot(
         **args
     )
-    path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    file_name = os.path.join(path, 'models', 'x_plots', 'fig_' + str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][0]) + '_rot-' + ((str(c[1]/np.pi) + 'pi') if c[1] != 10 else 'rand') + '_xc-' + ('T' if c[0] else 'F') + '.png')
-    fig.tight_layout()
-    fig.savefig(file_name, dpi=150)

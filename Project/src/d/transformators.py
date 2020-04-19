@@ -139,9 +139,14 @@ class FindGradient(BaseEstimator, TransformerMixin):
 
         '''
         # Test
+        print(f'grad_x.shape:\n{grad_x.shape}')
+        print(f'grad_y.shape:\n{grad_y.shape}')
+        print(f'data.shape:\n{data.shape}')
         ind = 1
-        print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
-        print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
+        # print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
+        # print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
+        print_data_gradx = grad_x[:,ind]
+        print_data_grady = grad_y[:,ind]
         print_data_grad = data.transpose((0, 1, 3, 2))[ind]
         print(f'\nGrad_x:\n{print_data_gradx}')
         print(f'\nGrad_y:\n{print_data_grady}')

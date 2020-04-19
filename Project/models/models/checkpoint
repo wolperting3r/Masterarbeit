@@ -1,0 +1,2 @@
+model_checkpoint_path: "model_mlp_1000_100-80_7x7_eqk_0.0001_128_relu_neg_nag_rot_circle_smr_nhc.tf"
+all_model_checkpoint_paths: "model_mlp_1000_100-80_7x7_eqk_0.0001_128_relu_neg_nag_rot_circle_smr_nhc.tf"
