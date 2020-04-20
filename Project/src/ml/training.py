@@ -49,8 +49,11 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
     return model
 
 
-def load_model(parameters):
-    path = os.path.dirname(os.path.abspath(sys.argv[0]))
+def load_model(parameters, **kwargs):
+    if 'path' in kwargs:
+        path = kwargs.get('path')
+    else:
+        path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     # '''
     param_str = parameters['filename']

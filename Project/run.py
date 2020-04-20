@@ -27,7 +27,7 @@ activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [False]
-rot = [True]
+rot = [False]
 # data = ['sinus']
 # data = ['all', 'sinus', 'circle', 'ellipse']
 # plotdata = ['all', 'sinus', 'circle', 'ellipse']
@@ -66,7 +66,7 @@ for i in range(0, 2):
     # '''
     if i == 1:
         plot = [True]
-        # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
         exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
 

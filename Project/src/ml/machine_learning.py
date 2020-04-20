@@ -66,10 +66,8 @@ def learning(parameters, silent=False, plot=True): # Get data (reshape if networ
         # Load model
         model = load_model(parameters)
 
-        save_to_txt(model, parameters)
-
         # Create validation plot
-        # validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0], test_k_labels=test_k_labels)
+        validate_model_plot(model, test_data, test_labels, parameters, test_kappa=test_kappa[:, 0], test_k_labels=test_k_labels)
     # '''
 
 def saving(parameters):
