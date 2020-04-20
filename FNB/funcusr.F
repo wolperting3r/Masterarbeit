@@ -51,7 +51,7 @@ call setzero(cold,nxyzac,1,nxyzac)
 !############### Initialize Machine Learning ########################
 
 ! Open file with weights
-open(unit=142,file='model',action='read',status='old',iostat=stat)
+open(unit=142,file='model_circ',action='read',status='old',iostat=stat)
 if (stat == 0) then
         read(142,*) ml_n_features       ! number of input features
         read(142,*) ml_n_layers         ! number of layers (including input, including output)

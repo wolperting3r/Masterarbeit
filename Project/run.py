@@ -31,8 +31,8 @@ rot = [False]
 # data = ['sinus']
 # data = ['all', 'sinus', 'circle', 'ellipse']
 # plotdata = ['all', 'sinus', 'circle', 'ellipse']
-data = ['all']
-plotdata = ['all']
+data = ['circle']
+plotdata = ['circle']
 smearing = [True]
 hf = ['hf']
 hf_correction = [False]
@@ -58,7 +58,7 @@ for i in range(0, 2):
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
     layer = [[100, 80]]
-    '''
+    # '''
     if i == 0:
         plot = [False]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
