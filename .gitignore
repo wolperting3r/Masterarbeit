@@ -1,6 +1,8 @@
 __pycache__/
 .DS_Store
 output*.txt
+model*.txt
+*.swp
 
 **/datasets/*.feather
 **/tuning

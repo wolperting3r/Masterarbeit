@@ -11,7 +11,6 @@ from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate,
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
 np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
-
 def get_data(parameters):
     ''' Import data from files '''
     if parameters['data'] == 'all':
@@ -262,6 +261,9 @@ def transform_data(parameters, reshape=False, plot=False, **kwargs):
         data = kwargs.get('data')
     else:
         data = get_data(parameters)
+
+    # Condition for data
+    # data = data[(np.abs(data.iloc[:, 0]) < 0.05)]
 
     if 'data' in kwargs:  # And use all of that data in test set
         # Split data

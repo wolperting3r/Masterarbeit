@@ -242,7 +242,7 @@ class Rotate(BaseEstimator, TransformerMixin):
         # 0: rot 2
         # 2: rot 3
         # 5: rot 0
-        ind = 2
+        ind = 5
         print_data_nrt = data[ind].reshape((st_sz[0], st_sz[1])).copy()
         # '''
 

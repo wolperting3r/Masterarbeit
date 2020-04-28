@@ -76,13 +76,20 @@ def create_model(parameters, shape):
 
     return model
 
+def custom_loss(y_true, y_pred):
+    return tf.math.reduce_mean(tf.math.squared_difference(y_true, y_pred)*tf.math.subtract(0.5, tf.abs(y_true)))
+    #return tf.math.subtract(tf.abs(y_true),0.5)
+
 
 def build_model(parameters, shape):
     # Create tensorflow model
     model = create_model(parameters, shape)
     # Compile model with optimizer and loss function
+    # model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
+                  # loss='mse',
+                  # metrics=['mae', 'mse'])
     model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  loss='mse',
+                  loss='mse', # custom_loss,   # custom_loss oder 'mse'
                   metrics=['mae', 'mse'])
     # Print summary
     for key, value in parameters.items():
