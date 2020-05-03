@@ -31,7 +31,7 @@ rot = [True]
 # data = ['sinus']
 # data = ['all', 'sinus', 'circle', 'ellipse']
 # plotdata = ['all', 'sinus', 'circle', 'ellipse']
-data = ['all', 'circle']
+data = ['all']
 plotdata = ['all']
 smearing = [True]
 hf = ['hf']
@@ -57,17 +57,17 @@ for i in range(0, 2):
     network = ['mlp']
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
-    # layer = [[100, 90, 80, 50]]
-    layer = [[100, 80]]
+    layer = [[200, 150, 120]]
+    # layer = [[100, 80]]
     # '''
     if i == 0:
         plot = [False]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
+        # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
     # '''
     if i == 1:
         plot = [True]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
+        # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
         exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
 

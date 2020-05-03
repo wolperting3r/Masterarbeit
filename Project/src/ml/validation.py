@@ -105,7 +105,7 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
 
     # Save plot
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    param_str = parameters['filename']
+    param_str = parameters['filename'] + '_shift_kappa'
     fig.tight_layout()
     fig.savefig(file_name, dpi=150)
     # plt.show()
@@ -120,7 +120,7 @@ def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=Fa
     test_predictions = model.predict(test_data, batch_size=parameters['batch_size']).flatten()
 
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    param_str = param_filename(parameters, include_plotdata=True)
+    param_str = param_filename(parameters, include_plotdata=True) + '_shift_kappa'
     # param_str = parameters['filename']
 
     if (parameters['hf'] == 'hf') or (parameters['hf'] == 'cd'):

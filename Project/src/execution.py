@@ -59,7 +59,7 @@ def ml(
 
     # print(f'parameters:\n{parameters}')
     # Generate filename string
-    parameters['filename'] = param_filename(parameters)
+    parameters['filename'] = param_filename(parameters) + '_shift_kappa'
 
     # Execute learning
     if parameters['network'] != 'auto':

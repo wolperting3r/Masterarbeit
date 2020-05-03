@@ -277,6 +277,85 @@ class Rotate(BaseEstimator, TransformerMixin):
         return [dataset[0], data, dataset[2]]
 
 
+class Shift(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate dataset
+        data = dataset[1]
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1], 1))
+
+        '''
+        # Test mit seed 43
+        # 1 shift up
+        # 4 shift down
+        # 21 shift left
+        # 9 shift right
+        ind = 8
+        print_data_nrt = data[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'Data before:\n{print_data_nrt}')
+        # '''
+
+        # Data can only be shifted where the sum over one row/column is 0/the stencil size (which means there is no information on the interface in that row/column, only 1s or 0s.
+        sum_x = np.sum(data, axis=2)
+        sum_y = np.sum(data, axis=1)
+
+        np.random.seed(43)
+        # Create array with random integers from 0 to 2. 0 = shift in direction 1, 1 = do not shift, 2 = shift in direction 2
+        decider = np.random.randint(0, 3, data.shape[0])
+
+        result = data.copy()
+
+        # Get indices where the data should be shifted
+        epsilon = 0.03
+        shift_up = np.nonzero((decider == 0) & (sum_x[:, 0, 0] >= (st_sz[1]-epsilon)))
+        shift_down = np.nonzero((decider == 2) & (sum_x[:, st_sz[1]-1, 0] <= epsilon))
+        shift_right = np.nonzero((decider == 0) & (sum_y[:, st_sz[0]-1, 0] >= (st_sz[0]-epsilon)))
+        shift_left = np.nonzero((decider == 2) & (sum_y[:, 0, 0] <= epsilon))
+
+        # Shift the data
+        result[shift_up, :st_sz[0]-1, :, :] = data[shift_up, 1:, :, :]
+        result[shift_up, st_sz[0]-1, :, :] = 0
+
+        result[shift_down, 1:, :, :] = data[shift_down, :st_sz[0]-1, :, :]
+        result[shift_down, 0, :, :] = 1
+
+        result[shift_left, :, :st_sz[0]-1, :] = data[shift_left, :, 1:, :]
+        result[shift_left, :, st_sz[0]-1, :] = 1
+
+        result[shift_right, :, 1:, :] = data[shift_right, :, :st_sz[0]-1, :]
+        result[shift_right, :, 0, :] = 0
+
+        # Overwrite data
+        data = result
+
+        if data.shape != shape:
+            # Reshape rotated data to original shape
+            data = np.reshape(data, shape)
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, shape)
+
+        '''
+        # Test
+        print_data_rot = result[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'Data after:\n{print_data_rot}')
+        # '''
+        return [dataset[0], data, dataset[2]]
+
+
 class CDS(BaseEstimator, TransformerMixin):
     def __init__(self, parameters):
         self.parameters = parameters

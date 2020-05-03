@@ -11,7 +11,12 @@ def get_predictions(data, basepath, **kwargs):
         parameters = {'filename': kwargs.get('filename')}    
     else:
         parameters = {'filename': '_mlp_1000_100-80_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_old'}
-    model = load_model(parameters, path=basepath)
+
+    if 'custom_objects' in kwargs:
+        custom_objects = kwargs.get('custom_objects')
+        model = load_model(parameters, path=basepath, custom_objects=custom_objects)
+    else:
+        model = load_model(parameters, path=basepath)
     test_predictions = model.predict(data, batch_size=128).flatten()
     return test_predictions
 

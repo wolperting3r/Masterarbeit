@@ -50,15 +50,12 @@ integer:: stz = 7
 integer:: stzh = (7-1)/2
 integer:: gridsize = 128
 integer :: counter, w_idx_beg, b_idx_beg, i_loc, j_loc, n, o, p, counter1
-! real*4  :: t1, delta
 #include "hahihjhk.h"
 !####################################################################################################################################
 ! Calculate gradient of concentration field for pre-processing
 call calgradc(ngr,0,1,c,dscdx,dscdy,dscdz, &
 #               include "listcalgradcc.h"
         ier)  
-
-! t1 = secnds(0.0)
 
 do m=1,nblo
   call setind(ngr,m, &
@@ -237,9 +234,6 @@ do m=1,nblo
     end do
   end do
 end do
-
-! delta = secnds(t1)
-! print*, delta
 ! Am Ende muss dscdx und dscurv2 (Kr√mmung) √ºber dem ganzen Stencil√ºberschrieben werden
 ! Das sind globale Variablen, die nicht ausgegeben werden m√ssen
 end subroutine curv_ml

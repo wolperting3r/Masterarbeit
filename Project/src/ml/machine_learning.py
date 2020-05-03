@@ -75,7 +75,7 @@ def saving(parameters):
     model = load_model(parameters)
 
     # Get export path
-    param_str = parameters['filename']
+    param_str = parameters['filename'] + '_shift_kappa'
     path = os.path.dirname(os.path.abspath(sys.argv[0]))
     file_name = os.path.join(path, 'model' + param_str + '.txt')
 

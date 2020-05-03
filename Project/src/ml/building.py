@@ -77,7 +77,7 @@ def create_model(parameters, shape):
     return model
 
 def custom_loss(y_true, y_pred):
-    return tf.math.reduce_mean(tf.math.squared_difference(y_true, y_pred)*tf.math.subtract(0.5, tf.abs(y_true)))
+    return tf.math.reduce_mean(tf.math.multiply(tf.math.squared_difference(y_true, y_pred),tf.math.square(tf.math.multiply(tf.math.subtract(0.44, tf.math.abs(y_true)), 2)) ))
     #return tf.math.subtract(tf.abs(y_true),0.5)
 
 
@@ -89,7 +89,7 @@ def build_model(parameters, shape):
                   # loss='mse',
                   # metrics=['mae', 'mse'])
     model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  loss='mse', # custom_loss,   # custom_loss oder 'mse'
+                  loss= custom_loss,   # custom_loss oder 'mse'
                   metrics=['mae', 'mse'])
     # Print summary
     for key, value in parameters.items():

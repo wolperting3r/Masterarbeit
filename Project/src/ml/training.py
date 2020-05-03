@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-# from tqdm.keras import TqdmCallback
+from tqdm.keras import TqdmCallback
 from .utils import param_filename
 from .building import custom_loss
 
@@ -37,7 +37,7 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
               shuffle=True,
               epochs=parameters['epochs'],  # war 10000
               verbose=0,
-              callbacks=[# TqdmCallback(verbose=(0 if silent else 1)),
+              callbacks=[TqdmCallback(verbose=(0 if silent else 1)),
                          early_stopping_callback,
                          csv_logger])
     # validation_steps=2,
@@ -57,7 +57,8 @@ def load_model(parameters, **kwargs):
         path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     # '''
-    param_str = parameters['filename']
+    # param_str = parameters['filename']
+    param_str = parameters['filename'] + '_shift_kappa'
     # '''
     '''
     param_tmp = parameters.copy()
@@ -68,6 +69,6 @@ def load_model(parameters, **kwargs):
     print(f'param_str:\n{param_str}')
 
     file_name = os.path.join(path, 'models', 'models', 'model' + param_str + '.h5')
-    # model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
-    model = tf.keras.models.load_model(file_name)
+    model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
+    # model = tf.keras.models.load_model(file_name)
     return model

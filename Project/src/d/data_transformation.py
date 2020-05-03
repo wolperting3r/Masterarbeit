@@ -5,7 +5,7 @@ import sys
 import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF, TwoLayers
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF, TwoLayers, Shift
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
@@ -166,6 +166,7 @@ def process_data(dataset, parameters, reshape):
             ('findgradient', FindGradient(parameters=parameters)),
             ('findangle', FindAngle(parameters=parameters)),
             ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+            ('shift', Shift(parameters=parameters)),  # Output: [labels, data, angle_matrix]
         ])
         # Execute pipeline
         [labels, features, angle] = data_pipeline.fit_transform(dataset)

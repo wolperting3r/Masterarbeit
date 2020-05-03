@@ -51,7 +51,9 @@ call setzero(cold,nxyzac,1,nxyzac)
 !############### Initialize Machine Learning ########################
 
 ! Open file with weights
-open(unit=142,file='model_circ',action='read',status='old',iostat=stat)
+loop_counter = 1
+open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_shift_kappa',&
+  action='read',status='old',iostat=stat)
 if (stat == 0) then
         read(142,*) ml_n_features       ! number of input features
         read(142,*) ml_n_layers         ! number of layers (including input, including output)
@@ -120,6 +122,14 @@ if (stat == 0) then
                 end do
                 ml_linecounter_bias = ml_linecounter_bias + ml_n_biasweights(i)
         end do
+
+        ! Allocate layers
+        ! allocate(ml_input_layer(ml_layer_nodes(1)))
+        ! allocate(ml_first_layer(ml_layer_nodes(2)))
+        ! allocate(ml_second_layer(ml_layer_nodes(3)))
+        ! allocate(ml_third_layer(ml_layer_nodes(4)))
+        ! allocate(ml_output_layer(ml_layer_nodes(5)))
+        ! allocate(ml_tmp(ml_layer_nodes(1)))
         print*, 'file ml_weights was loaded'
 else
         print*, 'file ml_weights not found'
