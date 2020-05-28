@@ -57,7 +57,7 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
+def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal):
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
@@ -216,6 +216,75 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
         # Round point to get origin of local coordinates in global coordinates relative to geometry origin
         round_point = np.floor(x*1/Delta*L)*Delta/L
 
+
+        ''' 1. Evaluate VOF values on cross around origin to get gradient, shift along gradient '''
+        # Initialize vof_array and fill it with nan
+        vof_array = np.empty((cr_sz[0], cr_sz[1]))
+        vof_array[:] = np.nan
+
+        if visualize:
+            # Create pandas dataframe to fetch shape of geometry in local coordinates
+            vof_df = pd.DataFrame(index=range(cr_sz[0]), columns=range(cr_sz[1]))
+
+        # Generate cross points in x and y direction
+        cross_point_origins = cross(round_point, st_crp, rev_y=True)
+        cross_point_indices = cross(cr_mid, st_crp/Delta).astype(int)
+        
+        for idx, ill in enumerate(cross_point_indices):
+            # Get origin coordinates too
+            lo = cross_point_origins[idx]
+            # Values of local grid relative to geometry origin
+            # Local grid origin in lower left corner, x: l.t.r., y: b.t.t.
+            # (!! y on global grid = local grid origins is from top to bottom!)
+            [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
+                                   local_grid[1] + lo[1] - x_c[1]])
+            if (geometry == 'sinus') or (geometry == 'ellipse'):
+                # Rotate geometry back to calculate geometry
+                x_ltmp = x_l.copy()
+                y_ltmp = y_l.copy()
+                x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
+                y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
+
+            if geometry == 'sinus':
+                # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
+                r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
+                # Calculate 1s and 0s on local grid
+                r_area = np.where(r_sqr <= 0, 1, 0)
+
+            elif geometry == 'ellipse':
+                # Get radii on local grid r^2 = e^2*x^2 + y^2
+                r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                # Calculate 1s and 0s on local grid
+                r_area = np.where(r_sqr <= r*r, 1, 0)
+
+            elif geometry == 'circle':
+                # Get radii on local grid r^2 = x^2 + y^2 + z^2
+                r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                # Calculate 1s and 0s on local grid
+                r_area = np.where(r_sqr <= r*r, 1, 0)
+
+            # Get VOF values by integration over local grid
+            vof = np.sum(r_area)/r_area.size
+            # Write vof value into stencil value array
+            vof_array[ill[0], ill[1]] = vof
+            if visualize:
+                # Save the r_area array (containing the shape of the geometry) for plotting
+                vof_df.iloc[ill[0], ill[1]] = r_area
+
+        # Calculate gradient with central finite difference:
+        grad_y = vof_array[cr_mid[0]+1, cr_mid[1]]-vof_array[cr_mid[0]-1, cr_mid[1]]
+        grad_x = vof_array[cr_mid[0], cr_mid[1]+1]-vof_array[cr_mid[0], cr_mid[1]-1]
+        # Calculate normal vector
+        normal = -1/np.sqrt(grad_y*grad_y+grad_x*grad_x)*np.array([grad_y, grad_x])
+
+        # Shift round point by random amount to cover points around the interface as well
+        if usenormal:
+            shift_vector = normal
+        else:
+            shift_vector = np.array([-grad_y, -grad_x])
+        shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
+        round_point = round_point + shift_point*shift_vector*Delta/L
+
         ''' Plot Ellipse/Circle '''
         if visualize:
             # Initialize plot
@@ -230,116 +299,17 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
                 # Plot circle
                 plot_circle(ax1, r, x_c, x)
 
-        ''' 1. Evaluate VOF values on cross around origin to get gradient (if stencil is not quadratic) '''
-        if st_sz[0] != st_sz[1]:
-            # Initialize vof_array and fill it with nan
-            vof_array = np.empty((cr_sz[0], cr_sz[1]))
-            vof_array[:] = np.nan
-
-            if visualize:
-                # Create pandas dataframe to fetch shape of geometry in local coordinates
-                vof_df = pd.DataFrame(index=range(cr_sz[0]), columns=range(cr_sz[1]))
-
-            # Generate cross points in x and y direction
-            cross_point_origins = cross(round_point, st_crp, rev_y=True)
-            cross_point_indices = cross(cr_mid, st_crp/Delta).astype(int)
-            for idx, ill in enumerate(cross_point_indices):
-                # Get origin coordinates too
-                lo = cross_point_origins[idx]
-                # Values of local grid relative to geometry origin
-                # Local grid origin in lower left corner, x: l.t.r., y: b.t.t.
-                # (!! y on global grid = local grid origins is from top to bottom!)
-                [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
-                                       local_grid[1] + lo[1] - x_c[1]])
-                if (geometry == 'sinus') or (geometry == 'ellipse'):
-                    # Rotate geometry back to calculate geometry
-                    x_ltmp = x_l.copy()
-                    y_ltmp = y_l.copy()
-                    x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
-                    y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
-
-                if geometry == 'sinus':
-                    # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
-                    r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
-                    # Calculate 1s and 0s on local grid
-                    r_area = np.where(r_sqr <= 0, 1, 0)
-
-                elif geometry == 'ellipse':
-                    # Get radii on local grid r^2 = e^2*x^2 + y^2
-                    r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
-                    # Calculate 1s and 0s on local grid
-                    r_area = np.where(r_sqr <= r*r, 1, 0)
-
-                elif geometry == 'circle':
-                    # Get radii on local grid r^2 = x^2 + y^2 + z^2
-                    r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
-                    # Calculate 1s and 0s on local grid
-                    r_area = np.where(r_sqr <= r*r, 1, 0)
-
-                # Get VOF values by integration over local grid
-                vof = np.sum(r_area)/r_area.size
-                # Write vof value into stencil value array
-                vof_array[ill[0], ill[1]] = vof
-                if visualize:
-                    # Save the r_area array (containing the shape of the geometry) for plotting
-                    vof_df.iloc[ill[0], ill[1]] = r_area
-
-            # Calculate gradient with central finite difference:
-            grad_y = vof_array[cr_mid[0]+1, cr_mid[1]]-vof_array[cr_mid[0]-1, cr_mid[1]]
-            grad_x = vof_array[cr_mid[0], cr_mid[1]+1]-vof_array[cr_mid[0], cr_mid[1]-1]
-            # Calculate normal vector
-            normal = -1/np.sqrt(grad_y*grad_y+grad_x*grad_x)*np.array([grad_y, grad_x])
-
-            # Extend the stencil in the direction the normal vector points to
-            if np.abs(normal[0]) > np.abs(normal[1]):
-                # If gradient points more to y-direction
-                # Set direction to 0 (y)
-                direction = 0
-                # Leave stencil as it is
-                st_stp_tmp = st_stp
-                st_sz_tmp = st_sz
-                st_mid_tmp = st_mid
-                if visualize:
-                    # Extend index of dataframe by padding
-                    # First shift index/columns by half the difference between new and old dimensions, so the cross dataframe stays in the middle
-                    vof_df.index = vof_df.index+(st_sz_tmp[0]-cr_sz[0])/2
-                    vof_df.columns = vof_df.columns+(st_sz_tmp[1]-cr_sz[1])/2
-                    # Then reindex the dataframe to create the indices before and after the old indices
-                    vof_df = vof_df.reindex(range(st_sz_tmp[0]))
-                    vof_df = vof_df.reindex(range(st_sz_tmp[1]), axis='columns').astype(object)
-            else:
-                # If gradient points more to x_direction
-                # Set direction to 1 (x)
-                direction = 1
-                # Rotate stencil by 90 degrees (flip x and y dimensions)
-                st_stp_tmp = np.flip(st_stp)
-                st_sz_tmp = np.flip(st_sz)
-                st_mid_tmp = np.flip(st_mid)
-                if visualize:
-                    # Extend columns of dataframe by padding
-                    vof_df.index = vof_df.index+(st_sz_tmp[0]-cr_sz[0])/2
-                    vof_df.columns = vof_df.columns+(st_sz_tmp[1]-cr_sz[1])/2
-
-                    vof_df = vof_df.reindex(range(st_sz_tmp[0]))
-                    vof_df = vof_df.reindex(range(st_sz_tmp[1]), axis='columns').astype(object)
-            # Pad vof_array so it fits the stencil dimensions
-            pad_y = int((st_sz_tmp[0] - vof_array.shape[0])*1/2)
-            pad_x = int((st_sz_tmp[1] - vof_array.shape[1])*1/2)
-            vof_array = np.pad(vof_array,
-                               [[pad_y, pad_y], [pad_x, pad_x]],
-                               mode='constant', constant_values=np.nan)
-        # If the stencil is quadratic
-        else:
-            # Initialize vof_array and vof_df with stencil size
-            vof_array = np.empty((st_sz[0], st_sz[1]))
-            vof_array[:] = np.nan
-            if visualize:
-                # Create pandas dataframe to fetch shape of geometry in local coordinates
-                vof_df = pd.DataFrame(index=range(st_sz[0]), columns=range(st_sz[1]))
-            # Pass on stencil values as they are
-            st_stp_tmp = st_stp
-            st_sz_tmp = st_sz
-            st_mid_tmp = st_mid
+        # Initialize new variables
+        # Initialize vof_array and vof_df with stencil size
+        vof_array = np.empty((st_sz[0], st_sz[1]))
+        vof_array[:] = np.nan
+        if visualize:
+            # Create pandas dataframe to fetch shape of geometry in local coordinates
+            vof_df = pd.DataFrame(index=range(st_sz[0]), columns=range(st_sz[1]))
+        # Pass on stencil values as they are
+        st_stp_tmp = st_stp
+        st_sz_tmp = st_sz
+        st_mid_tmp = st_mid
 
         ''' 2. Evaluate VOF values on whole stencil '''
         # Get origins of local coordinates of stencil points
@@ -479,9 +449,10 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing):
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_n.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+'.feather')
         print(f'File:\n{file_name}')
         # Export file
+        # print('NO EXPORT')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')
