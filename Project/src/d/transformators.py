@@ -410,7 +410,7 @@ class Shift(BaseEstimator, TransformerMixin):
         # Overwrite data
         data = result
 
-        #'''
+        '''
         # Shift a second time
         sum_x = np.sum(data, axis=2)
         sum_y = np.sum(data, axis=1)

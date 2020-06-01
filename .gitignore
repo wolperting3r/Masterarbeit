@@ -1,7 +1,11 @@
 __pycache__/
 .DS_Store
 output*.txt
+*.his
+y_pos.txt
+y_pos_re.txt
 model*.txt
+*.plt
 *.swp
 
 **/datasets/*.feather

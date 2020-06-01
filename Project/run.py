@@ -36,14 +36,14 @@ rot = [True]
 # data = ['sinus']
 # data = ['all', 'sinus', 'circle', 'ellipse']
 # plotdata = ['all', 'sinus', 'circle', 'ellipse']
-data = ['all']
-# data = ['ellipse']
+# data = ['all']
+data = ['ellipse']
 plotdata = ['all']
 smearing = [True]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
-addstring = ['_dshift1b_05snoshft1e05c_shift2e0_kappa_cut0050995']
+addstring = ['_dshift1b_shift_cut0050995']
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
     # CVN

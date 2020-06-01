@@ -22,7 +22,6 @@ def get_data(parameters):
             ('_neg' if parameters['negative'] else '_pos') + \
             '_cir' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
-            '_shift1' + \
             '.feather'
         filename_sin = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -37,10 +36,9 @@ def get_data(parameters):
             ('_neg' if parameters['negative'] else '_pos') + \
             '_ell' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
-            '_shift1' + \
             '.feather'
 
-        #'''
+        '''
         filename_cir2 = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
@@ -55,6 +53,8 @@ def get_data(parameters):
             ('_neg' if parameters['negative'] else '_pos') + \
             '_sin' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
+            '_shift1' + \
+            '_n' + \
             '.feather'
         filename_ell2 = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -89,10 +89,11 @@ def get_data(parameters):
         data_cir = pd.read_feather(path_cir)
         data_sin = pd.read_feather(path_sin)
         data_ell = pd.read_feather(path_ell)
+
         data_sin = data_sin[:int(data_sin.shape[0]/2)]
         data_cir = data_sin[:int(data_cir.shape[0]/2)]
 
-        #'''
+        '''
         print(f'Dataset 1b:\t{filename_cir2}')
         print(f'Dataset 2b:\t{filename_ell2}')
         print(f'Dataset 3b:\t{filename_sin2}')
@@ -108,7 +109,8 @@ def get_data(parameters):
         data = pd.concat([data_cir, data_sin, data_ell, data_cir2, data_sin2, data_ell2], ignore_index=True)
         #data = pd.concat([data_cir, data_ell, data_cir2, data_ell2], ignore_index=True)
         #'''
-        #data = pd.concat([data_sin, data_ell], ignore_index=True)
+        #data = pd.concat([data_sin, data_ell, data_cir], ignore_index=True)
+        data = pd.concat([data_ell, data_cir], ignore_index=True)
 
         # data_cir = pd.read_feather(path_cir) # neu
         # data = pd.concat([data_sin, data_ell, data_cir], ignore_index=True)
@@ -126,8 +128,14 @@ def get_data(parameters):
             ('_neg' if parameters['negative'] else '_pos') + \
             geom_str + \
             ('_smr' if parameters['smear'] else '_nsm') + \
-            '_shift1' + \
             '.feather'
+
+        print(f'Dataset:\t{filename}')
+        parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+        path = os.path.join(parent_path, 'data', 'datasets', filename)
+        data = pd.read_feather(path)
+
+        # '''
         filename2 = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
@@ -136,20 +144,15 @@ def get_data(parameters):
             ('_smr' if parameters['smear'] else '_nsm') + \
             '_shift1b' + \
             '.feather'
-
-        print(f'Dataset:\t{filename}')
-        # print(f'Dataset2:\t{filename}')
-        parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        path = os.path.join(parent_path, 'data', 'datasets', filename)
-        data = pd.read_feather(path)
-
-        # '''
+        print(f'Dataset2:\t{filename2}')
         path2 = os.path.join(parent_path, 'data', 'datasets', filename2)
         data2 = pd.read_feather(path2)
         data2= data2[:int(data2.shape[0]/2)]
         data = pd.concat([data, data2], ignore_index=True)
         # '''
     # print(f'Imported data with shape {data.shape}')
+    # Only return data with the curvature being below a certain threshold
+    # data = data[np.abs(data.iloc[:, 0]) < 0.15]
     return data.copy()
 
 
@@ -256,7 +259,7 @@ def process_data(dataset, parameters, reshape):
             ('transform', TransformData(parameters=parameters, reshape=reshape)),
             ('findgradient', FindGradient(parameters=parameters)),
             ('findangle', FindAngle(parameters=parameters)),
-            ('shift', Shift(parameters=parameters)),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
+            # ('shift', Shift(parameters=parameters)),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
             ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
         ])
         # Execute pipeline
