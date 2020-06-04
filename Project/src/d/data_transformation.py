@@ -129,13 +129,16 @@ def get_data(parameters):
             geom_str + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             '.feather'
+        '''
+        HIER OBEN SHIFT DAZU WENN DSHIFT
+        '''
 
         print(f'Dataset:\t{filename}')
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         path = os.path.join(parent_path, 'data', 'datasets', filename)
         data = pd.read_feather(path)
 
-        # '''
+        '''
         filename2 = 'data_' + \
             str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
             ('eqk' if parameters['equal_kappa'] else 'eqr') + \
@@ -153,6 +156,10 @@ def get_data(parameters):
     # print(f'Imported data with shape {data.shape}')
     # Only return data with the curvature being below a certain threshold
     # data = data[np.abs(data.iloc[:, 0]) < 0.15]
+    # data = data[np.abs(data.iloc[:, 0]) > 0.015]
+    # data = data[data.iloc[:, 0] > 0]
+    data.iloc[:, 0] = -data.iloc[:, 0]
+
     return data.copy()
 
 
@@ -259,7 +266,7 @@ def process_data(dataset, parameters, reshape):
             ('transform', TransformData(parameters=parameters, reshape=reshape)),
             ('findgradient', FindGradient(parameters=parameters)),
             ('findangle', FindAngle(parameters=parameters)),
-            # ('shift', Shift(parameters=parameters)),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
+            ('shift', Shift(parameters=parameters)),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
             ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
         ])
         # Execute pipeline

@@ -1,10 +1,14 @@
 import re
 
-with open('./2006011726 Stabiles Modell dshift1b/y_pos.txt', 'r') as myfile:
-    data = myfile.read()
-    data = re.sub(r'(\d) +(\d)', r'\1, \2', data)
-    data = re.sub(r'(?<!,) +', r'', data)
+# path = 'FASTEST_2'
+# paths = ['FASTEST_1', 'FASTEST_3']
+path = ['FASTEST_1', 'FASTEST_2', 'FASTEST_3', 'FASTEST_4']
+for path in paths:
+    with open('./'+path+'/y_pos.txt', 'r') as myfile:
+        data = myfile.read()
+        data = re.sub(r'(\d) +(\d)', r'\1, \2', data)
+        data = re.sub(r'(?<!,) +', r'', data)
 
-    outfile = open('./2006011726 Stabiles Modell dshift1b/y_pos_re.txt', 'w')
-    outfile.write(data)
-    outfile.close()
+        outfile = open('./'+path+'/y_pos_re.txt', 'w')
+        outfile.write(data)
+        outfile.close()

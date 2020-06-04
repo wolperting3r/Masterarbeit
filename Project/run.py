@@ -43,7 +43,7 @@ smearing = [True]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
-addstring = ['_dshift1b_shift_cut0050995']
+addstring = ['_nocust_flip_dshift1_shift1_cut0050995']
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
     # CVN
@@ -64,9 +64,11 @@ for i in range(0, 2):
     network = ['mlp']
     # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
     # layer = [[100, 80], [100, 80, 50]]
-    layer = [[200, 150, 120]]
+    # layer = [[200, 150, 120]]
+    # layer = [[200, 150, 120, 80, 50]]
     # layer = [[500, 600, 400, 100]]
-    # layer = [[100, 80]]
+    layer = [[100, 80]]
+    # layer = [[80, 50]]
     # '''
     if i == 0:
         plot = [False]

@@ -1,9 +1,9 @@
-699699/699699 - 14s - loss: 2.9961e-05 - mean_absolute_error: 0.0136 - mean_squared_error: 3.6927e-04
-[2.9960914524518235e-05, 0.013609478, 0.0003692678]
+699699/699699 - 9s - loss: 3.0680e-05 - mean_absolute_error: 0.0139 - mean_squared_error: 3.7990e-04
+[3.0680019411563344e-05, 0.013857448, 0.00037990295]
 
 
-149935/149935 - 3s - loss: 3.0123e-05 - mean_absolute_error: 0.0136 - mean_squared_error: 3.6840e-04
-[3.012331979372737e-05, 0.013589248, 0.00036840033]
+149935/149935 - 2s - loss: 3.0858e-05 - mean_absolute_error: 0.0138 - mean_squared_error: 3.7954e-04
+[3.085756897617784e-05, 0.013849655, 0.00037954337]
 
 
 Model: "sequential"
