@@ -346,8 +346,10 @@ class Rotate(BaseEstimator, TransformerMixin):
 
 
 class Shift(BaseEstimator, TransformerMixin):
-    def __init__(self, parameters):
+    def __init__(self, parameters, shift=0, epsilon=0):
         self.parameters = parameters
+        self.shift = shift
+        self.epsilon = epsilon
 
     def fit(self, dataset):
         return self
@@ -377,71 +379,38 @@ class Shift(BaseEstimator, TransformerMixin):
         print(f'Data before:\n{print_data_nrt}')
         # '''
 
-        # Data can only be shifted where the sum over one row/column is 0/the stencil size (which means there is no information on the interface in that row/column, only 1s or 0s.
-        sum_x = np.sum(data, axis=2)
-        sum_y = np.sum(data, axis=1)
+        for i in range(self.shift):
+            # Data can only be shifted where the sum over one row/column is 0/the stencil size (which means there is no information on the interface in that row/column, only 1s or 0s.
+            sum_x = np.sum(data, axis=2)
+            sum_y = np.sum(data, axis=1)
 
-        # np.random.seed(43)
-        # Create array with random integers from 0 to 2. 0 = shift in direction 1, 1 = do not shift, 2 = shift in direction 2
-        decider = np.random.randint(0, 3, data.shape[0])
+            # np.random.seed(43)
+            # Create array with random integers from 0 to 2. 0 = shift in direction 1, 1 = do not shift, 2 = shift in direction 2
+            decider = np.random.randint(0, 3, data.shape[0])
 
-        result = data.copy()
+            result = data.copy()
+            # Get indices where the data should be shifted
+            epsilon = self.epsilon  # war 0.03
+            shift_up = np.nonzero((decider == 0) & (sum_x[:, 0, 0] >= (st_sz[1]-epsilon)))
+            shift_down = np.nonzero((decider == 2) & (sum_x[:, st_sz[1]-1, 0] <= epsilon))
+            shift_right = np.nonzero((decider == 0) & (sum_y[:, st_sz[0]-1, 0] >= (st_sz[0]-epsilon)))
+            shift_left = np.nonzero((decider == 2) & (sum_y[:, 0, 0] <= epsilon))
 
-        # Get indices where the data should be shifted
-        epsilon = 0  # war 0.03
-        shift_up = np.nonzero((decider == 0) & (sum_x[:, 0, 0] >= (st_sz[1]-epsilon)))
-        shift_down = np.nonzero((decider == 2) & (sum_x[:, st_sz[1]-1, 0] <= epsilon))
-        shift_right = np.nonzero((decider == 0) & (sum_y[:, st_sz[0]-1, 0] >= (st_sz[0]-epsilon)))
-        shift_left = np.nonzero((decider == 2) & (sum_y[:, 0, 0] <= epsilon))
+            # Shift the data
+            result[shift_up, :st_sz[0]-1, :, :] = data[shift_up, 1:, :, :]
+            result[shift_up, st_sz[0]-1, :, :] = 0
 
-        # Shift the data
-        result[shift_up, :st_sz[0]-1, :, :] = data[shift_up, 1:, :, :]
-        result[shift_up, st_sz[0]-1, :, :] = 0
+            result[shift_down, 1:, :, :] = data[shift_down, :st_sz[0]-1, :, :]
+            result[shift_down, 0, :, :] = 1
 
-        result[shift_down, 1:, :, :] = data[shift_down, :st_sz[0]-1, :, :]
-        result[shift_down, 0, :, :] = 1
+            result[shift_left, :, :st_sz[0]-1, :] = data[shift_left, :, 1:, :]
+            result[shift_left, :, st_sz[0]-1, :] = 1
 
-        result[shift_left, :, :st_sz[0]-1, :] = data[shift_left, :, 1:, :]
-        result[shift_left, :, st_sz[0]-1, :] = 1
+            result[shift_right, :, 1:, :] = data[shift_right, :, :st_sz[0]-1, :]
+            result[shift_right, :, 0, :] = 0
 
-        result[shift_right, :, 1:, :] = data[shift_right, :, :st_sz[0]-1, :]
-        result[shift_right, :, 0, :] = 0
-
-        # Overwrite data
-        data = result
-
-        '''
-        # Shift a second time
-        sum_x = np.sum(data, axis=2)
-        sum_y = np.sum(data, axis=1)
-        # Create array with random integers from 0 to 2. 0 = shift in direction 1, 1 = do not shift, 2 = shift in direction 2
-        decider = np.random.randint(0, 3, data.shape[0])
-
-        result = data.copy()
-
-        # Get indices where the data should be shifted
-        epsilon = 0
-        shift_up = np.nonzero((decider == 0) & (sum_x[:, 0, 0] >= (st_sz[1]-epsilon)))
-        shift_down = np.nonzero((decider == 2) & (sum_x[:, st_sz[1]-1, 0] <= epsilon))
-        shift_right = np.nonzero((decider == 0) & (sum_y[:, st_sz[0]-1, 0] >= (st_sz[0]-epsilon)))
-        shift_left = np.nonzero((decider == 2) & (sum_y[:, 0, 0] <= epsilon))
-
-        # Shift the data
-        result[shift_up, :st_sz[0]-1, :, :] = data[shift_up, 1:, :, :]
-        result[shift_up, st_sz[0]-1, :, :] = 0
-
-        result[shift_down, 1:, :, :] = data[shift_down, :st_sz[0]-1, :, :]
-        result[shift_down, 0, :, :] = 1
-
-        result[shift_left, :, :st_sz[0]-1, :] = data[shift_left, :, 1:, :]
-        result[shift_left, :, st_sz[0]-1, :] = 1
-
-        result[shift_right, :, 1:, :] = data[shift_right, :, :st_sz[0]-1, :]
-        result[shift_right, :, 0, :] = 0
-
-        # Overwrite data
-        data = result
-        # '''
+            # Overwrite data
+            data = result
 
         if data.shape != shape:
             # Reshape rotated data to original shape
@@ -454,6 +423,567 @@ class Shift(BaseEstimator, TransformerMixin):
         print_data_rot = result[ind].reshape((st_sz[0], st_sz[1])).copy()
         print(f'Data after:\n{print_data_rot}')
         # '''
+        return [dataset[0], data, dataset[2]]
+
+
+class Edge(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate dataset
+        data = dataset[1]
+
+        ''' ENTFERNEN! '''
+        data = data[dataset[0] > 0.4]
+
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1], 1))
+
+        # 1. c < 0.5 -> 0; c > 0.5 -> 1
+        # 2. Find 1 value above 0.5, 1 below (e.g. 0.1 0.3 0.6 0.9 -> 0.3, 0.6)
+        # 3. Where 
+
+        mask = np.where(data < 0.5, 0, 1)
+
+        mask_x = mask.copy()
+        mask_x[:] = np.nan
+        mask_y = mask_x.copy()
+        # Get closest points to 0.5 coming from above and below (in x- and y-direction)
+        for x in range(1, data.shape[1]-1):
+            for y in range(1, data.shape[2]-1):
+                mask_x[:, y, x, :] = np.logical_or(
+                    np.logical_xor(mask[:, y, x+1, :], mask[:, y, x, :]),
+                    np.logical_xor(mask[:, y, x-1, :], mask[:, y, x, :])
+                )
+                mask_y[:, y, x, :] = np.logical_or(
+                    np.logical_xor(mask[:, y+1, x, :], mask[:, y, x, :]),
+                    np.logical_xor(mask[:, y-1, x, :], mask[:, y, x, :])
+                )
+        # Cut arrays
+        mask_x = mask_x[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
+        mask_y = mask_y[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
+
+        sum_mask_x = np.sum(mask_x, axis=2)
+        sum_mask_y = np.sum(mask_y, axis=1)
+
+        and_mask_x = np.zeros((mask_x.shape[0], st_sz[1]-2, st_sz[1]-3, 1))
+        and_mask_y = np.zeros((mask_y.shape[0], st_sz[0]-3, st_sz[1]-2, 1))
+
+        # Find adjacent points with sum over and
+        for y in range(0, data.shape[1]-3):
+            and_mask_y[:, y, :, :] = np.logical_and(mask_y[:, y+1, :, :], mask_y[:, y, :, :])
+        for x in range(0, data.shape[1]-3):
+            and_mask_x[:, :, x, :] = np.logical_and(mask_x[:, :, x+1, :], mask_x[:, :, x, :])
+        sum_and_mask_y = np.sum(and_mask_y, axis=1)  # columns (x) where to write mean on bigger/smaller value
+        sum_and_mask_x = np.sum(and_mask_x, axis=2)  # rows (y) where to write mean on bigger/smaller value
+
+
+        here = np.argwhere((sum_mask_y == 2))
+        here2 = np.argwhere((sum_and_mask_y == 0))
+        here3 = np.array([x for x in set([tuple(x) for x in here]) & set([tuple(x) for x in here2])])
+        here3 = np.array([[x[0], x[1], x[2]] for x in here3])
+        here3 = here3[here3[:, 0].argsort()]
+        # print(f'here3.shape:\t{here3.shape}')
+        # print(f'here3:\n{here3[:10]}')
+
+        # '''
+        # List of combinations of sum_mask and sum_and_mask
+        # Find rows/columns for different cases
+        # rowcol_pairs = []
+        # rowcol_singles = []
+        # rowcol_triplets = []
+        rowcol_pairs = np.empty((0, 2, 3))
+        rowcol_triplets = np.empty((0, 3, 3))
+        rowcol_singles = np.empty((0, 1, 3))
+        valid_combinations = [[1, 0], [2, 0], [2, 1], [3, 1], [3, 2], [4, 2], [4, 3]]
+        for combination in valid_combinations:
+            print(f'combination:\t{combination}')
+            # Find indices that match the criterion for sum_mask/sum_and_mask alone
+            ind_mask_x = np.argwhere((sum_mask_x == combination[0]))
+            ind_and_mask_x = np.argwhere((sum_and_mask_x == combination[1]))
+            # Find indices that match the combination of both (make rows to single tuples, find common tuples in both lists, extract indices from tuples, sort for first column (stencil number))
+            in_both_x = np.array([tpl for tpl in set([tuple(im) for im in ind_mask_x]) & set([tuple(iam) for iam in ind_and_mask_x])])
+            if len(in_both_x) > 0:
+                in_both_x = np.array([[ib[0], ib[1], ib[2]] for ib in in_both_x])
+                in_both_x = in_both_x[in_both_x[:, 0].argsort()]
+
+                # Oder hier direkt die Indizes finden?
+                if tuple(combination) in set([tuple([1, 0]), tuple([2, 0])]):
+                    # One single (1 0 0 0 0)
+                    # Find columns for given rows where mask_x = 1 (value to be copied)
+                    indices = np.argwhere(mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
+                    # Overwrite third column of indices with row from in_both_x
+                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # row
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencil
+                    # Append to list
+                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
+                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
+
+                elif tuple(combination) in set([tuple([2, 1])]):
+                    # One pair (0 1 1 0 0)
+                    # Caution! First column of indices is index in in_both_x, not in mask_x!
+                    # Indices has columns [index in in_both_x, column where value = 1, 0], which makes two rows per one row in in_both_x (because there are two values = 1)
+
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
+                    # Add second
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+
+                    # Overwrite third column of indices with row from in_both_y (pair 1)
+                    indices_pair_1[:, 2] = in_both_x[indices_pair_1[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_1[:, 0] = in_both_x[indices_pair_1[:, 0]][:, 0]  # stencils
+
+                    # Overwrite third column of indices with row from in_both_y (pair 2)
+                    indices_pair_2[:, 2] = in_both_x[indices_pair_2[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_2[:, 0] = in_both_x[indices_pair_2[:, 0]][:, 0]  # stencils
+
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+                    '''
+                    # Debugging:
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+
+                    print(f'indices:\n{indices[:10]}')
+                    # '''
+                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+
+                elif tuple(combination) in set([tuple([3, 1])]):
+                    ''' Scheint es bei x nicht zu geben, bei y testen '''
+                    # One pair, one single (1 1 0 0 1)
+                    # '''
+                    # Debugging:
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+
+                    print(f'indices:\n{indices[:10]}')
+                    print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
+                    rowcol_pairs.append(in_both_x)  # temp
+
+                elif tuple(combination) in set([tuple([3, 2])]):
+                    # One triple (1 1 1 0 0)
+                    rowcol_triplets.append(in_both_x)
+
+                elif tuple(combination) in set([tuple([4, 2])]):
+                    # Two pairs, seperated (1 1 0 1 1)
+                    rowcol_pairs.append(in_both_x)  # temp
+
+                elif tuple(combination) in set([tuple([4, 3])]):
+                    # Two pairs, adjacent (1 1 1 1 0)
+                    rowcol_pairs.append(in_both_x)  # temp
+
+
+        print('\ny\n')
+        for combination in valid_combinations:
+            print(f'combination:\t{combination}')
+            # Do the same for y
+            ind_mask_y = np.argwhere((sum_mask_y == combination[0]))
+            ind_and_mask_y = np.argwhere((sum_and_mask_y == combination[1]))
+            in_both_y = [tpl for tpl in set([tuple(im) for im in ind_mask_y]) & set([tuple(iam) for iam in ind_and_mask_y])]
+            in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in np.array(in_both_y)])
+            in_both_y = in_both_y[in_both_y[:, 0].argsort()]
+
+            if len(in_both_y) > 0:
+                in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in in_both_y])
+                in_both_y = in_both_y[in_both_y[:, 0].argsort()]
+
+                # Oder hier direkt die Indizes finden?
+                if tuple(combination) in set([tuple([1, 0]), tuple([2, 0])]):
+                    # One single (1 0 0 0 0)
+                    # Find columns for given rows where mask_x = 1 (value to be copied)
+                    indices = np.argwhere(mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] == 1)
+                    # Overwrite third column of indices with row from in_both_y
+                    indices[:, 2] = indices[:, 1]  # rows
+                    indices[:, 1] = in_both_y[indices[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices[:, 0] = in_both_y[indices[:, 0]][:, 0]  # stencils
+                    # Append to list
+                    '''
+                    # Debugging:
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+
+                    print(f'indices:\n{indices[:10]}')
+                    print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
+                    # Indices: [stencil nr, column, row]
+                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
+                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
+
+                elif tuple(combination) in set([tuple([2, 1])]):
+                    # One pair (0 1 1 0 0)
+                    # Caution! First column of indices is index in in_both_y, not in mask_x!
+                    # Indices has columns [index in in_both_y, column where value = 1, 0], which makes two rows per one row in in_both_y (because there are two values = 1)
+                    indices = np.argwhere(mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] == 1)
+                    # Overwrite third column of indices with row from in_both_y (pair 1)
+                    indices[:, 2] = indices[:, 1]  # rows
+                    indices[:, 1] = in_both_y[indices[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices[:, 0] = in_both_y[indices[:, 0]][:, 0]  # stencils
+                    # Reshape so pairs are grouped together
+                    indices = np.reshape(indices, (int(indices.shape[0]/2), 2, 3))
+                    '''
+                    # Debugging:
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+
+                    print(f'indices:\n{indices[:10]}')
+                    # print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
+                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+
+                elif tuple(combination) in set([tuple([3, 1])]):
+                    ''' Scheint es bei x nicht zu geben, bei y testen '''
+                    # One pair, one single (1 1 0 0 1)
+                    # indices = np.argwhere(mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] == 1)
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] ==1)
+                    # Add second
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+
+                    # Overwrite third column of indices with row from in_both_y (pair 1)
+                    indices_pair_1[:, 2] = indices_pair_1[:, 1]  # rows
+                    indices_pair_1[:, 1] = in_both_y[indices_pair_1[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_1[:, 0] = in_both_y[indices_pair_1[:, 0]][:, 0]  # stencils
+
+                    # Overwrite third column of indices with row from in_both_y (pair 2)
+                    indices_pair_2[:, 2] = indices_pair_2[:, 1]  # rows
+                    indices_pair_2[:, 1] = in_both_y[indices_pair_2[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_2[:, 0] = in_both_y[indices_pair_2[:, 0]][:, 0]  # stencils
+
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+
+                    # '''
+                    # Find singles and write into rowcol_singles
+                    indices = np.argwhere((mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] == 1))
+
+                    # Overwrite third column of indices with row from in_both_y (pair 2)
+                    indices[:, 2] = indices[:, 1]  # rows
+                    indices[:, 1] = in_both_y[indices[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices[:, 0] = in_both_y[indices[:, 0]][:, 0]  # stencils
+
+                    # Remove indices that are in pair1 or pair2
+                    indices = [x for x in 
+                                      set([tuple(x) for x in indices]) - 
+                                      set([tuple(x) for x in indices_pair_1]).union(set([tuple(x) for x in indices_pair_2]))
+                                     ]
+                    indices = np.array([[x[0], x[1], x[2]] for x in np.array(indices)])
+                    indices = indices[indices[:, 0].argsort()]
+
+                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
+                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
+
+                    '''
+                    # Debugging:
+                    print(f'indices_single:\n{indices_single[:10]}')
+                    # print(f'indices_pair_1:\n{indices_pair_1[:10]}')
+                    # print(f'indices_pair_2:\n{indices_pair_2[:10]}')
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+
+                    # print(f'indices:\n{indices[:10]}')
+                    # print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
+
+                elif tuple(combination) in set([tuple([3, 2])]):
+                    # One triple (1 1 1 0 0)
+
+                    # Get index of all values
+                    indices = np.argwhere(mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] ==1)
+                    # Overwrite third column of indices with row from in_both_y (pair 2)
+                    indices[:, 2] = indices[:, 1]  # rows
+                    indices[:, 1] = in_both_y[indices[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices[:, 0] = in_both_y[indices[:, 0]][:, 0]  # stencils
+                    # Reshape so triplets are grouped together
+                    indices = np.reshape(indices, (int(indices.shape[0]/3), 3, 3))
+
+                    '''
+                    # Debugging:
+                    print(f'indices:\n{indices[:10]}')
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+                    # '''
+                    rowcol_triplets = np.concatenate((rowcol_triplets, indices), axis=0)
+
+                elif tuple(combination) in set([tuple([4, 2])]):
+                    # Two pairs, seperated (1 1 0 1 1)
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] ==1)
+                    # Add second
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+
+                    # Overwrite third column of indices with row from in_both_y (pair 1)
+                    indices_pair_1[:, 2] = indices_pair_1[:, 1]  # rows
+                    indices_pair_1[:, 1] = in_both_y[indices_pair_1[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_1[:, 0] = in_both_y[indices_pair_1[:, 0]][:, 0]  # stencils
+
+                    # Overwrite third column of indices with row from in_both_y (pair 2)
+                    indices_pair_2[:, 2] = indices_pair_2[:, 1]  # rows
+                    indices_pair_2[:, 1] = in_both_y[indices_pair_2[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_2[:, 0] = in_both_y[indices_pair_2[:, 0]][:, 0]  # stencils
+
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+
+                    '''
+                    # Debugging:
+                    print(f'indices[:10]:\t{indices[:10]}')
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+                    # '''
+                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+
+                elif tuple(combination) in set([tuple([4, 3])]):
+                    # Two pairs, adjacent (1 1 1 1 0)
+
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] ==1)
+
+                    # Overwrite third column of indices with row from in_both_y (pair 1)
+                    indices_pair_1[:, 2] = indices_pair_1[:, 1]  # rows
+                    indices_pair_1[:, 1] = in_both_y[indices_pair_1[:, 0]][:, 1]  # columns
+                    # Overwrite first column of indices with stencil index from in_both_y
+                    indices_pair_1[:, 0] = in_both_y[indices_pair_1[:, 0]][:, 0]  # stencils
+                    # Get first three
+                    indices_pair_1 = np.reshape(indices_pair_1, (int(indices_pair_1.shape[0]/3), 3, 3))
+                    # Remove middle one to get groups of two
+                    indices_pair_1 = np.delete(indices_pair_1, 1, 1)
+                    # Break up groups of two (both being pair 1 of one of the pairs)
+                    indices_pair_1 = np.reshape(indices_pair_1, (int(indices_pair_1.shape[0]*2), 3))
+                    # Generate pair 2 corresponding to pair 1
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 2] = indices_pair_2[:, 2] + 1
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+
+                    '''
+                    print(f'indices_pair_1[:10]:\n{indices_pair_1[:10]}')
+                    print(f'indices[:10]:\n{indices[:10]}')
+                    # Debugging:
+                    # print(f'indices[:10]:\t{indices[:10]}')
+                    # print(f'in_both_y[in_both_y[:, 0] == 0]:\n{in_both_y[in_both_y[:, 0] == 0]}')
+                    print(f'in_both_y[:10]:\n{in_both_y[:10]}')
+                    pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
+                    print(f'mask_y:\n{pdat1}')
+                    # '''
+                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+
+        print(f'rowcol_pairs:\n{rowcol_pairs}')
+        print(f'rowcol_pairs.shape:\t{rowcol_pairs.shape}')
+        print(f'rowcol_triplets.shape:\t{rowcol_triplets.shape}')
+        print(f'rowcol_singles.shape:\t{rowcol_singles.shape}')
+
+        a = b
+
+        # Find indices for each case, append it to either a list of pairs (mean) or a list of single values
+        # 
+        # Go through cases, append index pairs
+        # If second index = 0 -10 -10, just take the value, otherwise take the mean
+        # mean -> on bigger/on smaller
+
+        # 4:    0 1 1 1 1 1 1 (sm = 1)          -> übernehmen (4818)
+        #         1 0 0 0 0
+
+        # 2:    0 0 0 0 1 1 1 (sm = 2, sam = 1) -> interpolieren (13276)
+        #         0 0 1 1 0 
+
+        # 34:   0 1 1 1 1 1 0 (sm = 2, sam = 0) -> übernehmen (242)
+        #         1 0 0 0 1
+
+        # 0:    0 0 1 1 1 1 0 (sm = 3, sam = 1) -> interpolieren & übernehmen (645)
+        #         1 1 0 0 1
+
+        # 76:   0 0 0 0 1 0 0 (sm = 3, sam = 2) -> 2x interpolieren, Mittelwert auf Mitte/beide Ränder (297)
+        #         0 0 1 1 1
+
+        # 35:   0 0 1 1 1 0 0 (sm = 4, sam = 2) -> in zwei aufteilen, interpolieren (178)
+        #         1 1 0 1 1
+
+        # 51:   0 0 0 1 1 0 0 (sm = 4, sam = 3) -> in zwei aufteilen, interpolieren (189)
+        #         0 1 1 1 1 
+
+        ind = 51  # 1 für Fehler 18
+        print(f'\nINDEX = {ind}\n')
+        pdat1 = data[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'pdat1:\n{pdat1}')
+        pdat2 = mask[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'pdat2:\n{pdat2}')
+        pdat2 = sum_mask_x[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_mask_x:\n{pdat2}')
+        pdat2 = sum_mask_y[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_mask_y:\n{pdat2}')
+        pdat2 = sum_and_mask_x[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_and_mask_x:\n{pdat2}')
+
+        pdat2 = sum_and_mask_y[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_and_mask_y:\n{pdat2}')
+        pdat2 = and_mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-3)).copy()
+        print(f'and_mask_x:\n{pdat2}')
+        pdat2 = and_mask_y[:, :, :, :][ind].reshape((st_sz[0]-3, st_sz[0]-2)).copy()
+        print(f'and_mask_y:\n{pdat2}')
+        pdat2 = mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
+        print(f'mask_x:\n{pdat2}')
+        pdat2 = mask_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
+        print(f'mask_y:\n{pdat2}')
+        print(f'\nINDEX = {ind}\n')
+        # '''
+        a = b
+
+        
+        # Get vof values of points closest to 0.5
+        data_x = np.multiply(mask_x, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
+        data_y = np.multiply(mask_y, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
+
+        # pdat2 = mask_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        # print(f'mask_y:\n{pdat2}')
+
+        # pdat2 = data_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        # print(f'data_y:\n{pdat2}')
+
+        # Get mean of those values
+        mid_x = np.sum(data_x, axis = 2)/np.where(np.sum(mask_x, axis=2)>0, np.sum(mask_x, axis=2), 1)
+        mid_y = np.sum(data_y, axis = 1)/np.where(np.sum(mask_y, axis=1)>0, np.sum(mask_y, axis=1), 1)
+        # print(f'mid_y.shape:\t{mid_y.shape}')
+        
+        # Find out where the interpolated value should be written onto the vof-value > 0.5 or < 0.5 
+        x_on_bigger = np.argwhere((mid_x <= 0.5) & (sum_and_mask_x == 1))
+        x_on_smaller = np.argwhere((mid_x > 0.5) & (sum_and_mask_x == 1))
+        y_on_bigger = np.argwhere((mid_y <= 0.5) & (sum_and_mask_y == 1))
+        y_on_smaller = np.argwhere((mid_y > 0.5) & (sum_and_mask_y == 1))
+        x_on_both = np.argwhere(sum_and_mask_x == 1)  # where data should be overwritten with mean. not overwritten = values from data_x
+        y_on_both = np.argwhere(sum_and_mask_y == 1)  # where data should be overwritten with mean. not overwritten = values from data_y
+
+        stamp_x = data_x.copy()
+        stamp_y = data_y.copy()
+        stamp_x[x_on_both[:, 0], x_on_both[:, 1], :, :] = 0
+        stamp_y[y_on_both[:, 0], :, y_on_both[:, 1], :] = 0
+
+        # Get rows/columns (and substitute 0 for 2 on on_smaller to prepare for argmin)
+        rc_x_on_bigger = data_x[x_on_bigger[:, 0], x_on_bigger[:, 1], :, :]
+        rc_x_on_smaller = np.where((data_x[x_on_smaller[:, 0], x_on_smaller[:, 1], :, :]==0), 2, data_x[x_on_smaller[:, 0], x_on_smaller[:, 1], :, :])
+        rc_y_on_bigger = data_y[y_on_bigger[:, 0], :, y_on_bigger[:, 1], :]
+        rc_y_on_smaller = np.where((data_y[y_on_smaller[:, 0], :, y_on_smaller[:, 1], :]==0), 2, data_y[y_on_smaller[:, 0], :, y_on_smaller[:, 1], :])
+        
+        # Find index of these vof values
+        x_index_bigger = np.argmax(rc_x_on_bigger, axis = 1)[:, 0]
+        x_index_smaller = np.argmin(rc_x_on_smaller, axis = 1)[:, 0]
+        y_index_bigger = np.argmax(rc_y_on_bigger, axis = 1)[:, 0]
+        y_index_smaller = np.argmin(rc_y_on_smaller, axis = 1)[:, 0]
+
+        # Write indices all into one array (e.g. x_on_bigger: in the x_on_bigger[1] row of stencil x_on_bigger[0], the bigger value (> 0.5) is at index x_on_bigger[2]. The mean+0.5 should be written onto this point
+        x_on_bigger[:, 2] = x_index_bigger
+        x_on_smaller[:, 2] = x_index_smaller
+        y_on_bigger[:, 2] = y_index_bigger
+        y_on_smaller[:, 2] = y_index_smaller
+
+        interp_x = data_x.copy()
+        interp_x[:] = 0
+        interp_y = data_y.copy()
+        interp_y[:] = 0
+
+        # Increase mid by 0.5 if to be put on bigger, else decrease by 0.5. set to 0 if mid == 0
+        mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] = np.where(
+            (mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] != 0),
+            (mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] + 0.5),
+            0
+        )
+        mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] = np.where(
+            (mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] != 0),
+            (mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] - 0.5),
+            0
+        )
+        mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] = np.where(
+            (mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] != 0),
+            (mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] + 0.5),
+            0
+        )
+        mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] = np.where(
+            (mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] != 0),
+            (mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] - 0.5),
+            0
+        )
+
+        # Put interpolated value on stencil at right position
+        interp_x[x_on_bigger[:,0], x_on_bigger[:,1], x_on_bigger[:,2], 0] = mid_x[x_on_bigger[:,0], x_on_bigger[:,1], 0]
+        interp_x[x_on_smaller[:,0], x_on_smaller[:,1], x_on_smaller[:,2], 0] = mid_x[x_on_smaller[:,0], x_on_smaller[:,1], 0]
+        interp_y[y_on_bigger[:, 0], y_on_bigger[:, 2], y_on_bigger[:, 1], 0] = mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0]
+        interp_y[y_on_smaller[:, 0], y_on_smaller[:, 2], y_on_smaller[:, 1], 0] = mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0]
+
+        # Fill with mask and restore value where value was written on bigger
+        interp_x = interp_x + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :] + stamp_x
+        interp_x = np.where(interp_x > 1, interp_x-1, interp_x)
+
+        interp_y = interp_y + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :] + stamp_y
+        interp_y = np.where(interp_y > 1, interp_y-1, interp_y)
+
+        # '''
+        print(f'sum adj_y:\n{adj_y[ind]}')
+        print(f'sum adj_x:\n{adj_x[ind]}')
+
+        pdat2 = data_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'data_y:\n{pdat2}')
+        pdat2 = mid_y[ind, :, :].reshape((st_sz[1]-2)).copy()
+        print(f'mid_y:\n{pdat2}')
+        pdat2 = interp_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'interp_y:\n{pdat2}')
+
+        pdat2 = data_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'data_x:\n{pdat2}')
+        pdat2 = mid_x[ind, :, :].reshape((st_sz[1]-2)).copy()
+        print(f'mid_x:\n{pdat2}')
+        pdat2 = interp_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'interp_x:\n{pdat2}')
+        # '''
+
+        a = b
+
+        if data.shape != shape:
+            # Reshape rotated data to original shape
+            data = np.reshape(data, shape)
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, shape)
+
         return [dataset[0], data, dataset[2]]
 
 
@@ -661,7 +1191,7 @@ class HF(BaseEstimator, TransformerMixin):
         # h_xx = (h3-2*h2+h1)
 
         # Calculate kappa
-        kappa = np.round(
+        kappa = -np.round(
             2/Delta*h_xx/((1+np.multiply(h_x, h_x))**(3/2))
             , 5)
 

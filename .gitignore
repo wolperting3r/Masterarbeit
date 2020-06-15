@@ -9,4 +9,7 @@ model*.txt
 *.swp
 
 **/datasets/*.feather
+**/datasets/*.feather.old
+*.csv
+*.res
 **/tuning

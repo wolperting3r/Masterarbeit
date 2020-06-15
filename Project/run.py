@@ -1,51 +1,54 @@
 from src.execution import exe_ml, exe_save
-#from src.execution import exe_dg
-
-''' Data Generation '''
-'''
-stencils = [[7, 7]]
-# stencils = [[5, 5]]
-# stencils = [[9, 9]]
-ek = [True]
-neg = [True]
-N_values = [1e6]
-# N_values = [1e3]
-# N_values = [2]
-silent = [False]
-# geometry = ['sinus', 'ellipse']
-geometry = ['circle']
-smearing = [True]
-usenormal = [True, False]
-exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal)
-# '''
+from src.execution import exe_dg
 
 ''' Machine Learning '''
 
 ''' Train '''
 epochs = [1000]
-# epochs = [1]
-# stencils = [[7, 7], [3, 3], [5, 5]]
 stencil = [[7, 7]]
-# stencil = [[5, 5]]
-# stencil = [[9, 9]]
 activation = ['relu']
 learning_rate = [1e-4]
 neg = [True]
 angle = [False]
 rot = [True]
-# data = ['sinus']
-# data = ['all', 'sinus', 'circle', 'ellipse']
-# plotdata = ['all', 'sinus', 'circle', 'ellipse']
-# data = ['all']
 data = ['ellipse']
 plotdata = ['all']
 smearing = [True]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
-addstring = ['_nocust_flip_dshift1_shift1_cut0050995']
+flip = [True]
+cut = [True]
+dshift = ['1']  # 0, 1, 1b
+shift = [1]
+bias = [True]
+# interpolate = [1.5, 2]
+interpolate = [0]
+# addstring = ['_1', '_2', '_3', '_4']
+# addstring = ['_5']
+# addstring = ['_6']
+# addstring = ['_7']
+# addstring = ['_8']
+# addstring = ['_n_1', '_n_2']
+addstring = ['']
+
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
+    # MLP
+    network = ['mlp']
+    layer = [[200, 150, 120]]
+    # '''
+    if i == 0:
+        plot = [False]
+        # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, interpolate=interpolate)
+    # '''
+    # '''
+    if i == 1:
+        plot = [True]
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, interpolate=interpolate)
+        # exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, interpolate=interpolate)
+    # '''
+
     # CVN
     network = ['cvn']
     layer = [[32], [32, 64]]
@@ -59,28 +62,6 @@ for i in range(0, 2):
         plot = [True]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata)
     # '''
-
-    # MLP
-    network = ['mlp']
-    # layer = [[100, 80], [80], [50, 50], [50, 40, 30]]
-    # layer = [[100, 80], [100, 80, 50]]
-    # layer = [[200, 150, 120]]
-    # layer = [[200, 150, 120, 80, 50]]
-    # layer = [[500, 600, 400, 100]]
-    layer = [[100, 80]]
-    # layer = [[80, 50]]
-    # '''
-    if i == 0:
-        plot = [False]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring)
-    # '''
-    # '''
-    if i == 1:
-        plot = [True]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring)
-        exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring)
-    # '''
-
     '''
     # Autoencoder
     # 5x5
@@ -93,3 +74,24 @@ for i in range(0, 2):
     elif i == 1:
         exe_ml_plot(network=network, stencils=stencils, layers=layers, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout)
     # '''
+
+''' Data Generation '''
+'''
+stencils = [[7, 7]]
+# stencils = [[5, 5]]
+# stencils = [[9, 9]]
+ek = [True]
+neg = [True]
+# N_values = [7e6]
+N_values = [1e6]
+# N_values = [1]
+silent = [False]
+# geometry = ['sinus', 'ellipse']
+geometry = ['ellipse']
+smearing = [True]
+usenormal = [True]
+# interpolate = [0, 1, 1.5, 2]
+interpolate = [1.5, 2]
+# interpolate = [2]
+exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal, interpolate=interpolate)
+# '''

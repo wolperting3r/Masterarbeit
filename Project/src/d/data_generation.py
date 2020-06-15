@@ -57,13 +57,14 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal):
+def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal, interpolate):
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
     # Script
     N_values = int(N_values)
     visualize = True if (N_values == 1) else False
+    visualize = False
     debug = False
 
     # Initialize progress bar
@@ -83,6 +84,11 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     if smearing:
         # Increase stencil size by two until smearing is applied
         st_sz = np.add(st_sz, [2, 2])
+        if interpolate:
+            sm_it = int(np.ceil(interpolate))
+            for i in range(sm_it-1):
+                # Increase stencil size by another two to make up for smearing
+                st_sz = np.add(st_sz, [2, 2])
 
     # Geometry
     R_min = max(st_sz)/2*Delta
@@ -218,6 +224,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
 
 
         ''' 1. Evaluate VOF values on cross around origin to get gradient, shift along gradient '''
+        # '''
         # Initialize vof_array and fill it with nan
         vof_array = np.empty((cr_sz[0], cr_sz[1]))
         vof_array[:] = np.nan
@@ -284,6 +291,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             shift_vector = np.array([-grad_y, -grad_x])
         shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
         round_point = round_point + shift_point*shift_vector*Delta/L
+        # '''
 
         ''' Plot Ellipse/Circle '''
         if visualize:
@@ -365,28 +373,49 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
                 if visualize:
                     # Save the r_area array for plotting
                     vof_df.iloc[ill[0], ill[1]] = r_area
+
         # Apply smearing
         if smearing:
             # Define smearing kernel
             kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
             # kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
-            vof_array_smear = vof_array.copy()
-            vof_array_smear[:] = np.nan
-            for column in range(1, st_sz_tmp[0]-1):
-                for row in range(1, st_sz_tmp[1]-1):
-                    # Calculate smeared vof field: sum(weights * vof_array_slice)/sum(weights)
-                    vof_array_smear[column, row] = np.sum(np.multiply(
-                        kernel,
-                        vof_array[column-1:column+2, row-1:row+2]
-                    ))/np.sum(kernel)
-            # Cut edges of vof_array
-            vof_array = vof_array_smear[1:st_sz_tmp[0]-1, 1:st_sz_tmp[1]-1]
+
+            # Make dictionary for unsmoothed and smoothed stencils
+            vof_array_dict = {0: vof_array.copy()}
+
+            # Get random factor between 0 and interpolate. The resulting vof_array will be a linear combination of vof_array smoothed floor(a) and ceil(a) times, where the factor defining the point inbetween both that should be interpolated is a-floor(a). If interpolate = 0 smoothing should be applied once.
+            a = (interpolate*u() if interpolate else 1)
+            for i in range(int(np.ceil(a))):
+                # Attach array filled with nan to dictionary
+                vof_array_dict[i+1] = vof_array.copy()
+                vof_array_dict[i+1][:] = np.nan
+                # Fill array with smoothed values of last array (or unsmoothed array)
+                for column in range(1+i, st_sz_tmp[0]-1-i):
+                    for row in range(1+i, st_sz_tmp[1]-1-i):
+                        # Calculate smeared vof field: sum(weights * vof_array_slice)/sum(weights)
+                        vof_array_dict[i+1][column, row] = np.sum(np.multiply(
+                            kernel,
+                            vof_array_dict[i][column-1:column+2, row-1:row+2]
+                        ))/np.sum(kernel)
+
+            if interpolate:
+                # Cut edges of arrays. vof_smear_array_1 is stencil with smoothing kernel applied floor(a) times, vof_smear_array_2 with it applied ceil(a) times.
+                vof_smear_array_1 = vof_array_dict[int(np.floor(a))][sm_it:st_sz_tmp[0]-sm_it, sm_it:st_sz_tmp[1]-sm_it]
+                vof_smear_array_2 = vof_array_dict[int(np.ceil(a))][sm_it:st_sz_tmp[0]-sm_it, sm_it:st_sz_tmp[1]-sm_it]
+                # Lineary interpolate between the two arrays
+                vof_array = vof_smear_array_1 + (a-np.floor(a))*(vof_smear_array_2-vof_smear_array_1)
+            else:
+                # Cut edges of vof_array
+                vof_array = vof_array_dict[sm_it][sm_it:st_sz_tmp[0]-sm_it, sm_it:st_sz_tmp[1]-sm_it]
+
             if visualize:
                 # Cut vof_df too
-                vof_df = vof_df.iloc[1:-1, 1:-1]
+                vof_df = vof_df.iloc[sm_it:-sm_it, sm_it:-sm_it]
+
             # Shrink st_sz
-            st_sz_tmp = np.add(st_sz_tmp, [-2, -2])
-            st_mid_tmp = np.add(st_mid_tmp, [-1, -1])
+            st_sz_tmp = np.add(st_sz_tmp, [-2*sm_it, -2*sm_it])
+            st_mid_tmp = np.add(st_mid_tmp, [-sm_it, -sm_it])
+
 
         ''' Plot VoF field and show plot '''
         if visualize:
@@ -430,6 +459,11 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         if smearing:
             # Shrink st_sz to create right filename
             st_sz = np.add(st_sz, [-2, -2])
+            if interpolate:
+                sm_it = int(np.ceil(interpolate))
+                for i in range(sm_it-1):
+                    # Increase stencil size by another two to make up for smearing
+                    st_sz = np.add(st_sz, [-2, -2])
         ''' Export data to feather file '''
         # Convert output list to pandas dataframe
         output_df = pd.DataFrame(output_list)
@@ -449,7 +483,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+'.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+'.feather')
         print(f'File:\n{file_name}')
         # Export file
         # print('NO EXPORT')

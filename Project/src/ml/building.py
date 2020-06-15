@@ -13,7 +13,7 @@ def create_model(parameters, shape):
         # Add feedforward layers defined in parameters['layers']
         model.add(layers.InputLayer(input_shape=(shape[1],)))
         for l in parameters['layers']:
-            model.add(layers.Dense(l, activation=parameters['activation']))
+            model.add(layers.Dense(l, activation=parameters['activation'], use_bias=parameters['bias']))
             # if parameters['dropout'] > 0:
                 # model.add(layers.Dropout(parameters['dropout']))
         model.add(layers.Dense(1, activation='linear'))

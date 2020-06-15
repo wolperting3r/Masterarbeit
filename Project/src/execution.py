@@ -31,6 +31,12 @@ def ml(
     hf_correction=False,
     dropout=0,
     plotdata=False,
+    flip=False,
+    cut=False,
+    dshift=0,
+    shift=0,
+    bias=True,
+    interpolate=0,
     addstring=False,
 ):
 
@@ -54,8 +60,14 @@ def ml(
         'smear': smearing,               # Use smeared data
         'hf': hf,                        # Use height function
         'hf_correction': hf_correction,  # Use height function as input for NN
-        # 'dropout': dropout               # dropout fraction
         'plotdata': plotdata,
+        # 'dropout': dropout               # dropout fraction
+        'flip': flip,
+        'cut': cut,
+        'dshift': dshift,
+        'shift': shift,
+        'bias': bias,
+        'interpolate': interpolate,
         'addstring': addstring,
         #'addstring': '_dshift1b_shift_kappa',
     }
@@ -97,6 +109,12 @@ def save(
     hf_correction=False,
     dropout=0,
     plotdata=False,
+    flip=False,
+    cut=False,
+    dshift=0,
+    shift=0,
+    bias=True,
+    interpolate=0,
     addstring=False,
 ):
 
@@ -122,6 +140,12 @@ def save(
         'hf_correction': hf_correction,  # Use height function as input for NN
         # 'dropout': dropout               # dropout fraction
         'plotdata': plotdata,
+        'flip': flip,
+        'cut': cut,
+        'dshift': dshift,
+        'shift': shift,
+        'bias': bias,
+        'interpolate': interpolate,
         'addstring': addstring,
     }
 
@@ -139,7 +163,7 @@ def save(
 def exe_dg(**kwargs):
     print(f'kwargs:\n{kwargs}')
     # Sort input keyword arguments
-    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'geometry', 'smearing', 'usenormal']
+    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'geometry', 'smearing', 'usenormal', 'interpolate']
     kwargs = {k: kwargs[k] for k in order}
     # Create job list according to input arguments
     job_list = list(itpd(*kwargs.values()))
@@ -156,7 +180,7 @@ def exe_dg(**kwargs):
 
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'addstring']
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
     plot = kwargs.get('plot')
@@ -175,7 +199,7 @@ def exe_ml(**kwargs):
 
 def exe_save(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'addstring']
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute saving job list with multithreading
     for job in list(itpd(*kwargs.values())):
