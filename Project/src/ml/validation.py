@@ -50,6 +50,8 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
         lims = [-0.6, 0.6]
     elif parameters['stencil_size'][0] == 7:
         lims = [-0.5, 0.5]
+    elif parameters['stencil_size'][0] == 9:
+        lims = [-0.5, 0.5]
     else:
         lims = [-1, 1]
     ax.set_xlim(lims)

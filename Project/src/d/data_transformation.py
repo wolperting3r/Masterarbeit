@@ -305,14 +305,23 @@ def process_data(dataset, parameters, reshape):
                 ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
             ])
         else:
-            data_pipeline = Pipeline([
-                ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                ('findgradient', FindGradient(parameters=parameters)),
-                ('findangle', FindAngle(parameters=parameters)),
-                ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
-                # ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-            ])
+            if parameters['edge']:
+                data_pipeline = Pipeline([
+                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
+                    ('findgradient', FindGradient(parameters=parameters)),
+                    ('findangle', FindAngle(parameters=parameters)),
+                    ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
+                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                    ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                ])
+            else:
+                data_pipeline = Pipeline([
+                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
+                    ('findgradient', FindGradient(parameters=parameters)),
+                    ('findangle', FindAngle(parameters=parameters)),
+                    ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
+                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                ])
         # Execute pipeline
         [labels, features, angle] = data_pipeline.fit_transform(dataset)
         # print(f'np.reshape(features[5], (7, 7)):\n{np.reshape(features[5], (7, 7))}')

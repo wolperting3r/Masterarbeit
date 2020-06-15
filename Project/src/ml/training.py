@@ -69,6 +69,6 @@ def load_model(parameters, **kwargs):
     print(f'param_str:\n{param_str}')
 
     file_name = os.path.join(path, 'models', 'models', 'model' + param_str + '.h5')
-    # model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
-    model = tf.keras.models.load_model(file_name)
+    model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
+    # model = tf.keras.models.load_model(file_name)
     return model

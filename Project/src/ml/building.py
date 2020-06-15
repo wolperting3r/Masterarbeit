@@ -85,12 +85,12 @@ def build_model(parameters, shape):
     # Create tensorflow model
     model = create_model(parameters, shape)
     # Compile model with optimizer and loss function
-    model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  loss='mse',
-                  metrics=['mae', 'mse'])
     # model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  # loss= custom_loss,   # custom_loss oder 'mse'
+                  # loss='mse',
                   # metrics=['mae', 'mse'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
+                  loss= custom_loss,   # custom_loss oder 'mse'
+                  metrics=['mae', 'mse'])
     # Print summary
     for key, value in parameters.items():
         print(f'{key}:\t\t{value}')

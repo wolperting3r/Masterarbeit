@@ -31,7 +31,7 @@ def learning(parameters, silent=False, plot=True): # Get data (reshape if networ
      )  # kappa = 0 if parameters['hf'] == False
     # '''
 
-    '''
+    # '''
     if plot:
         [[train_k_labels, train_kappa], [test_k_labels, test_kappa], [val_k_labels, val_kappa]] = transform_kappa(
              param_tmp,
@@ -54,7 +54,7 @@ def learning(parameters, silent=False, plot=True): # Get data (reshape if networ
         test_labels = test_data
     # '''
 
-    '''
+    # '''
     if not plot:
         # Build model
         model = build_model(parameters, train_data.shape)

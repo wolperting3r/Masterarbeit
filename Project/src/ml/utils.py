@@ -56,6 +56,10 @@ def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
             filename_string = filename_string + '_' + ('bia' if value else 'nbi')
         elif key == 'cut':
             filename_string = filename_string + '_' + ('cut' if value else 'nct')
+        elif key == 'edge':
+            filename_string = filename_string + '_' + ('edg' if value else 'ned')
+        elif key == 'custom_loss':
+            filename_string = filename_string + '_' + ('cls' if value else 'ncl')
         elif ((key == 'dshift') and (parameters['dshift'] != '0')):
             filename_string = filename_string + '_' + 'dshift' + str(value)
         elif ((key == 'shift') and (parameters['shift'] != 0)):

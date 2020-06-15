@@ -444,7 +444,7 @@ class Edge(BaseEstimator, TransformerMixin):
         data = dataset[1]
 
         ''' ENTFERNEN! '''
-        data = data[dataset[0] > 0.4]
+        # data = data[dataset[0] > 0.4]
 
         # Get shape of data
         shape = data.shape
@@ -983,7 +983,6 @@ class Edge(BaseEstimator, TransformerMixin):
         print(f'np.unique(sum_and_mask_x):\t{np.unique(sum_and_mask_x)}')
         print(f'np.unique(sum_and_mask_y):\t{np.unique(sum_and_mask_y)}')
         print(f'\nINDEX = {ind}\n')
-        # '''
         print(f'pairs_x:\n{pairs_x}')
         print(f'pairs_x.shape:\t{pairs_x.shape}')
         print(f'triplets_x.shape:\t{triplets_x.shape}')
@@ -992,6 +991,7 @@ class Edge(BaseEstimator, TransformerMixin):
         print(f'pairs_y.shape:\t{pairs_y.shape}')
         print(f'triplets_y.shape:\t{triplets_y.shape}')
         print(f'singles_y.shape:\t{singles_y.shape}')
+        # '''
 
         # Get vof values of points closest to 0.5
         # data_x = np.multiply(mask_x, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
