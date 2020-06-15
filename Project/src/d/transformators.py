@@ -1,9 +1,12 @@
 import numpy as np
 import time
+import sys
 from sklearn.base import (
     BaseEstimator,  # for get_params, set_params
     TransformerMixin     # for fit_transform
 )
+# Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
+np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 class TransformData(BaseEstimator, TransformerMixin):
     def __init__(self, parameters, reshape=False):
@@ -489,32 +492,19 @@ class Edge(BaseEstimator, TransformerMixin):
         sum_and_mask_y = np.sum(and_mask_y, axis=1)  # columns (x) where to write mean on bigger/smaller value
         sum_and_mask_x = np.sum(and_mask_x, axis=2)  # rows (y) where to write mean on bigger/smaller value
 
-
-        here = np.argwhere((sum_mask_y == 2))
-        here2 = np.argwhere((sum_and_mask_y == 0))
-        here3 = np.array([x for x in set([tuple(x) for x in here]) & set([tuple(x) for x in here2])])
-        here3 = np.array([[x[0], x[1], x[2]] for x in here3])
-        here3 = here3[here3[:, 0].argsort()]
-        # print(f'here3.shape:\t{here3.shape}')
-        # print(f'here3:\n{here3[:10]}')
-
-        # '''
-        # List of combinations of sum_mask and sum_and_mask
-        # Find rows/columns for different cases
-        # rowcol_pairs = []
-        # rowcol_singles = []
-        # rowcol_triplets = []
-        rowcol_pairs = np.empty((0, 2, 3))
-        rowcol_triplets = np.empty((0, 3, 3))
-        rowcol_singles = np.empty((0, 1, 3))
+        pairs_x = np.empty((0, 2, 3))
+        triplets_x = np.empty((0, 3, 3))
+        singles_x = np.empty((0, 1, 3))
         valid_combinations = [[1, 0], [2, 0], [2, 1], [3, 1], [3, 2], [4, 2], [4, 3]]
+
         for combination in valid_combinations:
-            print(f'combination:\t{combination}')
+            # print(f'combination:\t{combination}')
             # Find indices that match the criterion for sum_mask/sum_and_mask alone
             ind_mask_x = np.argwhere((sum_mask_x == combination[0]))
             ind_and_mask_x = np.argwhere((sum_and_mask_x == combination[1]))
             # Find indices that match the combination of both (make rows to single tuples, find common tuples in both lists, extract indices from tuples, sort for first column (stencil number))
             in_both_x = np.array([tpl for tpl in set([tuple(im) for im in ind_mask_x]) & set([tuple(iam) for iam in ind_and_mask_x])])
+            # print(f'len(in_both_x):\t{len(in_both_x)}')
             if len(in_both_x) > 0:
                 in_both_x = np.array([[ib[0], ib[1], ib[2]] for ib in in_both_x])
                 in_both_x = in_both_x[in_both_x[:, 0].argsort()]
@@ -525,51 +515,11 @@ class Edge(BaseEstimator, TransformerMixin):
                     # Find columns for given rows where mask_x = 1 (value to be copied)
                     indices = np.argwhere(mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
                     # Overwrite third column of indices with row from in_both_x
-                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # row
+                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # rows
                     # Overwrite first column of indices with stencil index from in_both_x
-                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencil
+                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencils
                     # Append to list
-                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
-                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
-
-                elif tuple(combination) in set([tuple([2, 1])]):
-                    # One pair (0 1 1 0 0)
-                    # Caution! First column of indices is index in in_both_x, not in mask_x!
-                    # Indices has columns [index in in_both_x, column where value = 1, 0], which makes two rows per one row in in_both_x (because there are two values = 1)
-
-                    # Get index of first of pair (and_mask = 1)
-                    indices_pair_1 = np.argwhere(and_mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
-                    # Add second
-                    indices_pair_2 = indices_pair_1.copy()
-                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
-
-                    # Overwrite third column of indices with row from in_both_y (pair 1)
-                    indices_pair_1[:, 2] = in_both_x[indices_pair_1[:, 0]][:, 1]  # rows
-                    # Overwrite first column of indices with stencil index from in_both_y
-                    indices_pair_1[:, 0] = in_both_x[indices_pair_1[:, 0]][:, 0]  # stencils
-
-                    # Overwrite third column of indices with row from in_both_y (pair 2)
-                    indices_pair_2[:, 2] = in_both_x[indices_pair_2[:, 0]][:, 1]  # rows
-                    # Overwrite first column of indices with stencil index from in_both_y
-                    indices_pair_2[:, 0] = in_both_x[indices_pair_2[:, 0]][:, 0]  # stencils
-
-                    # Stack pairs together
-                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
                     '''
-                    # Debugging:
-                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
-                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
-                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
-                    print(f'mask_x:\n{pdat1}')
-
-                    print(f'indices:\n{indices[:10]}')
-                    # '''
-                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
-
-                elif tuple(combination) in set([tuple([3, 1])]):
-                    ''' Scheint es bei x nicht zu geben, bei y testen '''
-                    # One pair, one single (1 1 0 0 1)
-                    # '''
                     # Debugging:
                     # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
                     print(f'in_both_x[:10]:\n{in_both_x[:10]}')
@@ -579,24 +529,181 @@ class Edge(BaseEstimator, TransformerMixin):
                     print(f'indices:\n{indices[:10]}')
                     print(f'indices:\n{indices[indices[:, 0] == 0]}')
                     # '''
-                    rowcol_pairs.append(in_both_x)  # temp
+                    # Indices: [stencil nr, column, row]
+                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
+                    singles_x = np.concatenate((singles_x, indices), axis = 0)
+
+                elif tuple(combination) in set([tuple([2, 1])]):
+                    # One pair (0 1 1 0 0)
+                    # Caution! First column of indices is index in in_both_x, not in mask_x!
+                    # Indices has columns [index in in_both_x, column where value = 1, 0], which makes two rows per one row in in_both_x (because there are two values = 1)
+                    indices = np.argwhere(mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
+                    # Overwrite third column of indices with row from in_both_x (pair 1)
+                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencils
+                    # Reshape so pairs are grouped together
+                    indices = np.reshape(indices, (int(indices.shape[0]/2), 2, 3))
+                    '''
+                    # Debugging:
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+
+                    print(f'indices:\n{indices[:10]}')
+                    # print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
+                    pairs_x = np.concatenate((pairs_x, indices), axis=0)
+
+                elif tuple(combination) in set([tuple([3, 1])]):
+                    # One pair, one single (1 1 0 0 1)
+                    # indices = np.argwhere(mask_y[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1)
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] ==1)
+                    # Add second
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+
+                    # Overwrite third column of indices with row from in_both_x (pair 1)
+                    indices_pair_1[:, 2] = in_both_x[indices_pair_1[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices_pair_1[:, 0] = in_both_x[indices_pair_1[:, 0]][:, 0]  # stencils
+
+                    # Overwrite third column of indices with row from in_both_x (pair 2)
+                    indices_pair_2[:, 2] = in_both_x[indices_pair_2[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices_pair_2[:, 0] = in_both_x[indices_pair_2[:, 0]][:, 0]  # stencils
+
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+                    pairs_x = np.concatenate((pairs_x, indices), axis=0)
+
+                    # '''
+                    # Find singles and write into singles
+                    indices = np.argwhere((mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] == 1))
+
+                    # Overwrite third column of indices with row from in_both_x (pair 2)
+                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencils
+
+                    # Remove indices that are in pair1 or pair2
+                    indices = [x for x in 
+                                      set([tuple(x) for x in indices]) - 
+                                      set([tuple(x) for x in indices_pair_1]).union(set([tuple(x) for x in indices_pair_2]))
+                                     ]
+                    indices = np.array([[x[0], x[1], x[2]] for x in np.array(indices)])
+                    indices = indices[indices[:, 0].argsort()]
+
+                    indices = np.reshape(indices, (indices.shape[0], 1, 3))
+                    singles_x = np.concatenate((singles_x, indices), axis = 0)
+
+                    '''
+                    # Debugging:
+                    print(f'indices:\n{indices[:10]}')
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+
+                    # print(f'indices:\n{indices[:10]}')
+                    # print(f'indices:\n{indices[indices[:, 0] == 0]}')
+                    # '''
 
                 elif tuple(combination) in set([tuple([3, 2])]):
                     # One triple (1 1 1 0 0)
-                    rowcol_triplets.append(in_both_x)
+
+                    # Get index of all values
+                    indices = np.argwhere(mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] ==1)
+                    # Overwrite third column of indices with row from in_both_x (pair 2)
+                    indices[:, 2] = in_both_x[indices[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices[:, 0] = in_both_x[indices[:, 0]][:, 0]  # stencils
+                    # Reshape so triplets are grouped together
+                    indices = np.reshape(indices, (int(indices.shape[0]/3), 3, 3))
+
+                    '''
+                    # Debugging:
+                    print(f'indices:\n{indices[:10]}')
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+                    # '''
+                    triplets_x = np.concatenate((triplets_x, indices), axis=0)
 
                 elif tuple(combination) in set([tuple([4, 2])]):
                     # Two pairs, seperated (1 1 0 1 1)
-                    rowcol_pairs.append(in_both_x)  # temp
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] ==1)
+                    # Add second
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+
+                    # Overwrite third column of indices with row from in_both_x (pair 1)
+                    indices_pair_1[:, 2] = in_both_x[indices_pair_1[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices_pair_1[:, 0] = in_both_x[indices_pair_1[:, 0]][:, 0]  # stencils
+
+                    # Overwrite third column of indices with row from in_both_x (pair 2)
+                    indices_pair_2[:, 2] = in_both_x[indices_pair_2[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices_pair_2[:, 0] = in_both_x[indices_pair_2[:, 0]][:, 0]  # stencils
+
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+
+                    '''
+                    # Debugging:
+                    print(f'indices[:10]:\t{indices[:10]}')
+                    # print(f'in_both_x[in_both_x[:, 0] == 0]:\n{in_both_x[in_both_x[:, 0] == 0]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+                    # '''
+                    pairs_x = np.concatenate((pairs_x, indices), axis=0)
 
                 elif tuple(combination) in set([tuple([4, 3])]):
                     # Two pairs, adjacent (1 1 1 1 0)
-                    rowcol_pairs.append(in_both_x)  # temp
+
+                    # Get index of first of pair (and_mask = 1)
+                    indices_pair_1 = np.argwhere(and_mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :] ==1)
+
+                    # Overwrite third column of indices with row from in_both_x (pair 1)
+                    indices_pair_1[:, 2] = in_both_x[indices_pair_1[:, 0]][:, 1]  # rows
+                    # Overwrite first column of indices with stencil index from in_both_x
+                    indices_pair_1[:, 0] = in_both_x[indices_pair_1[:, 0]][:, 0]  # stencils
+                    # Get first three
+                    indices_pair_1 = np.reshape(indices_pair_1, (int(indices_pair_1.shape[0]/3), 3, 3))
+                    # Remove middle one to get groups of two
+                    indices_pair_1 = np.delete(indices_pair_1, 1, 1)
+                    # Break up groups of two (both being pair 1 of one of the pairs)
+                    indices_pair_1 = np.reshape(indices_pair_1, (int(indices_pair_1.shape[0]*2), 3))
+                    # Generate pair 2 corresponding to pair 1
+                    indices_pair_2 = indices_pair_1.copy()
+                    indices_pair_2[:, 1] = indices_pair_2[:, 1] + 1
+                    # Stack pairs together
+                    indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
+
+                    '''
+                    print(f'indices_pair_1[:10]:\n{indices_pair_1[:10]}')
+                    print(f'indices[:10]:\n{indices[:10]}')
+                    # Debugging:
+                    # print(f'indices[:10]:\t{indices[:10]}')
+                    print(f'in_both_x[:10]:\n{in_both_x[:10]}')
+                    pdat1 = mask_x[in_both_x[:, 0], in_both_x[:, 1], :, :][:10].reshape((10,5)).copy()
+                    print(f'mask_x:\n{pdat1}')
+                    # '''
+                    pairs_x = np.concatenate((pairs_x, indices), axis=0)
 
 
-        print('\ny\n')
+        pairs_y = np.empty((0, 2, 3))
+        triplets_y = np.empty((0, 3, 3))
+        singles_y = np.empty((0, 1, 3))
+        # print('\ny\n')
         for combination in valid_combinations:
-            print(f'combination:\t{combination}')
+            # print(f'combination:\t{combination}')
             # Do the same for y
             ind_mask_y = np.argwhere((sum_mask_y == combination[0]))
             ind_and_mask_y = np.argwhere((sum_and_mask_y == combination[1]))
@@ -604,6 +711,7 @@ class Edge(BaseEstimator, TransformerMixin):
             in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in np.array(in_both_y)])
             in_both_y = in_both_y[in_both_y[:, 0].argsort()]
 
+            # print(f'len(in_both_y):\t{len(in_both_y)}')
             if len(in_both_y) > 0:
                 in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in in_both_y])
                 in_both_y = in_both_y[in_both_y[:, 0].argsort()]
@@ -631,7 +739,7 @@ class Edge(BaseEstimator, TransformerMixin):
                     # '''
                     # Indices: [stencil nr, column, row]
                     indices = np.reshape(indices, (indices.shape[0], 1, 3))
-                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
+                    singles_y = np.concatenate((singles_y, indices), axis = 0)
 
                 elif tuple(combination) in set([tuple([2, 1])]):
                     # One pair (0 1 1 0 0)
@@ -655,7 +763,7 @@ class Edge(BaseEstimator, TransformerMixin):
                     print(f'indices:\n{indices[:10]}')
                     # print(f'indices:\n{indices[indices[:, 0] == 0]}')
                     # '''
-                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+                    pairs_y = np.concatenate((pairs_y, indices), axis=0)
 
                 elif tuple(combination) in set([tuple([3, 1])]):
                     ''' Scheint es bei x nicht zu geben, bei y testen '''
@@ -681,10 +789,10 @@ class Edge(BaseEstimator, TransformerMixin):
 
                     # Stack pairs together
                     indices = np.stack((indices_pair_1, indices_pair_2), axis=1)
-                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+                    pairs_y = np.concatenate((pairs_y, indices), axis=0)
 
                     # '''
-                    # Find singles and write into rowcol_singles
+                    # Find singles and write into singles
                     indices = np.argwhere((mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :] == 1))
 
                     # Overwrite third column of indices with row from in_both_y (pair 2)
@@ -702,7 +810,7 @@ class Edge(BaseEstimator, TransformerMixin):
                     indices = indices[indices[:, 0].argsort()]
 
                     indices = np.reshape(indices, (indices.shape[0], 1, 3))
-                    rowcol_singles = np.concatenate((rowcol_singles, indices), axis = 0)
+                    singles_y = np.concatenate((singles_y, indices), axis = 0)
 
                     '''
                     # Debugging:
@@ -739,7 +847,7 @@ class Edge(BaseEstimator, TransformerMixin):
                     pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
                     print(f'mask_y:\n{pdat1}')
                     # '''
-                    rowcol_triplets = np.concatenate((rowcol_triplets, indices), axis=0)
+                    triplets_y = np.concatenate((triplets_y, indices), axis=0)
 
                 elif tuple(combination) in set([tuple([4, 2])]):
                     # Two pairs, seperated (1 1 0 1 1)
@@ -772,7 +880,7 @@ class Edge(BaseEstimator, TransformerMixin):
                     pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
                     print(f'mask_y:\n{pdat1}')
                     # '''
-                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+                    pairs_y = np.concatenate((pairs_y, indices), axis=0)
 
                 elif tuple(combination) in set([tuple([4, 3])]):
                     # Two pairs, adjacent (1 1 1 1 0)
@@ -807,14 +915,17 @@ class Edge(BaseEstimator, TransformerMixin):
                     pdat1 = mask_y[in_both_y[:, 0], :, in_both_y[:, 1], :][:10].reshape((10,5)).copy()
                     print(f'mask_y:\n{pdat1}')
                     # '''
-                    rowcol_pairs = np.concatenate((rowcol_pairs, indices), axis=0)
+                    pairs_y = np.concatenate((pairs_y, indices), axis=0)
 
-        print(f'rowcol_pairs:\n{rowcol_pairs}')
-        print(f'rowcol_pairs.shape:\t{rowcol_pairs.shape}')
-        print(f'rowcol_triplets.shape:\t{rowcol_triplets.shape}')
-        print(f'rowcol_singles.shape:\t{rowcol_singles.shape}')
+        # Make rowcol arrays integer
+        singles_x = singles_x.astype(np.int)
+        pairs_x = pairs_x.astype(np.int)
+        triplets_x = triplets_x.astype(np.int)
+        singles_y = singles_y.astype(np.int)
+        pairs_y = pairs_y.astype(np.int)
+        triplets_y = triplets_y.astype(np.int)
 
-        a = b
+        # a = b
 
         # Find indices for each case, append it to either a list of pairs (mean) or a list of single values
         # 
@@ -843,146 +954,217 @@ class Edge(BaseEstimator, TransformerMixin):
         # 51:   0 0 0 1 1 0 0 (sm = 4, sam = 3) -> in zwei aufteilen, interpolieren (189)
         #         0 1 1 1 1 
 
-        ind = 51  # 1 für Fehler 18
+        '''
+        ind = 51
         print(f'\nINDEX = {ind}\n')
         pdat1 = data[ind].reshape((st_sz[0], st_sz[1])).copy()
         print(f'pdat1:\n{pdat1}')
         pdat2 = mask[ind].reshape((st_sz[0], st_sz[1])).copy()
         print(f'pdat2:\n{pdat2}')
-        pdat2 = sum_mask_x[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_mask_x:\n{pdat2}')
-        pdat2 = sum_mask_y[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_mask_y:\n{pdat2}')
-        pdat2 = sum_and_mask_x[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_and_mask_x:\n{pdat2}')
-
-        pdat2 = sum_and_mask_y[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_and_mask_y:\n{pdat2}')
-        pdat2 = and_mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-3)).copy()
-        print(f'and_mask_x:\n{pdat2}')
-        pdat2 = and_mask_y[:, :, :, :][ind].reshape((st_sz[0]-3, st_sz[0]-2)).copy()
-        print(f'and_mask_y:\n{pdat2}')
         pdat2 = mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
         print(f'mask_x:\n{pdat2}')
         pdat2 = mask_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
         print(f'mask_y:\n{pdat2}')
+        pdat2 = sum_mask_x[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_mask_x:\n{pdat2}')
+        pdat2 = sum_mask_y[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_mask_y:\n{pdat2}')
+        pdat2 = and_mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-3)).copy()
+        print(f'and_mask_x:\n{pdat2}')
+        pdat2 = and_mask_y[:, :, :, :][ind].reshape((st_sz[0]-3, st_sz[0]-2)).copy()
+        print(f'and_mask_y:\n{pdat2}')
+        pdat2 = sum_and_mask_x[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_and_mask_x:\n{pdat2}')
+        pdat2 = sum_and_mask_y[ind].reshape((st_sz[0]-2)).copy()
+        print(f'sum_and_mask_y:\n{pdat2}')
+
+        print(f'np.unique(sum_mask_x):\t{np.unique(sum_mask_x)}')
+        print(f'np.unique(sum_mask_y):\t{np.unique(sum_mask_y)}')
+        print(f'np.unique(sum_and_mask_x):\t{np.unique(sum_and_mask_x)}')
+        print(f'np.unique(sum_and_mask_y):\t{np.unique(sum_and_mask_y)}')
         print(f'\nINDEX = {ind}\n')
         # '''
-        a = b
+        print(f'pairs_x:\n{pairs_x}')
+        print(f'pairs_x.shape:\t{pairs_x.shape}')
+        print(f'triplets_x.shape:\t{triplets_x.shape}')
+        print(f'singles_x.shape:\t{singles_x.shape}')
+        print(f'pairs_y:\n{pairs_y}')
+        print(f'pairs_y.shape:\t{pairs_y.shape}')
+        print(f'triplets_y.shape:\t{triplets_y.shape}')
+        print(f'singles_y.shape:\t{singles_y.shape}')
 
-        
         # Get vof values of points closest to 0.5
-        data_x = np.multiply(mask_x, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
-        data_y = np.multiply(mask_y, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
+        # data_x = np.multiply(mask_x, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
+        # data_y = np.multiply(mask_y, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
 
-        # pdat2 = mask_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        # print(f'mask_y:\n{pdat2}')
+        # Get inner stencil from data
+        data_cut = data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
 
-        # pdat2 = data_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        # print(f'data_y:\n{pdat2}')
-
-        # Get mean of those values
-        mid_x = np.sum(data_x, axis = 2)/np.where(np.sum(mask_x, axis=2)>0, np.sum(mask_x, axis=2), 1)
-        mid_y = np.sum(data_y, axis = 1)/np.where(np.sum(mask_y, axis=1)>0, np.sum(mask_y, axis=1), 1)
-        # print(f'mid_y.shape:\t{mid_y.shape}')
-        
-        # Find out where the interpolated value should be written onto the vof-value > 0.5 or < 0.5 
-        x_on_bigger = np.argwhere((mid_x <= 0.5) & (sum_and_mask_x == 1))
-        x_on_smaller = np.argwhere((mid_x > 0.5) & (sum_and_mask_x == 1))
-        y_on_bigger = np.argwhere((mid_y <= 0.5) & (sum_and_mask_y == 1))
-        y_on_smaller = np.argwhere((mid_y > 0.5) & (sum_and_mask_y == 1))
-        x_on_both = np.argwhere(sum_and_mask_x == 1)  # where data should be overwritten with mean. not overwritten = values from data_x
-        y_on_both = np.argwhere(sum_and_mask_y == 1)  # where data should be overwritten with mean. not overwritten = values from data_y
-
-        stamp_x = data_x.copy()
-        stamp_y = data_y.copy()
-        stamp_x[x_on_both[:, 0], x_on_both[:, 1], :, :] = 0
-        stamp_y[y_on_both[:, 0], :, y_on_both[:, 1], :] = 0
-
-        # Get rows/columns (and substitute 0 for 2 on on_smaller to prepare for argmin)
-        rc_x_on_bigger = data_x[x_on_bigger[:, 0], x_on_bigger[:, 1], :, :]
-        rc_x_on_smaller = np.where((data_x[x_on_smaller[:, 0], x_on_smaller[:, 1], :, :]==0), 2, data_x[x_on_smaller[:, 0], x_on_smaller[:, 1], :, :])
-        rc_y_on_bigger = data_y[y_on_bigger[:, 0], :, y_on_bigger[:, 1], :]
-        rc_y_on_smaller = np.where((data_y[y_on_smaller[:, 0], :, y_on_smaller[:, 1], :]==0), 2, data_y[y_on_smaller[:, 0], :, y_on_smaller[:, 1], :])
-        
-        # Find index of these vof values
-        x_index_bigger = np.argmax(rc_x_on_bigger, axis = 1)[:, 0]
-        x_index_smaller = np.argmin(rc_x_on_smaller, axis = 1)[:, 0]
-        y_index_bigger = np.argmax(rc_y_on_bigger, axis = 1)[:, 0]
-        y_index_smaller = np.argmin(rc_y_on_smaller, axis = 1)[:, 0]
-
-        # Write indices all into one array (e.g. x_on_bigger: in the x_on_bigger[1] row of stencil x_on_bigger[0], the bigger value (> 0.5) is at index x_on_bigger[2]. The mean+0.5 should be written onto this point
-        x_on_bigger[:, 2] = x_index_bigger
-        x_on_smaller[:, 2] = x_index_smaller
-        y_on_bigger[:, 2] = y_index_bigger
-        y_on_smaller[:, 2] = y_index_smaller
-
-        interp_x = data_x.copy()
+        # Initialize output stencils
+        interp_x = data_cut.copy()
         interp_x[:] = 0
-        interp_y = data_y.copy()
+        interp_y = data_cut.copy()
         interp_y[:] = 0
 
-        # Increase mid by 0.5 if to be put on bigger, else decrease by 0.5. set to 0 if mid == 0
-        mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] = np.where(
-            (mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] != 0),
-            (mid_x[x_on_bigger[:, 0], x_on_bigger[:, 1], 0] + 0.5),
-            0
-        )
-        mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] = np.where(
-            (mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] != 0),
-            (mid_x[x_on_smaller[:, 0], x_on_smaller[:, 1], 0] - 0.5),
-            0
-        )
-        mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] = np.where(
-            (mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] != 0),
-            (mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0] + 0.5),
-            0
-        )
-        mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] = np.where(
-            (mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] != 0),
-            (mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0] - 0.5),
-            0
-        )
+        # PAIRS
 
-        # Put interpolated value on stencil at right position
-        interp_x[x_on_bigger[:,0], x_on_bigger[:,1], x_on_bigger[:,2], 0] = mid_x[x_on_bigger[:,0], x_on_bigger[:,1], 0]
-        interp_x[x_on_smaller[:,0], x_on_smaller[:,1], x_on_smaller[:,2], 0] = mid_x[x_on_smaller[:,0], x_on_smaller[:,1], 0]
-        interp_y[y_on_bigger[:, 0], y_on_bigger[:, 2], y_on_bigger[:, 1], 0] = mid_y[y_on_bigger[:, 0], y_on_bigger[:, 1], 0]
-        interp_y[y_on_smaller[:, 0], y_on_smaller[:, 2], y_on_smaller[:, 1], 0] = mid_y[y_on_smaller[:, 0], y_on_smaller[:, 1], 0]
+        # Get data of both parts of pairs
+        pairs1_x = data_cut[pairs_x[:, 0, 0], pairs_x[:, 0, 2], pairs_x[:, 0, 1], 0]
+        pairs2_x = data_cut[pairs_x[:, 1, 0], pairs_x[:, 1, 2], pairs_x[:, 1, 1], 0]
 
-        # Fill with mask and restore value where value was written on bigger
-        interp_x = interp_x + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :] + stamp_x
+        pairs1_y = data_cut[pairs_y[:, 0, 0], pairs_y[:, 0, 2], pairs_y[:, 0, 1], 0]
+        pairs2_y = data_cut[pairs_y[:, 1, 0], pairs_y[:, 1, 2], pairs_y[:, 1, 1], 0]
+
+        # Calculate mean of pairs
+        mean_x = (pairs1_x + pairs2_x)/2
+        mean_y = (pairs1_y + pairs2_y)/2
+
+        # Decide weather mean should be written on bigger or smaller value
+        on_bigger_x = np.where(mean_x < 0.5, mean_x + 0.5, 0)
+        on_smaller_x = np.where(mean_x >= 0.5, mean_x - 0.5, 0)
+        on_bigger_y = np.where(mean_y < 0.5, mean_y + 0.5, 0)
+        on_smaller_y = np.where(mean_y >= 0.5, mean_y - 0.5, 0)
+
+        # Find out where p1 > p2 and where p1 <= p2
+        p1_bigger_x = np.where(pairs1_x > pairs2_x, 1, 0)
+        p1_smaller_x = np.where(pairs1_x <= pairs2_x, 1, 0)
+        p1_bigger_y = np.where(pairs1_y > pairs2_y, 1, 0)
+        p1_smaller_y = np.where(pairs1_y <= pairs2_y, 1, 0)
+
+        # Get values that should be written on p1/p2
+        int_p1_x = np.multiply(p1_bigger_x, on_bigger_x) + np.multiply(p1_smaller_x, on_smaller_x)
+        int_p2_x = np.multiply(p1_bigger_x, on_smaller_x) + np.multiply(p1_smaller_x, on_bigger_x)
+        int_p1_y = np.multiply(p1_bigger_y, on_bigger_y) + np.multiply(p1_smaller_y, on_smaller_y)
+        int_p2_y = np.multiply(p1_bigger_y, on_smaller_y) + np.multiply(p1_smaller_y, on_bigger_y)
+
+        interp_x[pairs_x[:, 0, 0], pairs_x[:, 0, 2], pairs_x[:, 0, 1], 0] = int_p1_x
+        interp_x[pairs_x[:, 1, 0], pairs_x[:, 1, 2], pairs_x[:, 1, 1], 0] = int_p2_x
+        interp_y[pairs_y[:, 0, 0], pairs_y[:, 0, 2], pairs_y[:, 0, 1], 0] = int_p1_y
+        interp_y[pairs_y[:, 1, 0], pairs_y[:, 1, 2], pairs_y[:, 1, 1], 0] = int_p2_y
+
+        '''
+        # Debug output
+        tmp = np.stack((pairs1_x, pairs2_x, mean_x, on_bigger_x, on_smaller_x, p1_bigger_x, p1_smaller_x, int_p1_x, int_p2_x, pairs_x[:, 0, 0], pairs_x[:, 0, 1], pairs_x[:, 0, 2], pairs_x[:, 1, 0], pairs_x[:, 1, 1], pairs_x[:, 1, 2]), axis=1)
+        print('pairs1_x, pairs2_x, mean_x, on_bigger_x, on_smaller_x, p1_bigger_x, p1_smaller_x, int_p1_x, int_p2_x, pairs_x[:, 0, :], pairs_x[:, 1, :]')
+        with np.printoptions(threshold=np.inf):
+            print(f'{np.round(tmp[:20],3)}')
+        tmp = np.stack((pairs1_y, pairs2_y, mean_y, on_bigger_y, on_smaller_y, p1_bigger_y, p1_smaller_y, int_p1_y, int_p2_y, pairs_y[:, 0, 0], pairs_y[:, 0, 1], pairs_y[:, 0, 2], pairs_y[:, 1, 0], pairs_y[:, 1, 1], pairs_y[:, 1, 2]), axis=1)
+        print('pairs1_y, pairs2_y, mean_y, on_bigger_y, on_smaller_y, p1_bigger_y, p1_smaller_y, int_p1_y, int_p2_y, pairs_y[:, 0, :], pairs_y[:, 1, :]')
+        with np.printoptions(threshold=np.inf):
+            print(f'{np.round(tmp[:20],3)}')
+        # print(f'value_on_bigger[:10]:\n{value_on_bigger[:10]}')
+        print(f'tmp[tmp[:, 2] == 0]:\t{tmp[tmp[:, 2] == 0]}')  # should be empty
+        print(f'tmp[tmp[:, 1] == 0]:\t{tmp[tmp[:, 1] == 0]}')  # should be empty
+        print(f'tmp[tmp[:, 0] == 0]:\t{tmp[tmp[:, 0] == 0]}')  # should be empty
+        # '''
+
+        # TRIPLETS
+
+        # Get data of both parts of pairs
+        triplets1_x = data_cut[triplets_x[:, 0, 0], triplets_x[:, 0, 2], triplets_x[:, 0, 1], 0]
+        triplets2_x = data_cut[triplets_x[:, 1, 0], triplets_x[:, 1, 2], triplets_x[:, 1, 1], 0]
+        triplets3_x = data_cut[triplets_x[:, 2, 0], triplets_x[:, 2, 2], triplets_x[:, 2, 1], 0]
+
+        triplets1_y = data_cut[triplets_y[:, 0, 0], triplets_y[:, 0, 2], triplets_y[:, 0, 1], 0]
+        triplets2_y = data_cut[triplets_y[:, 1, 0], triplets_y[:, 1, 2], triplets_y[:, 1, 1], 0]
+        triplets3_y = data_cut[triplets_y[:, 2, 0], triplets_y[:, 2, 2], triplets_y[:, 2, 1], 0]
+
+        # Calculate mean of pairs
+        mean_x_1 = (triplets1_x + triplets2_x)/2
+        mean_x_2 = (triplets2_x + triplets3_x)/2
+
+        mean_y_1 = (triplets1_y + triplets2_y)/2
+        mean_y_2 = (triplets2_y + triplets3_y)/2
+
+        # Decide weather mean should be written on bigger or smaller value
+        on_bigger_x_1 = np.where(mean_x_1 < 0.5, mean_x_1 + 0.5, 0)
+        on_bigger_x_2 = np.where(mean_x_2 < 0.5, mean_x_2 + 0.5, 0)
+        on_smaller_x_1 = np.where(mean_x_1 >= 0.5, mean_x_1 - 0.5, 0)
+        on_smaller_x_2 = np.where(mean_x_2 >= 0.5, mean_x_2 - 0.5, 0)
+
+        on_bigger_y_1 = np.where(mean_y_1 < 0.5, mean_y_1 + 0.5, 0)
+        on_bigger_y_2 = np.where(mean_y_2 < 0.5, mean_y_2 + 0.5, 0)
+        on_smaller_y_1 = np.where(mean_y_1 >= 0.5, mean_y_1 - 0.5, 0)
+        on_smaller_y_2 = np.where(mean_y_2 >= 0.5, mean_y_2 - 0.5, 0)
+
+        # Find out where p1 > p2 and where p1 <= p2
+        t1_bigger_x_1 = np.where(triplets1_x > triplets2_x, 1, 0)
+        t1_smaller_x_1 = np.where(triplets1_x <= triplets2_x, 1, 0)
+        t2_bigger_x_2 = np.where(triplets2_x > triplets3_x, 1, 0)
+        t2_smaller_x_2 = np.where(triplets2_x <= triplets3_x, 1, 0)
+
+        t1_bigger_y_1 = np.where(triplets1_y > triplets2_y, 1, 0)
+        t1_smaller_y_1 = np.where(triplets1_y <= triplets2_y, 1, 0)
+        t2_bigger_y_2 = np.where(triplets2_y > triplets3_y, 1, 0)
+        t2_smaller_y_2 = np.where(triplets2_y <= triplets3_y, 1, 0)
+
+        # Get values that should be written on p1/p2
+        int_t1_x = np.multiply(t1_bigger_x_1, on_bigger_x_1) + np.multiply(t1_smaller_x_1, on_smaller_x_1)
+        int_t3_x = np.multiply(t2_bigger_x_2, on_smaller_x_2) + np.multiply(t2_smaller_x_2, on_bigger_x_2)
+
+        int_t1_y = np.multiply(t1_bigger_y_1, on_bigger_y_1) + np.multiply(t1_smaller_y_1, on_smaller_y_1)
+        int_t3_y = np.multiply(t2_bigger_y_2, on_smaller_y_2) + np.multiply(t2_smaller_y_2, on_bigger_y_2)
+
+        # if middle value of triplet should be overwritten with left and right mean, overwrite it with the mean of both means
+        int_t2_x_1 = np.multiply(t1_bigger_x_1, on_smaller_x_1) + np.multiply(t1_smaller_x_1, on_bigger_x_1)
+        int_t2_x_2 = np.multiply(t2_bigger_x_2, on_bigger_x_2) + np.multiply(t2_smaller_x_2, on_smaller_x_2)
+        int_t2_x = np.where(((int_t2_x_1 != 0) & (int_t2_x_2 != 0)), (int_t2_x_1+int_t2_x_2)/2, int_t2_x_1+int_t2_x_2)
+
+        int_t2_y_1 = np.multiply(t1_bigger_y_1, on_smaller_y_1) + np.multiply(t1_smaller_y_1, on_bigger_y_1)
+        int_t2_y_2 = np.multiply(t2_bigger_y_2, on_bigger_y_2) + np.multiply(t2_smaller_y_2, on_smaller_y_2)
+        int_t2_y = np.where(((int_t2_y_1 != 0) & (int_t2_y_2 != 0)), (int_t2_y_1+int_t2_y_2)/2, int_t2_y_1+int_t2_y_2)
+
+        # Write values to output stencils
+        interp_x[triplets_x[:, 0, 0], triplets_x[:, 0, 2], triplets_x[:, 0, 1], 0] = int_t1_x
+        interp_x[triplets_x[:, 1, 0], triplets_x[:, 1, 2], triplets_x[:, 1, 1], 0] = int_t2_x
+        interp_x[triplets_x[:, 2, 0], triplets_x[:, 2, 2], triplets_x[:, 2, 1], 0] = int_t3_x
+
+        interp_y[triplets_y[:, 0, 0], triplets_y[:, 0, 2], triplets_y[:, 0, 1], 0] = int_t1_y
+        interp_y[triplets_y[:, 1, 0], triplets_y[:, 1, 2], triplets_y[:, 1, 1], 0] = int_t2_y
+        interp_y[triplets_y[:, 2, 0], triplets_y[:, 2, 2], triplets_y[:, 2, 1], 0] = int_t3_y
+
+        '''
+        tmp = np.stack((triplets1_x, triplets2_x, triplets3_x, mean_x_1, mean_x_2, on_bigger_x_1, on_bigger_x_2, on_smaller_x_1, on_smaller_x_2, t1_bigger_x_1, t1_smaller_x_1, t2_bigger_x_2, t2_smaller_x_2, int_t1_x, int_t2_x_1, int_t2_x, int_t2_x_2, int_t3_x, ), axis=1)
+        print('triplets1_x, triplets2_x, triplets3_x, mean_x_1, mean_x_2, on_bigger_x_1, on_bigger_x_2, on_smaller_x_1, on_smaller_x_2, t1_bigger_x_1, t1_smaller_x_1, t2_bigger_x_2, t2_smaller_x_2, int_t1_x, int_t2_x_1, int_t2_x, int_t2_x_2, int_t3_x, ')
+        with np.printoptions(threshold=np.inf):
+            print(f'{np.round(tmp[:20],3)}')
+        # '''
+
+        # Singles
+        # Just copy single values from data to interp
+        interp_x[singles_x[:, 0, 0], singles_x[:, 0, 2], singles_x[:, 0, 1], 0] = data_cut[singles_x[:, 0, 0], singles_x[:, 0, 2], singles_x[:, 0, 1], 0]
+        interp_y[singles_y[:, 0, 0], singles_y[:, 0, 2], singles_y[:, 0, 1], 0] = data_cut[singles_y[:, 0, 0], singles_y[:, 0, 2], singles_y[:, 0, 1], 0]
+
+        # Fill with mask with ones and restore value where value was written on bigger
+        interp_x = interp_x + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
         interp_x = np.where(interp_x > 1, interp_x-1, interp_x)
-
-        interp_y = interp_y + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :] + stamp_y
+        interp_y = interp_y + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
         interp_y = np.where(interp_y > 1, interp_y-1, interp_y)
 
-        # '''
-        print(f'sum adj_y:\n{adj_y[ind]}')
-        print(f'sum adj_x:\n{adj_x[ind]}')
-
-        pdat2 = data_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'data_y:\n{pdat2}')
-        pdat2 = mid_y[ind, :, :].reshape((st_sz[1]-2)).copy()
-        print(f'mid_y:\n{pdat2}')
-        pdat2 = interp_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'interp_y:\n{pdat2}')
-
-        pdat2 = data_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'data_x:\n{pdat2}')
-        pdat2 = mid_x[ind, :, :].reshape((st_sz[1]-2)).copy()
-        print(f'mid_x:\n{pdat2}')
-        pdat2 = interp_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        '''
+        ind = 35
+        pdat2 = data[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'data:\n{pdat2}')
+        pdat2 = mask[ind].reshape((st_sz[0], st_sz[1])).copy()
+        print(f'mask:\n{pdat2}')
+        pdat2 = data_cut[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'data_cut:\n{pdat2}')
+        pdat2 = mask_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'mask_x:\n{pdat2}')
+        pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
         print(f'interp_x:\n{pdat2}')
+        pdat2 = mask_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'mask_y:\n{pdat2}')
+        pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'interp_y:\n{pdat2}')
         # '''
+        
+        # Flatten interp_x and interp_y
+        interp_x = np.reshape (interp_x, (interp_x.shape[0], np.prod(interp_x.shape[1:3])))
+        interp_y = np.reshape (interp_y, (interp_y.shape[0], np.prod(interp_y.shape[1:3])))
 
-        a = b
-
-        if data.shape != shape:
-            # Reshape rotated data to original shape
-            data = np.reshape(data, shape)
-            if self.parameters['angle']:
-                angle_matrix = np.reshape(angle_matrix, shape)
+        # Glue them together (shape is data_length x 50 for 7x7 stencil, first 25 are x, second are y)
+        data = np.concatenate((interp_x, interp_y), axis=1)
 
         return [dataset[0], data, dataset[2]]
 

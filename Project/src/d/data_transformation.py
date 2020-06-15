@@ -310,7 +310,7 @@ def process_data(dataset, parameters, reshape):
                 ('findgradient', FindGradient(parameters=parameters)),
                 ('findangle', FindAngle(parameters=parameters)),
                 ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
-                ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                # ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
                 ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
             ])
         # Execute pipeline
