@@ -444,7 +444,33 @@ class Edge(BaseEstimator, TransformerMixin):
         data = dataset[1]
 
         ''' ENTFERNEN! '''
-        # data = data[dataset[0] > 0.4]
+        data = data[dataset[0] > 0.43]
+        print('Teststencil eingefügt')
+        teststencil_x = np.array(
+            [[1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0.4, 0.601, 0.8, 1, 1, 1, 1, 1, 1],
+            [0.2, 0.3, 0.7, 0.9, 1, 1, 1, 0.9, 0.4],
+            [0.01, 0.05, 0.1, 0.8, 1, 1, 1, 1, 1],
+            [0, 0, 0.4, 0.55, 0.75, 1, 1, 0.6, 0.2],
+            [0, 0, 0.4, 0.55, 0.75, 1, 0.9, 0.45, 0.2],
+            [0, 0, 0.01, 0.12, 0.45, 0.85, 0.9, 0.45, 0.2],
+            [0, 0, 0, 0, 0.1, 0.6, 0.2, 0, 0],
+            [0, 0, 0, 0, 0.9, 0.4, 0.9, 0, 0]]
+        )
+        # teststencil_x = 1-teststencil_x
+        # [1, 1, 1, 1, 0.9, 0.6, 0.9, 1, 1],
+        teststencil_y = np.rot90(teststencil_x, k=1)
+        teststencil_x_rot = np.rot90(teststencil_x, k=2)
+        teststencil_y_rot = np.rot90(teststencil_y, k=2)
+
+
+        teststencil_x = np.reshape(teststencil_x, (1, 81))
+        teststencil_y = np.reshape(teststencil_y, (1, 81))
+        teststencil_x_rot = np.reshape(teststencil_x_rot, (1, 81))
+        teststencil_y_rot = np.reshape(teststencil_y_rot, (1, 81))
+        data = np.concatenate((data, teststencil_x, teststencil_y, teststencil_x_rot, teststencil_y_rot), axis=0)
+        # print(f'data[0].shape:\t{data[0].shape}')
+        # print(f'data[0]:\t{data[0]}')
 
         # Get shape of data
         shape = data.shape
@@ -1162,6 +1188,40 @@ class Edge(BaseEstimator, TransformerMixin):
         # Flatten interp_x and interp_y
         interp_x = np.reshape (interp_x, (interp_x.shape[0], np.prod(interp_x.shape[1:3])))
         interp_y = np.reshape (interp_y, (interp_y.shape[0], np.prod(interp_y.shape[1:3])))
+
+        # interp_x und interp_y sind wahrscheinlich vertauscht
+
+
+        print('Teststencil output')
+
+        pdat2 = teststencil_x.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
+        print(f'T1x input:\n{pdat2}')
+        ind = -4
+        pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'T1x interp_x:\n{pdat2}')
+        #'''
+        pdat2 = teststencil_y.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
+        # print(f'T1y input:\n{pdat2}')
+        ind = -3
+        pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        pdat2 = np.rot90(pdat2,k=-1)
+        print(f'T1y interp_y:\n{pdat2}')
+
+        pdat2 = teststencil_x_rot.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
+        # print(f'T2x input:\n{pdat2}')
+        ind = -2
+        pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        pdat2 = np.rot90(pdat2,k=-2)
+        print(f'T2x interp_x:\n{pdat2}')
+
+        pdat2 = teststencil_y_rot.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
+        # print(f'T2y input:\n{pdat2}')
+        ind = -1
+        pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        pdat2 = np.rot90(pdat2,k=-3)
+        print(f'T2y interp_y:\n{pdat2}')
+        # '''
+
 
         # Glue them together (shape is data_length x 50 for 7x7 stencil, first 25 are x, second are y)
         data = np.concatenate((interp_x, interp_y), axis=1)

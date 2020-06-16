@@ -29,7 +29,6 @@ def axismatrix(n_grid, axis):
     elif axis == 1:
         return return_matrix
 
-
 def cross(mid_pt, max_pt, rev_y=False):
     # Generate cross values mid_pt - max_pt to mid_pt + max_pt in both axis
     # Generate points in direction of both axis
@@ -84,14 +83,15 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     if smearing:
         # Increase stencil size by two until smearing is applied
         st_sz = np.add(st_sz, [2, 2])
+        sm_it = (int(np.ceil(interpolate)) if interpolate else 1)
         if interpolate:
-            sm_it = int(np.ceil(interpolate))
             for i in range(sm_it-1):
                 # Increase stencil size by another two to make up for smearing
                 st_sz = np.add(st_sz, [2, 2])
 
     # Geometry
-    R_min = max(st_sz)/2*Delta
+    st_sz_kappa = min(max(st_sz), 9)  # 9 for +/- 0.44
+    R_min = st_sz_kappa/2*Delta
     R_max = 0.5
 
     # kappa_min = L*Delta*2/R_max
@@ -149,7 +149,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             # Calculate geometry radius
             # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
             # '''
-            r_min = max([2*L*Delta/(-curvature*e), (max(st_sz)*Delta*e**2)/2])
+            r_min = max([2*L*Delta/(-curvature*e), (st_sz_kappa*Delta*e**2)/2])
             r_max = 2*e**2*L*Delta/(-curvature)
             r = r_min + u()**1* (r_max - r_min)
             # '''
