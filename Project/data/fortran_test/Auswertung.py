@@ -20,11 +20,25 @@ fig, ax = plt.subplots(1, 1, figsize=(10,8))
 # paths = ['2006020903 cds Vergleich', '2006031402 dshift1 zu viel Dämpfung', '2006031403 CVOFLS', '2006031405 shift1', '2006021958 shift1 weights 0 oder 1', '2006022001 altes curv_ml']
 # labels = ['cds', 'dshift1', 'cvofls', 'shift1', 'shift1 w01', 'alt']
 
-# paths = ['FASTEST_1', 'FASTESET_2', 'FASTEST_3', 'FASTEST_4', '2006031403 CVOFLS']
-# labels = ['F1', 'F2', 'F3', 'F4', 'CVOFLS']
+paths = [
+    # 'FASTEST_1',
+    'FASTEST_2',
+    # 'FASTEST_3',
+    # 'FASTEST_4',
+    '2006171503 edge int2',
+    '2006031403 CVOFLS'
+]
+labels = [
+    # 'F1',
+    'F2',
+    # 'F3',
+    # 'F4',
+    '2006171503 edge int2',
+    'CVOFLS'
+]
 
-paths = ['FASTEST_1', 'FASTEST_2', '2006042307 dshift1 shift1 flip 0.05 sehr gut', '2006041645 dshift1 shift1 0.03 w + kappa neq 0 g sqr all ganz gut', '2006040836 altes w bei k ungleich 0 0.08 0.92 wenig Fehler kleine Amplitude', '2006031403 CVOFLS', '2006022000 cds Vergleich']
-labels = ['F1', 'F2', 'flip 0.05', 'dshift1 shift1 0.03', 'altes shift1 0.08 0.92', 'CVOFLS', 'CDS']
+# paths = ['FASTEST_1', 'FASTEST_2', '2006042307 dshift1 shift1 flip 0.05 sehr gut', '2006041645 dshift1 shift1 0.03 w + kappa neq 0 g sqr all ganz gut', '2006040836 altes w bei k ungleich 0 0.08 0.92 wenig Fehler kleine Amplitude', '2006031403 CVOFLS', '2006022000 cds Vergleich']
+# labels = ['F1', 'F2', 'flip 0.05', 'dshift1 shift1 0.03', 'altes shift1 0.08 0.92', 'CVOFLS', 'CDS']
 
 reds = ['crimson', 'lightcoral', 'orangered', 'chocolate']
 j=0

@@ -47,6 +47,7 @@ def ml(
 
     # Parameters
     parameters = {
+        'plot': plot,
         'network': network,              # Network type
         'epochs': epochs,                # Number of epochs
         'layers': layer,                 # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]
@@ -129,6 +130,7 @@ def save(
 
     # Parameters
     parameters = {
+        'plot': plot,
         'network': network,              # Network type
         'epochs': epochs,                # Number of epochs
         'layers': layer,                 # Autoencoder: [n*Encoder Layers, 1*Coding Layer, 1*Feedforward Layer]

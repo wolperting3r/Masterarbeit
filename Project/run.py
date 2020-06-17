@@ -23,8 +23,8 @@ dshift = ['1']  # 0, 1, 1b
 shift = [1]
 bias = [True]
 # interpolate = [1.5, 2]
-# interpolate = [0, 1, 1.5, 2]
-interpolate = [0]
+interpolate = [0, 1, 1.5, 2]
+# interpolate = [0]
 edge = [1]
 custom_loss = [False]
 # addstring = ['_1', '_2', '_3', '_4']
@@ -40,16 +40,17 @@ addstring = ['']
 for i in range(0, 2):
     # MLP
     network = ['mlp']
-    layer = [[200, 150, 120]]
+    # layer = [[200, 150, 120]]
+    layer = [[200, 180, 150, 120, 100]]
     # layer = [[100, 80], [200, 150, 120]]
 
     if i == 0:
         plot = [False]
-        # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
     if i == 1:
         plot = [True]
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
-        # exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
+        exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
     # '''
 
 '''

@@ -23,6 +23,7 @@ def get_data(parameters):
                 ('_neg' if parameters['negative'] else '_pos') + \
                 '_cir' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
             filename_sin = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -30,6 +31,7 @@ def get_data(parameters):
                 ('_neg' if parameters['negative'] else '_pos') + \
                 '_sin' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
             filename_ell = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -37,6 +39,7 @@ def get_data(parameters):
                 ('_neg' if parameters['negative'] else '_pos') + \
                 '_ell' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
         else:
             filename_cir = 'data_' + \
@@ -46,6 +49,7 @@ def get_data(parameters):
                 '_cir' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1' + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
             filename_sin = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -54,6 +58,7 @@ def get_data(parameters):
                 '_sin' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1' + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
             filename_ell = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -62,6 +67,7 @@ def get_data(parameters):
                 '_ell' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1' + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 '.feather'
 
         if parameters['dshift'] == '1b':
@@ -148,13 +154,14 @@ def get_data(parameters):
             geom_str = '_cir'
         # Data file to load
         if parameters['dshift'] == '0':
+            # _int2 if plot, else _int + interpolation if interpolation != 0, else nothing
             filename = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
                 ('eqk' if parameters['equal_kappa'] else 'eqr') + \
                 ('_neg' if parameters['negative'] else '_pos') + \
                 geom_str + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 '.feather'
         else:
             filename = 'data_' + \
@@ -164,7 +171,7 @@ def get_data(parameters):
                 geom_str + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1' + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 '.feather'
 
         print(f'Dataset:\t{filename}')
@@ -191,7 +198,8 @@ def get_data(parameters):
     # Only return data with the curvature being below a certain threshold
     # data = data[np.abs(data.iloc[:, 0]) < 0.15]
     # data = data[np.abs(data.iloc[:, 0]) > 0.015]
-    # data = data[data.iloc[:, 0] > 0]
+    # print('\n#######\nData ist unter 0.4 abgeschnitten\n#######\n')
+    # data = data[data.iloc[:, 0] > 0.4]
     if parameters['flip']:
         data.iloc[:, 0] = -data.iloc[:, 0]
 

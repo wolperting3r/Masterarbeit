@@ -59,7 +59,8 @@ integer:: stzh
 integer:: checksum
 integer:: gridsize = 128
 integer :: counter, w_idx_beg, b_idx_beg, i_loc, j_loc, n, o, p, counter1, i_shift, j_shift
-integer :: export = 1
+integer :: j_locc, i_locc ! Am Ende lÃschen
+integer :: export = 0
 
 integer :: icphi
 ! integer,intent(in)  :: ngr
@@ -106,6 +107,7 @@ allocate(ml_data_y((stz-2), (stz-2)))
 allocate(ml_row((stz-2)))
 allocate(ml_and_row((stz-3)))
 
+
 ! t1 = secnds(0.0)
 ! if ((it > 3200) .and. (it < 3500)) then
 ! if (it == 200) then
@@ -130,7 +132,7 @@ do m=1,nblo
         xm = sqrt((x(ha(i, j, k)) - x(ha(i-1, j, k)))**2)
         ym = sqrt((y(ha(i, j, k)) - y(ha(i, j-1, k)))**2)
 
-        if (((cm(ha(i  ,j  ,k)) > 0.06) .AND. (cm(ha(i  ,j  ,k)) < 0.94)) &  ! war bei den Test meistens 0.98
+        if (((cm(ha(i  ,j  ,k)) > 0.06d0) .AND. (cm(ha(i  ,j  ,k)) < 0.94d0)) &  ! war bei den Test meistens 0.98
             !.AND. ((sqrt(dscdx(inp)**2 + dscdy(inp)**2) > 0.01d0/min(xm, ym))) & ! zusätzliche Bedingung
             !.AND. (checksum >= 2) &
             !.AND. (((c(ha(i+1,j  ,k)) > 0.075) .AND. (c(ha(i+1,j  ,k)) < 0.99))&
@@ -175,7 +177,7 @@ do m=1,nblo
             ! Rotate gradient by 45 degrees first
             ! print*, 'Gradient'
             ! print*, dscdx(inp), dscdy(inp)
-            rotation = floor(((atan(-dscdy(inp), -dscdx(inp))+pi)*1/(2*pi))*8)  ! Old version
+            rotation = floor(((atan(-dscdy(inp), -dscdx(inp))+pi)*1d0/(2d0*pi))*8d0)  ! Old version
             ! Rotate stencil so the top right corner is always 1 and the bottom left corner always 0
             counter = 1
 
@@ -250,94 +252,52 @@ do m=1,nblo
           if (1 == 1) then  ! edge switch
 
               ! Test
-              deallocate(ml_last_layer_output)
-              allocate(ml_last_layer_output(81))
+              ! deallocate(ml_last_layer_output)
+              ! allocate(ml_last_layer_output(81))
 
-              ml_last_layer_output(1) = 1
-              ml_last_layer_output(2) = 1
-              ml_last_layer_output(3) = 1
-              ml_last_layer_output(4) = 1
-              ml_last_layer_output(5) = 1
-              ml_last_layer_output(6) = 1
-              ml_last_layer_output(7) = 1
-              ml_last_layer_output(8) = 1
-              ml_last_layer_output(9) = 1
-              ml_last_layer_output(10) = 0.4
-              ml_last_layer_output(11) = 0.601
-              ml_last_layer_output(12) = 0.8
-              ml_last_layer_output(13) = 1
-              ml_last_layer_output(14) = 1
-              ml_last_layer_output(15) = 1
-              ml_last_layer_output(16) = 1
-              ml_last_layer_output(17) = 1
-              ml_last_layer_output(18) = 1
-              ml_last_layer_output(19) = 0.2
-              ml_last_layer_output(20) = 0.3
-              ml_last_layer_output(21) = 0.7
-              ml_last_layer_output(22) = 0.9
-              ml_last_layer_output(23) = 1
-              ml_last_layer_output(24) = 1
-              ml_last_layer_output(25) = 1
-              ml_last_layer_output(26) = 0.9
-              ml_last_layer_output(27) = 0.4
-              ml_last_layer_output(28) = 0.01
-              ml_last_layer_output(29) = 0.05
-              ml_last_layer_output(30) = 0.1
-              ml_last_layer_output(31) = 0.8
-              ml_last_layer_output(32) = 1
-              ml_last_layer_output(33) = 1
-              ml_last_layer_output(34) = 1
-              ml_last_layer_output(35) = 1
-              ml_last_layer_output(36) = 1
-              ml_last_layer_output(37) = 0
-              ml_last_layer_output(38) = 0
-              ml_last_layer_output(39) = 0.4
-              ml_last_layer_output(40) = 0.55
-              ml_last_layer_output(41) = 0.75
-              ml_last_layer_output(42) = 1
-              ml_last_layer_output(43) = 1
-              ml_last_layer_output(44) = 0.6
-              ml_last_layer_output(45) = 0.2
-              ml_last_layer_output(46) = 0
-              ml_last_layer_output(47) = 0
-              ml_last_layer_output(48) = 0.4
-              ml_last_layer_output(49) = 0.55
-              ml_last_layer_output(50) = 0.75
-              ml_last_layer_output(51) = 1
-              ml_last_layer_output(52) = 0.9
-              ml_last_layer_output(53) = 0.45
-              ml_last_layer_output(54) = 0.2
-              ml_last_layer_output(55) = 0
-              ml_last_layer_output(56) = 0
-              ml_last_layer_output(57) = 0.01
-              ml_last_layer_output(58) = 0.12
-              ml_last_layer_output(59) = 0.45
-              ml_last_layer_output(60) = 0.85
-              ml_last_layer_output(61) = 0.9
-              ml_last_layer_output(62) = 0.45
-              ml_last_layer_output(63) = 0.2
-              ml_last_layer_output(64) = 0
-              ml_last_layer_output(65) = 0
-              ml_last_layer_output(66) = 0
-              ml_last_layer_output(67) = 0
-              ml_last_layer_output(68) = 0.1
-              ml_last_layer_output(69) = 0.6
-              ml_last_layer_output(70) = 0.2
-              ml_last_layer_output(71) = 0
-              ml_last_layer_output(72) = 0
-              ml_last_layer_output(73) = 0
-              ml_last_layer_output(74) = 0
-              ml_last_layer_output(75) = 0
-              ml_last_layer_output(76) = 0
-              ml_last_layer_output(77) = 0.9
-              ml_last_layer_output(78) = 0.4
-              ml_last_layer_output(79) = 0.9
-              ml_last_layer_output(80) = 0
-              ml_last_layer_output(81) = 0
+              ! ml_last_layer_output = (/&
+                ! 1.0,  1.0,  0.4, 1.0,  0.2,  0.2,  0.2,  0.0, 0.0,&
+                ! 1.0,  1.0,  0.9, 1.0,  0.6,  0.45, 0.45, 0.0, 0.0,&
+                ! 1.0,  1.0,  1.0, 1.0,  1.0,  0.9,  0.9,  0.2, 0.9,&
+                ! 1.0,  1.0,  1.0, 1.0,  1.0,  1.0,  0.85, 0.6, 0.4,&
+                ! 1.0,  1.0,  1.0, 1.0,  0.75, 0.75, 0.45, 0.1, 0.9,&
+                ! 1.0,  1.0,  0.9, 0.8,  0.55, 0.55, 0.12, 0.0, 0.0,&
+                ! 1.0,  0.8,  0.7, 0.1,  0.4,  0.4,  0.01, 0.0, 0.0,&
+                ! 1.0,  0.601,0.3, 0.05, 0.0,  0.0,  0.0,  0.0, 0.0,&
+                ! 1.0,  0.4,  0.2, 0.01, 0.0,  0.0,  0.0,  0.0, 0.0&
+              ! /)  
+              ! ml_last_layer_output = (/&
+                ! 1.0,  1.0,   1.0,  1.0,  1.0,  1.0,  1.0, 1.0,  1.0,&
+                ! 0.4,  0.601, 0.8,  1.0,  1.0,  1.0,  1.0, 1.0,  1.0,&
+                ! 0.2,  0.3,   0.7,  0.9,  1.0,  1.0,  1.0, 0.9,  0.4,&
+                ! 0.01, 0.05,  0.1,  0.8,  1.0,  1.0,  1.0, 1.0,  1.0,&
+                ! 0.0,  0.0,   0.4,  0.55, 0.75, 1.0,  1.0, 0.6,  0.2,&
+                ! 0.0,  0.0,   0.4,  0.55, 0.75, 1.0,  0.9, 0.45, 0.2,&
+                ! 0.0,  0.0,   0.01, 0.12, 0.45, 0.85, 0.9, 0.45, 0.2,&
+                ! 0.0,  0.0,   0.0,  0.0,  0.1,  0.6,  0.2, 0.0,  0.0,&
+                ! 0.0,  0.0,   0.0,  0.0,  0.9,  0.4,  0.9, 0.0,  0.0&
+              ! /)
 
+              ! stz = 9
+              ! stzh = 4
+              ! allocate(ml_mask(stz, stz))
+              ! allocate(ml_mask_x((stz-2), (stz-2)))
+              ! allocate(ml_mask_y((stz-2), (stz-2)))
+              ! allocate(ml_and_mask_x((stz-2), (stz-3)))
+              ! allocate(ml_and_mask_y((stz-3), (stz-2)))
+              ! allocate(ml_sum_mask_x((stz-2)))
+              ! allocate(ml_sum_mask_y((stz-2)))
+              ! allocate(ml_sum_and_mask_x((stz-3)))
+              ! allocate(ml_sum_and_mask_y((stz-3)))
 
-
-
+              ! allocate(ml_interp_x((stz-2), (stz-2)))
+              ! allocate(ml_interp_y((stz-2), (stz-2)))
+              ! allocate(ml_data_cut((stz-2), (stz-2)))
+              ! allocate(ml_mask_cut((stz-2), (stz-2)))
+              ! allocate(ml_data_x((stz-2), (stz-2)))
+              ! allocate(ml_data_y((stz-2), (stz-2)))
+              ! allocate(ml_row((stz-2)))
+              ! allocate(ml_and_row((stz-3)))
 
             do j_loc=1,stz
               do i_loc=1,stz
@@ -362,12 +322,11 @@ do m=1,nblo
               end do
             end do
 
-
             counter = 1
             ! Get mask: c > 0.5 -> 1, c < 0.5 -> 0
             do j_loc=1,stz
               do i_loc=1,stz
-                if (ml_last_layer_output(counter) >= 0.5) then
+                if (ml_last_layer_output(counter) >= 0.5d0) then
                   ml_mask(j_loc, i_loc) = 1
                 else
                   ml_mask(j_loc, i_loc) = 0
@@ -469,20 +428,39 @@ do m=1,nblo
               do i_loc=1,stz-3
                 ml_and_row(i_loc) = ml_and_mask_x(j_loc, i_loc)
               end do
+
+              ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                ! ml_last_layer_output(j_loc*stz+1), ml_last_layer_output(j_loc*stz+2), ml_last_layer_output(j_loc*stz+3),&
+                ! ml_last_layer_output(j_loc*stz+4), ml_last_layer_output(j_loc*stz+5), ml_last_layer_output(j_loc*stz+6),&
+                ! ml_last_layer_output(j_loc*stz+7), ml_last_layer_output(j_loc*stz+8), ml_last_layer_output(j_loc*stz+9)
+              ! print"(f12.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+              ! print"(i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_mask(j_loc+1, 1),&
+              ! ml_mask(j_loc+1, 2), ml_mask(j_loc+1, 3), ml_mask(j_loc+1, 4), ml_mask(j_loc+1, 5),&
+              ! ml_mask(j_loc+1, 6), ml_mask(j_loc+1, 7), ml_mask(j_loc+1, 8), ml_mask(j_loc+1, 9)
+              ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_mask_x(j_loc, 1),&
+              ! ml_mask_x(j_loc, 2), ml_mask_x(j_loc, 3), ml_mask_x(j_loc, 4), ml_mask_x(j_loc, 5),&
+              ! ml_mask_x(j_loc, 6), ml_mask_x(j_loc, 7)
+              ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_and_mask_x(j_loc, 1),&
+              ! ml_and_mask_x(j_loc, 2), ml_and_mask_x(j_loc, 3), ml_and_mask_x(j_loc, 4), ml_and_mask_x(j_loc, 5),&
+              ! ml_and_mask_x(j_loc, 6)
+              ! print"(f6.3)", ml_sum_mask_x(j_loc)
+              ! print"(f6.3)", ml_sum_and_mask_x(j_loc)
+              ! print*, ' '
+
               
               ! Decide case
               if ((ml_sum_mask_x(j_loc) == 1) .and. (ml_sum_and_mask_x(j_loc) == 0)) then
                 ! One single (1 0 0 0 0)
                 ! Just copy row to output stencil
                 do i_loc=1,stz-2
-                  ml_interp_x(j_loc, i_loc) = ml_data_x(j_loc, i_loc)
+                  ml_interp_x(j_loc, i_loc) = ml_row(i_loc)
                 end do
 
               else if ((ml_sum_mask_x(j_loc) == 2) .and. (ml_sum_and_mask_x(j_loc) == 0)) then
                 ! Two single (1 0 0 0 1)
                 ! Just copy row to output stencil
                 do i_loc=1,stz-2
-                  ml_interp_x(j_loc, i_loc) = ml_data_x(j_loc, i_loc)
+                  ml_interp_x(j_loc, i_loc) = ml_row(i_loc)
                 end do
 
               else if ((ml_sum_mask_x(j_loc) == 2) .and. (ml_sum_and_mask_x(j_loc) == 1)) then
@@ -498,12 +476,12 @@ do m=1,nblo
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
-                  ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0))) = ml_mean-0.5
+                  ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0))) = ml_mean-0.5d0
                 else
                   ! Write ml_mean+0.5 on bigger value
-                  ml_interp_x(j_loc, maxloc(ml_row)) = ml_mean+0.5
+                  ml_interp_x(j_loc, maxloc(ml_row)) = ml_mean+0.5d0
                 end if
 
               else if ((ml_sum_mask_x(j_loc) == 3) .and. (ml_sum_and_mask_x(j_loc) == 1)) then
@@ -513,23 +491,23 @@ do m=1,nblo
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
                     ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)+1
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean-0.5
+                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean-0.5d0
                   else
                     ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean-0.5
+                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean-0.5d0
                   end if
                 else
                   ! Write ml_mean+0.5 on bigger value
                   if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
                     ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean+0.5
+                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean+0.5d0
                   else
                     ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)+1
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean+0.5
+                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -549,29 +527,29 @@ do m=1,nblo
                 ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
                 ml_mean2 = (ml_row(ml_loc+1) + ml_row(ml_loc+2))/2
 
-                if (ml_mean > 0.5) then
-                  ml_mean = ml_mean - 0.5
+                if (ml_mean > 0.5d0) then
+                  ml_mean = ml_mean - 0.5d0
                 else
-                  ml_mean = ml_mean + 0.5
+                  ml_mean = ml_mean + 0.5d0
                 end if
 
-                if (ml_mean2 > 0.5) then
-                  ml_mean2 = ml_mean2 - 0.5
+                if (ml_mean2 > 0.5d0) then
+                  ml_mean2 = ml_mean2 - 0.5d0
                 else
-                  ml_mean2 = ml_mean2 + 0.5
+                  ml_mean2 = ml_mean2 + 0.5d0
                 end if
 
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
 
-                if (and( xor((ml_mean > 0.5), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
-                  xor((ml_mean2 > 0.5), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
+                if (and( xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
+                  xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
                   ! Clash -> mean of means on inner
                   ml_interp_x(j_loc, (ml_loc+1)) = (ml_mean+ml_mean2)/2
                 else
                   ! No clash
-                  if (xor((ml_mean > 0.5), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
+                  if (xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
                     ! Write ml_mean on inner
                     ml_interp_x(j_loc, (ml_loc+1)) = ml_mean
                   else
@@ -579,7 +557,7 @@ do m=1,nblo
                     ml_interp_x(j_loc, ml_loc) = ml_mean
                   end if
 
-                  if (xor((ml_mean2 > 0.5), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
+                  if (xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
                     ! Write ml_mean2 on inner
                     ml_interp_x(j_loc, (ml_loc+1)) = ml_mean2
                   else
@@ -597,23 +575,23 @@ do m=1,nblo
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
                   end if
                 else
                   ! Write ml_mean+0.5 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -626,23 +604,23 @@ do m=1,nblo
                 ml_loc = maxloc(ml_and_row, DIM=1)
                 ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
 
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
                   end if
                 else
                   ! Write ml_mean+0.5 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -656,23 +634,23 @@ do m=1,nblo
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
                   end if
                 else
                   ! Write ml_mean+0.5 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -686,23 +664,23 @@ do m=1,nblo
                 ml_loc = maxloc(ml_and_row, DIM=1)
                 ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
 
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
                   end if
                 else
                   ! Write ml_mean+0.5 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -745,14 +723,14 @@ do m=1,nblo
                 ml_mean = ml_sum_rc/2
 
                 do j_loc=1,stz-2
-                  ml_interp_x(j_loc, i_loc) = 0
+                  ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
+                if (ml_mean > 0.5d0) then
                   ! Write ml_mean-0.5 on smaller value
-                  ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc) = ml_mean-0.5
+                  ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc) = ml_mean-0.5d0
                 else
                   ! Write ml_mean+0.5 on bigger value
-                  ml_interp_y(maxloc(ml_row), i_loc) = ml_mean+0.5
+                  ml_interp_y(maxloc(ml_row), i_loc) = ml_mean+0.5d0
                 end if
 
               else if ((ml_sum_mask_y(i_loc) == 3) .and. (ml_sum_and_mask_y(i_loc) == 1)) then
@@ -762,23 +740,23 @@ do m=1,nblo
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
-                  ! Write ml_mean-0.5 on smaller value
+                if (ml_mean > 0.5d0) then
+                  ! Write ml_mean-0.5d0 on smaller value
                   if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
                     ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)+1
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean-0.5
+                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean-0.5d0
                   else
                     ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean-0.5
+                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean-0.5d0
                   end if
                 else
-                  ! Write ml_mean+0.5 on bigger value
+                  ! Write ml_mean+0.5d0 on bigger value
                   if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
                     ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean+0.5
+                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean+0.5d0
                   else
                     ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)+1
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean+0.5
+                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -798,29 +776,29 @@ do m=1,nblo
                 ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
                 ml_mean2 = (ml_row(ml_loc+1) + ml_row(ml_loc+2))/2
 
-                if (ml_mean > 0.5) then
-                  ml_mean = ml_mean - 0.5
+                if (ml_mean > 0.5d0) then
+                  ml_mean = ml_mean - 0.5d0
                 else
-                  ml_mean = ml_mean + 0.5
+                  ml_mean = ml_mean + 0.5d0
                 end if
 
-                if (ml_mean2 > 0.5) then
-                  ml_mean2 = ml_mean2 - 0.5
+                if (ml_mean2 > 0.5d0) then
+                  ml_mean2 = ml_mean2 - 0.5d0
                 else
-                  ml_mean2 = ml_mean2 + 0.5
+                  ml_mean2 = ml_mean2 + 0.5d0
                 end if
 
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
 
-                if (and( xor((ml_mean > 0.5), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
-                  xor((ml_mean2 > 0.5), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
+                if (and( xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
+                  xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
                   ! Clash -> mean of means
                   ml_interp_y((ml_loc+1), i_loc) = (ml_mean+ml_mean2)/2
                 else
                   ! No clash
-                  if (xor((ml_mean > 0.5), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
+                  if (xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
                     ! Write ml_mean on inner
                     ml_interp_y((ml_loc+1), i_loc) = ml_mean
                   else
@@ -828,7 +806,7 @@ do m=1,nblo
                     ml_interp_y(ml_loc, i_loc) = ml_mean
                   end if
 
-                  if (xor((ml_mean2 > 0.5), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
+                  if (xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
                     ! Write ml_mean2 on inner
                     ml_interp_y((ml_loc+1), i_loc) = ml_mean2
                   else
@@ -846,23 +824,23 @@ do m=1,nblo
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
-                  ! Write ml_mean-0.5 on smaller value
+                if (ml_mean > 0.5d0) then
+                  ! Write ml_mean-0.5d0 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
                   end if
                 else
-                  ! Write ml_mean+0.5 on bigger value
+                  ! Write ml_mean+0.5d0 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -879,19 +857,19 @@ do m=1,nblo
                   ! Write ml_mean-0.5 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
                   end if
                 else
-                  ! Write ml_mean+0.5 on bigger value
+                  ! Write ml_mean+0.5d0 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -905,23 +883,23 @@ do m=1,nblo
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5) then
-                  ! Write ml_mean-0.5 on smaller value
+                if (ml_mean > 0.5d0) then
+                  ! Write ml_mean-0.5d0 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
                   end if
                 else
-                  ! Write ml_mean+0.5 on bigger value
+                  ! Write ml_mean+0.5d0 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -935,23 +913,23 @@ do m=1,nblo
                 ml_loc = maxloc(ml_and_row, DIM=1)
                 ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
 
-                if (ml_mean > 0.5) then
-                  ! Write ml_mean-0.5 on smaller value
+                if (ml_mean > 0.5d0) then
+                  ! Write ml_mean-0.5d0 on smaller value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
                   end if
                 else
-                  ! Write ml_mean+0.5 on bigger value
+                  ! Write ml_mean+0.5d0 on bigger value
                   if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
                     ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
                   else
                     ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
                   end if
                 end if
 
@@ -973,6 +951,35 @@ do m=1,nblo
               end do
             end do
 
+            ! Test
+
+            ! print*, ' '
+            ! print"(1i2)", j_loc
+            ! print*, ' '
+            
+            ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+            ! print*, ' '
+            ! print*, 'data_cut'
+            ! do j_locc=1,stz-2
+              ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_data_cut(j_locc, 1), ml_data_cut(j_locc, 2),&
+                ! ml_data_cut(j_locc, 3), ml_data_cut(j_locc, 4), ml_data_cut(j_locc, 5), ml_data_cut(j_locc, 6),&
+                ! ml_data_cut(j_locc, 7)
+            ! end do
+
+            ! print*, 'interp_x'
+            ! do j_locc=1,stz-2
+              ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_interp_x(j_locc, 1), ml_interp_x(j_locc, 2),&
+                ! ml_interp_x(j_locc, 3), ml_interp_x(j_locc, 4), ml_interp_x(j_locc, 5), ml_interp_x(j_locc, 6),&
+                ! ml_interp_x(j_locc, 7)
+            ! end do
+
+            ! print*, 'interp_y'
+            ! do j_locc=1,stz-2
+              ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_interp_y(j_locc, 1), ml_interp_y(j_locc, 2),&
+                ! ml_interp_y(j_locc, 3), ml_interp_y(j_locc, 4), ml_interp_y(j_locc, 5), ml_interp_y(j_locc, 6),&
+                ! ml_interp_y(j_locc, 7)
+            ! end do
+
             deallocate(ml_last_layer_output)
             allocate(ml_last_layer_output(2*(stz-2)**2))
 
@@ -991,6 +998,10 @@ do m=1,nblo
               end do
             end do
 
+            ! do i_loc=1,2*(stz-2)**2
+            ! print"(f6.3)", ml_last_layer_output(i_loc)
+            ! end do
+
           end if
 
           ! Export c/cm
@@ -999,9 +1010,9 @@ do m=1,nblo
             ! do j_loc=1,stz-3
               ! print*, ml_and_row(j_loc)
             ! end do
-            do j_loc=1,stz
-              do i_loc=1,stz
-                print*, ml_interp_x(j_loc, i_loc)
+            do j_loc=1,stz-2
+              do i_loc=1,stz-2
+                print*, ml_data_cut(j_loc, i_loc)
               end do
             end do
 
@@ -1020,9 +1031,9 @@ do m=1,nblo
               ! end do
             ! end do
             print*, 'cm'
-            do j_loc=1,stz
-              do i_loc=1,stz
-                print*, ml_data_cut(j_loc, i_loc)
+            do j_loc=1,stz-2
+              do i_loc=1,stz-2
+                print*, ml_interp_x(j_loc, i_loc)
               end do
             end do
             ! do i_loc=1,stz**2  ! export rotated cm
@@ -1039,7 +1050,7 @@ do m=1,nblo
             ! DAS IST WAHRSCHEINLICH LANGSAM
             allocate(ml_layer_input(size(ml_last_layer_output)))
             do counter=1,size(ml_last_layer_output)
-              ml_layer_input(counter) = 0
+              ml_layer_input(counter) = 0d0
             end do
             do counter=1,size(ml_layer_input)
               ml_layer_input(counter)=ml_last_layer_output(counter)
@@ -1048,16 +1059,16 @@ do m=1,nblo
             deallocate(ml_last_layer_output)
             allocate(ml_last_layer_output(ml_layer_nodes(n)))
             do counter=1,ml_layer_nodes(n)
-              ml_last_layer_output(counter) = 0
+              ml_last_layer_output(counter) = 0d0
             end do
 
             ! Get index for weights and bias vector where current layer starts by summing length of weights of all previous layers
-            w_idx_beg = 0
+            w_idx_beg = 0d0
             do counter1=1,(n-1)
               w_idx_beg = w_idx_beg+ml_n_layerweights(counter1)
             end do
             if (ml_bias_on == 1) then
-              b_idx_beg = 0
+              b_idx_beg = 0d0
               do counter1=1,(n-1)
                 b_idx_beg = b_idx_beg+ml_n_biasweights(counter1)
               end do
@@ -1065,8 +1076,8 @@ do m=1,nblo
 
             ! Calculate current layer input*weights + bias
             do o=1,ml_layer_nodes(n)
-              ml_sum = 0
-              ml_weight = 0
+              ml_sum = 0d0
+              ml_weight = 0d0
               ! Sum all connections (output of last layer l *weight k l) for node k of current layer
               do p=1,ml_layer_nodes(n-1)
                 ! Get weight of connection between last layer and current layer
@@ -1086,8 +1097,8 @@ do m=1,nblo
             if (ml_layer_activation(n) == 'relu') then
               do o=1,ml_layer_nodes(n)
                 ! Set every output that is smaller then 0 to 0
-                if (ml_last_layer_output(o) < 0) then
-                  ml_last_layer_output(o) = 0
+                if (ml_last_layer_output(o) < 0d0) then
+                  ml_last_layer_output(o) = 0d0
                 end if
               end do
             end if
@@ -1097,7 +1108,7 @@ do m=1,nblo
           end do
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
-          dscurv2(inp)=1*ml_last_layer_output(1)*0.5*gridsize/0.075
+          dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
@@ -1114,14 +1125,14 @@ do m=1,nblo
           deallocate(ml_last_layer_output)
         else
           ! If concentration in stencil midpoint is 0 or 1, set curvature to 0
-          dscurv2(inp)=0
+          dscurv2(inp)=0d0
         end if
       end do
     end do
   end do
 end do
-print*, 'STOP'
-STOP
+! print*, 'STOP'
+! STOP
 
 curvfiltering=.true.  ! war false
  !1-lsp0,2-binominal,3-5pointcheby,4-lsp2
@@ -1261,9 +1272,9 @@ if (curvweightening .eqv. .true.) then
           ! if ((cm(inp) > 0.01) .AND. (cm(inp) < 0.98)) then
           if (dscurv2(inp)/=0d0) then
             ! weights(inp)=(1-2d0*abs(0.5d0-cm(inp)))**(weightsexp)
-            weights(inp)=1
+            weights(inp)=1d0
           else
-            weights(inp)=0
+            weights(inp)=0d0
           end if
         end do
       end do
@@ -1278,7 +1289,7 @@ if (curvweightening .eqv. .true.) then
         do j=2,njm
           inp=ha(i,j,k)
           ! if (dscurv2(inp)/=0d0) then
-          if ((cm(inp) > 0.005) .AND. (cm(inp) < 0.995)) then
+          if ((cm(inp) > 0.005d0) .AND. (cm(inp) < 0.995d0)) then
             if (thirddim==0) then
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 dscurv2(ha(i+1,j+1,k))*weights(ha(i+1,j+1,k))+ &  ! von mir

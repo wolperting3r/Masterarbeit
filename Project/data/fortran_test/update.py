@@ -2,16 +2,20 @@ import os
 import re
 
 # folders = ['FASTEST_1', 'FASTEST_2', 'FASTEST_3', 'FASTEST_4']
-folders = ['FASTEST_1', 'FASTEST_2']
+folders = ['FASTEST_2']
 
 for folder in folders:
-    if folder == 'FASTEST_1':
-        maira_folder = 'FASTEST'
-    else:
-        maira_folder = folder
+    # if folder == 'FASTEST_1':
+        # maira_folder = 'FASTEST'
+    # else:
+    maira_folder = folder
 
     print(f'Getting {folder}')
-    os.system(f'rsync -vLa --delete-before --include="res/***" --include="out/***" --include="id/***" --include="map/***" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
+    # Mit res
+    os.system(f'rsync -vLa --delete-before --delete-excluded --include="res/***" --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude="out/oscillation.res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
+
+    # Ohne res
+    # os.system(f'rsync -vLa --delete-before --delete-excluded --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude=".res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
     # os.system(f'rsync -va --delete-before zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/src/fhp/fsrc/curv_ml.F /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
 
 print('Executing regex')

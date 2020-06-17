@@ -444,6 +444,8 @@ class Edge(BaseEstimator, TransformerMixin):
         data = dataset[1]
 
         ''' ENTFERNEN! '''
+        '''
+        # Test
         data = data[dataset[0] > 0.43]
         print('Teststencil eingefügt')
         teststencil_x = np.array(
@@ -471,6 +473,7 @@ class Edge(BaseEstimator, TransformerMixin):
         data = np.concatenate((data, teststencil_x, teststencil_y, teststencil_x_rot, teststencil_y_rot), axis=0)
         # print(f'data[0].shape:\t{data[0].shape}')
         # print(f'data[0]:\t{data[0]}')
+        # '''
 
         # Get shape of data
         shape = data.shape
@@ -522,6 +525,7 @@ class Edge(BaseEstimator, TransformerMixin):
         triplets_x = np.empty((0, 3, 3))
         singles_x = np.empty((0, 1, 3))
         valid_combinations = [[1, 0], [2, 0], [2, 1], [3, 1], [3, 2], [4, 2], [4, 3]]
+
 
         for combination in valid_combinations:
             # print(f'combination:\t{combination}')
@@ -734,8 +738,8 @@ class Edge(BaseEstimator, TransformerMixin):
             ind_mask_y = np.argwhere((sum_mask_y == combination[0]))
             ind_and_mask_y = np.argwhere((sum_and_mask_y == combination[1]))
             in_both_y = [tpl for tpl in set([tuple(im) for im in ind_mask_y]) & set([tuple(iam) for iam in ind_and_mask_y])]
-            in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in np.array(in_both_y)])
-            in_both_y = in_both_y[in_both_y[:, 0].argsort()]
+            # in_both_y = np.array([[ib[0], ib[1], ib[2]] for ib in np.array(in_both_y)])
+            # in_both_y = in_both_y[in_both_y[:, 0].argsort()]
 
             # print(f'len(in_both_y):\t{len(in_both_y)}')
             if len(in_both_y) > 0:
@@ -1189,22 +1193,27 @@ class Edge(BaseEstimator, TransformerMixin):
         interp_x = np.reshape (interp_x, (interp_x.shape[0], np.prod(interp_x.shape[1:3])))
         interp_y = np.reshape (interp_y, (interp_y.shape[0], np.prod(interp_y.shape[1:3])))
 
-        # interp_x und interp_y sind wahrscheinlich vertauscht
-
-
+        '''
         print('Teststencil output')
-
         pdat2 = teststencil_x.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
         print(f'T1x input:\n{pdat2}')
         ind = -4
+        pdat2 = mask_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'Mask x:\n{pdat2}')
+        pdat2 = and_mask_x[ind].reshape((st_sz[0]-2, st_sz[1]-3)).copy()
+        print(f'And mask x:\n{pdat2}')
         pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
         print(f'T1x interp_x:\n{pdat2}')
-        #'''
-        pdat2 = teststencil_y.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
-        # print(f'T1y input:\n{pdat2}')
-        ind = -3
         pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        pdat2 = np.rot90(pdat2,k=-1)
+        print(f'T1x interp_y:\n{pdat2}')
+        # pdat2 = teststencil_y.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
+        pdat2 = teststencil_y.reshape((st_sz[0], st_sz[1])).copy()
+        print(f'T1y input:\n{pdat2}')
+        ind = -3
+        pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        print(f'T1y interp_x:\n{pdat2}')
+        pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
+        # pdat2 = np.rot90(pdat2,k=-1)
         print(f'T1y interp_y:\n{pdat2}')
 
         pdat2 = teststencil_x_rot.reshape((st_sz[0], st_sz[1]))[1:st_sz[0]-1, 1:st_sz[1]-1].copy()
@@ -1225,6 +1234,15 @@ class Edge(BaseEstimator, TransformerMixin):
 
         # Glue them together (shape is data_length x 50 for 7x7 stencil, first 25 are x, second are y)
         data = np.concatenate((interp_x, interp_y), axis=1)
+
+        '''
+        # pdat2 = np.reshape(data[-3], (2, 7, 7))
+        pdat2 = list(np.reshape(data[-3], (data[-4].shape[0])))
+        print(f'data[-3]:\n{pdat2}')
+        for i in pdat2:
+            print(f'{i}')
+        # '''
+
 
         return [dataset[0], data, dataset[2]]
 
