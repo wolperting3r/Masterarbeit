@@ -13,7 +13,7 @@ np.set_printoptions(suppress=True, linewidth=250, threshold=250)
 
 def get_data(parameters):
     ''' Import data from files '''
-    if parameters['data'] == 'all':
+    if ((parameters['data'] == 'all') & (len(parameters['load_data']) == 0)):
         # Data file to load
         # Vorher war hier b und unten keins, für 5x5 geändert
         if parameters['dshift'] == '0':
@@ -146,54 +146,67 @@ def get_data(parameters):
         # data_cir = pd.read_feather(path_cir) # neu
         # data = pd.concat([data_sin, data_ell, data_cir], ignore_index=True)
     else:
-        if parameters['data'] == 'ellipse':
-            geom_str = '_ell'
-        elif parameters['data'] == 'sinus':
-            geom_str = '_sin'
-        elif parameters['data'] == 'circle':
-            geom_str = '_cir'
-        # Data file to load
-        if parameters['dshift'] == '0':
-            # _int2 if plot, else _int + interpolation if interpolation != 0, else nothing
-            filename = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                geom_str + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
-                '.feather'
+        if len(parameters['load_data']) > 0:
+            parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+            filename = parameters['load_data'] + '.feather'
+            path = os.path.join(parent_path, 'data', 'datasets', filename)
+            if os.path.isfile(path):
+                print(f'Dataset:\t{filename}')
+                data = pd.read_feather(path)
+            else:
+                raise ValueError(f'Dataset {filename} not found!')
         else:
-            filename = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                geom_str + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                '_shift1' + \
-                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
-                '.feather'
+            if parameters['data'] == 'ellipse':
+                geom_str = '_ell'
+            elif parameters['data'] == 'sinus':
+                geom_str = '_sin'
+            elif parameters['data'] == 'circle':
+                geom_str = '_cir'
+            # Data file to load
+            if parameters['dshift'] == '0':
+                # _int2 if plot, else _int + interpolation if interpolation != 0, else nothing
+                filename = 'data_' + \
+                    str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+                    ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+                    ('_neg' if parameters['negative'] else '_pos') + \
+                    geom_str + \
+                    ('_smr' if parameters['smear'] else '_nsm') + \
+                    ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+                    ('_g' if parameters['gauss'] else '') + \
+                    '.feather'
+            else:
+                filename = 'data_' + \
+                    str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+                    ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+                    ('_neg' if parameters['negative'] else '_pos') + \
+                    geom_str + \
+                    ('_smr' if parameters['smear'] else '_nsm') + \
+                    '_shift1' + \
+                    ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+                    ('_g' if parameters['gauss'] else '') + \
+                    '.feather'
 
-        print(f'Dataset:\t{filename}')
-        parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        path = os.path.join(parent_path, 'data', 'datasets', filename)
-        data = pd.read_feather(path)
+            print(f'Dataset:\t{filename}')
+            parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+            path = os.path.join(parent_path, 'data', 'datasets', filename)
+            data = pd.read_feather(path)
 
-        if parameters['dshift'] == '1b':
-            filename2 = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                geom_str + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                '_shift1b' + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-            print(f'Dataset2:\t{filename2}')
-            path2 = os.path.join(parent_path, 'data', 'datasets', filename2)
-            data2 = pd.read_feather(path2)
-            data2= data2[:int(data2.shape[0]/2)]
-            data = pd.concat([data, data2], ignore_index=True)
+            if parameters['dshift'] == '1b':
+                filename2 = 'data_' + \
+                    str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+                    ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+                    ('_neg' if parameters['negative'] else '_pos') + \
+                    geom_str + \
+                    ('_smr' if parameters['smear'] else '_nsm') + \
+                    '_shift1b' + \
+                    (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
+                    ('_g' if parameters['gauss'] else '') + \
+                    '.feather'
+                print(f'Dataset2:\t{filename2}')
+                path2 = os.path.join(parent_path, 'data', 'datasets', filename2)
+                data2 = pd.read_feather(path2)
+                data2= data2[:int(data2.shape[0]/2)]
+                data = pd.concat([data, data2], ignore_index=True)
     # print(f'Imported data with shape {data.shape}')
     # Only return data with the curvature being below a certain threshold
     # data = data[np.abs(data.iloc[:, 0]) < 0.15]
@@ -201,7 +214,10 @@ def get_data(parameters):
     # print('\n#######\nData ist unter 0.4 abgeschnitten\n#######\n')
     # data = data[data.iloc[:, 0] > 0.4]
     if parameters['flip']:
-        data.iloc[:, 0] = -data.iloc[:, 0]
+        if len(parameters['load_data']) > 0:
+            data.iloc[:, 0] = data.iloc[:, 0] # CVOFLS Data
+        else:
+            data.iloc[:, 0] = -data.iloc[:, 0] # Eigene Netze
 
     return data.copy()
 
@@ -302,16 +318,26 @@ def process_data(dataset, parameters, reshape):
     else:
         kappa = 0
 
+
     # Pre-Processing
     if parameters['rotate']:
         # Create pipeline
         if parameters['shift'] == 0:
-            data_pipeline = Pipeline([
-                ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                ('findgradient', FindGradient(parameters=parameters)),
-                ('findangle', FindAngle(parameters=parameters)),
-                ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-            ])
+            if parameters['edge']:
+                data_pipeline = Pipeline([
+                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
+                    ('findgradient', FindGradient(parameters=parameters)),
+                    ('findangle', FindAngle(parameters=parameters)),
+                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                    ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                ])
+            else:
+                data_pipeline = Pipeline([
+                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
+                    ('findgradient', FindGradient(parameters=parameters)),
+                    ('findangle', FindAngle(parameters=parameters)),
+                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
+                ])
         else:
             if parameters['edge']:
                 data_pipeline = Pipeline([

@@ -84,37 +84,6 @@ call calgradc(ngr,0,1,c,dscdx,dscdy,dscdz, &
 stz = sqrt(real(ml_n_features))
 stzh = (stz-1)/2
 
-! allocate(ml_mask(stz, stz))
-! allocate(ml_mask_x((stz-2), (stz-2)))
-! allocate(ml_mask_y((stz-2), (stz-2)))
-! allocate(ml_and_mask_x((stz-2), (stz-3)))
-! allocate(ml_and_mask_y((stz-3), (stz-2)))
-! allocate(ml_sum_mask_x((stz-2)))
-! allocate(ml_sum_mask_y((stz-2)))
-! allocate(ml_sum_and_mask_x((stz-3)))
-! allocate(ml_sum_and_mask_y((stz-3)))
-
-! allocate(ml_interp_x((stz-2), (stz-2)))
-! allocate(ml_interp_y((stz-2), (stz-2)))
-! allocate(ml_data_cut((stz-2), (stz-2)))
-! allocate(ml_mask_cut((stz-2), (stz-2)))
-! allocate(ml_data_x((stz-2), (stz-2)))
-! allocate(ml_data_y((stz-2), (stz-2)))
-! allocate(ml_row((stz-2)))
-! allocate(ml_and_row((stz-3)))
-
-
-! t1 = secnds(0.0)
-! if ((it > 3200) .and. (it < 3500)) then
-! if (it == 200) then
- ! export = 0
-! else if (it == 201) then
- ! !STOP
- ! export = 0
-! else
- ! export = 0
-! end if
-
 
 do m=1,nblo
   call setind(ngr,m, &
@@ -128,7 +97,7 @@ do m=1,nblo
         xm = sqrt((x(ha(i, j, k)) - x(ha(i-1, j, k)))**2)
         ym = sqrt((y(ha(i, j, k)) - y(ha(i, j-1, k)))**2)
 
-        if (((cm(ha(i  ,j  ,k)) > 0.06d0) .AND. (cm(ha(i  ,j  ,k)) < 0.94d0)) &  ! war bei den Test meistens 0.98
+        if (((cm(ha(i  ,j  ,k)) > 0.02d0) .AND. (cm(ha(i  ,j  ,k)) < 0.98d0)) &  ! war bei den Test meistens 0.98
             !.AND. ((sqrt(dscdx(inp)**2 + dscdy(inp)**2) > 0.01d0/min(xm, ym))) & ! zusätzliche Bedingung
             !.AND. (checksum >= 2) &
             !.AND. (((c(ha(i+1,j  ,k)) > 0.075) .AND. (c(ha(i+1,j  ,k)) < 0.99))&
@@ -1105,6 +1074,7 @@ do m=1,nblo
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
           dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
+          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0  ! CVOFLS
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5

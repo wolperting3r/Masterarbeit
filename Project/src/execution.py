@@ -39,6 +39,8 @@ def ml(
     interpolate=0,
     edge=0,
     custom_loss=0,
+    gauss=0,
+    load_data='',
     addstring=False,
 ):
 
@@ -73,6 +75,8 @@ def ml(
         'interpolate': interpolate,
         'edge': edge,
         'custom_loss': custom_loss,
+        'gauss': gauss,
+        'load_data': load_data,
         'addstring': addstring,
         #'addstring': '_dshift1b_shift_kappa',
     }
@@ -122,6 +126,8 @@ def save(
     interpolate=0,
     edge=0,
     custom_loss=0,
+    gauss=0,
+    load_data='',
     addstring=False,
 ):
 
@@ -156,6 +162,8 @@ def save(
         'interpolate': interpolate,
         'edge': edge,
         'custom_loss': custom_loss,
+        'gauss': gauss,
+        'load_data': load_data,
         'addstring': addstring,
     }
 
@@ -190,7 +198,7 @@ def exe_dg(**kwargs):
 
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
     plot = kwargs.get('plot')
@@ -209,7 +217,7 @@ def exe_ml(**kwargs):
 
 def exe_save(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute saving job list with multithreading
     for job in list(itpd(*kwargs.values())):

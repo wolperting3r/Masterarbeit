@@ -90,7 +90,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
                 st_sz = np.add(st_sz, [2, 2])
 
     # Geometry
-    st_sz_kappa = min(max(st_sz), 9)  # 9 for +/- 0.44
+    st_sz_kappa = min(max(st_sz), 7)  # 9 for +/- 0.44
     R_min = st_sz_kappa/2*Delta
     R_max = 0.5
 
@@ -377,8 +377,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         # Apply smearing
         if smearing:
             # Define smearing kernel
-            kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
-            # kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
+            # kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
+            kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
 
             # Make dictionary for unsmoothed and smoothed stencils
             vof_array_dict = {0: vof_array.copy()}
@@ -483,7 +483,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+'.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+'_g.feather')
         print(f'File:\n{file_name}')
         # Export file
         # print('NO EXPORT')

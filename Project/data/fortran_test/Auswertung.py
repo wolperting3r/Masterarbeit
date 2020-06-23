@@ -21,19 +21,53 @@ fig, ax = plt.subplots(1, 1, figsize=(10,8))
 # labels = ['cds', 'dshift1', 'cvofls', 'shift1', 'shift1 w01', 'alt']
 
 paths = [
-    # 'FASTEST_1',
+    'FASTEST_1',
     'FASTEST_2',
-    # 'FASTEST_3',
-    # 'FASTEST_4',
-    '2006171503 edge int2',
+    'FASTEST_3',
+    'FASTEST_4',
+    # '2006221540 cvofls ml g2 7x7 1/',
+    # '2006221540 cvofls ml g2 7x7 2/',
+    # '2006230852 cvofls ml g2 7x7 2x g 1/',
+    # '2006230852 cvofls ml g2 7x7 2x g 2/',
+    # '2006230852 cvofls ml g2 9x9 1x g 1/',
+    # '2006230852 cvofls ml g2 9x9 1x g 2/',
+    # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 1/',
+    # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 2/',
+    # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 3/',
+    # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 4/',
+    # '2006231431 200 int 1 g 1 c/',
+    # '2006231431 200 int 1 g 2 c/',
+    # '2006051655 flip 200 150 120 0.06 mit w+g perfekte Frequenz',
+    # '2006061015 200 150 120 Verifikation 1',
+    # '2006061015 200 150 120 Verifikation 2',
+    # '2006111502 int 2 cm',
+    # '2006212029 cvofls ml ganz gut',
+    '2006022000 cds Vergleich',
     '2006031403 CVOFLS'
 ]
 labels = [
-    # 'F1',
+    'F1',
     'F2',
-    # 'F3',
-    # 'F4',
-    '2006171503 edge int2',
+    'F3',
+    'F4',
+    # '2006221540 cvofls ml g2 7x7 1/',
+    # '2006221540 cvofls ml g2 7x7 2/',
+    # '2006230852 cvofls ml g2 7x7 2x g 1/',
+    # '2006230852 cvofls ml g2 7x7 2x g 2/',
+    # '2006230852 cvofls ml g2 9x9 1x g 1/',
+    # '2006230852 cvofls ml g2 9x9 1x g 2/',
+    # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 1/',
+    # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 2/',
+    # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 3/',
+    # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 4/',
+    # '2006231431 200 int 1 g 1 c/',
+    # '2006231431 200 int 1 g 2 c/',
+    # '2006051655 flip 200 150 120 0.06 mit w+g perfekte Frequenz',
+    # '2006061015 200 150 120 Verifikation 1',
+    # '2006061015 200 150 120 Verifikation 2',
+    # '2006111502 int 2 cm',
+    # '2006212029 cvofls ml ganz gut',
+    '2006022000 cds Vergleich',
     'CVOFLS'
 ]
 
@@ -50,6 +84,7 @@ refdata['t'] = refdata['t']*1/timestep
 refdata = refdata.set_index('t')
 refdata.plot(ax=ax, label='CVOFLS (Paper)', color='darkgray', lw=2, ls='-')
 
+colors=iter(plt.cm.rainbow(np.linspace(0,1,len(paths))))
 for i in range(len(paths)):
     path = paths[i]
     label = labels[i]
@@ -100,9 +135,9 @@ for i in range(len(paths)):
         # color = 'steelblue'
         color = 'cyan'
     else:
-        color = None
+        color = next(colors)
 
-    pd.Series(y_05).plot(label=label, color=color)
+    pd.Series(y_05).plot(label=label, c=color)
 
 
 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x*timestep}'))

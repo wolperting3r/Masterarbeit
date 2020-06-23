@@ -30,8 +30,11 @@ def validate_model_loss(model, train_data, train_labels, test_data, test_labels,
 
 def as_si(x, ndp):
     s = '{x:0.{ndp:d}e}'.format(x=x, ndp=ndp)
-    m, e = s.split('e')
-    st = r'{m:s}\times 10^{{{e:d}}}'.format(m=m, e=int(e))
+    if 'e' in s:
+        m, e = s.split('e')
+        st = r'{m:s}\times 10^{{{e:d}}}'.format(m=m, e=int(e))
+    else:
+        st = x
     return st
 
 def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels=False):

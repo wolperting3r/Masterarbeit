@@ -7,6 +7,7 @@ y_pos_re.txt
 model*.txt
 *.plt
 *.swp
+*.dat
 
 **/datasets/*.feather
 **/datasets/*.feather.old

@@ -4,53 +4,59 @@ from src.execution import exe_dg
 ''' Machine Learning '''
 
 ''' Train '''
+# Network related
 epochs = [1000]
-stencil = [[9, 9]]
+stencil = [[7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
-neg = [True]
-angle = [False]
-rot = [True]
-data = ['ellipse']
-plotdata = ['ellipse']
-smearing = [True]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
+
+angle = [False]
+rot = [True]
 flip = [True]
 cut = [True]
-dshift = ['1']  # 0, 1, 1b
 shift = [1]
 bias = [True]
-# interpolate = [1.5, 2]
-interpolate = [0, 1, 1.5, 2]
-# interpolate = [0]
-edge = [1]
+edge = [0]
 custom_loss = [False]
 # addstring = ['_1', '_2', '_3', '_4']
-# addstring = ['_5']
-# addstring = ['_6']
-# addstring = ['_7']
-# addstring = ['_8']
-# addstring = ['_n_1', '_n_2']
-addstring = ['']
+# addstring = ['']
+addstring = ['_1', '_2']
+# addstring = ['_4']
+
+# Data related
+neg = [True]
+# model_mlp_1000_200-150-120_7x7_rot_flp_cut_dshift1_shift1_bia_int2
+# load_data = ['data_CVOFLS_7x7_g2_eqk']
+# load_data = ['data_CVOFLS_7x7']
+load_data = ['']
+# interpolate = [0, 1, 1.5, 2]
+interpolate = [0, 2]
+data = ['ellipse']
+plotdata = ['ellipse']
+smearing = [True]
+dshift = ['1']  # 0, 1, 1b
+gauss = [1]
 
 # '''
 # 1.: Train, 2.: Plot
 for i in range(0, 2):
     # MLP
     network = ['mlp']
-    # layer = [[200, 150, 120]]
-    layer = [[200, 180, 150, 120, 100]]
+    layer = [[200, 150, 120]]
+    # layer = [[100, 80]]
+    # layer = [[200, 180, 150, 120, 100]]
     # layer = [[100, 80], [200, 150, 120]]
 
     if i == 0:
         plot = [False]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, interpolate=interpolate)
     if i == 1:
         plot = [True]
-        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
-        exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, interpolate=interpolate)
+        exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, interpolate=interpolate)
+        exe_save(plot=plot, network=network, stencil=stencil, layer=layer, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, interpolate=interpolate)
     # '''
 
 '''
@@ -81,14 +87,14 @@ elif i == 1:
 
 ''' Data Generation '''
 '''
-# stencils = [[7, 7]]
+stencils = [[7, 7]]
 # stencils = [[5, 5]]
-stencils = [[9, 9]]
+# stencils = [[9, 9]]
 ek = [True]
 neg = [True]
 # N_values = [7e6]
 N_values = [1e6]
-# N_values = [1e2]
+# N_values = [1]
 silent = [False]
 # geometry = ['sinus', 'ellipse']
 geometry = ['ellipse']
