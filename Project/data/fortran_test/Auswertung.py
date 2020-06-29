@@ -35,8 +35,22 @@ paths = [
     # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 2/',
     # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 3/',
     # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 4/',
-    # '2006231431 200 int 1 g 1 c/',
-    # '2006231431 200 int 1 g 2 c/',
+    # '2006231431 200 int 1 g 1 c 0.02/',
+    # '2006231431 200 int 1 g 1 c 0.05/',
+    # '2006231431 200 int 1 g 1 cm 0.05/',
+    # '2006231431 200 int 1 g 2 c 0.02/',
+    # '2006231431 200 int 1 g 2 c 0.05/',
+    # '2006231431 200 int 1 g 2 cm 0.05/',
+    # '2006231835 200 int 0 g cm 0.05 1/',
+    # '2006231835 200 int 0 g cm 0.05 2/',
+    # '2006231835 200 int 2 g cm 0.05 1/',
+    # '2006231835 200 int 2 g cm 0.05 2/',
+    # '2006231931 200 int 1.5 g cm 0.05 1/',
+    # '2006231931 200 int 1.5 g cm 0.05 2/',
+    '2006290804 200 int 1 g cm 0.05 1/',
+    '2006290804 200 int 1 g cm 0.05 2/',
+    # '2006290804 200 int 1 g cm 0.05 cls 1/',
+    # '2006290804 200 int 1 g cm 0.05 cls 2/',
     # '2006051655 flip 200 150 120 0.06 mit w+g perfekte Frequenz',
     # '2006061015 200 150 120 Verifikation 1',
     # '2006061015 200 150 120 Verifikation 2',
@@ -60,8 +74,22 @@ labels = [
     # '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 2/',
     # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 3/',
     # '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 4/',
-    # '2006231431 200 int 1 g 1 c/',
-    # '2006231431 200 int 1 g 2 c/',
+    # '2006231431 200 int 1 g 1 c 0.02/',
+    # '2006231431 200 int 1 g 1 c 0.05/',
+    # '2006231431 200 int 1 g 1 cm 0.05/',
+    # '2006231431 200 int 1 g 2 c 0.02/',
+    # '2006231431 200 int 1 g 2 c 0.05/',
+    # '2006231431 200 int 1 g 2 cm 0.05/',
+    # '2006231835 200 int 0 g cm 0.05 1/',
+    # '2006231835 200 int 0 g cm 0.05 2/',
+    # '2006231835 200 int 2 g cm 0.05 1/',
+    # '2006231835 200 int 2 g cm 0.05 2/',
+    # '2006231931 200 int 1.5 g cm 0.05 1/',
+    # '2006231931 200 int 1.5 g cm 0.05 2/',
+    '2006290804 200 int 1 g cm 0.05 1/',
+    '2006290804 200 int 1 g cm 0.05 2/',
+    # '2006290804 200 int 1 g cm 0.05 cls 1/',
+    # '2006290804 200 int 1 g cm 0.05 cls 2/',
     # '2006051655 flip 200 150 120 0.06 mit w+g perfekte Frequenz',
     # '2006061015 200 150 120 Verifikation 1',
     # '2006061015 200 150 120 Verifikation 2',
@@ -131,7 +159,7 @@ for i in range(len(paths)):
     elif (re.match(r'F\d', label) or ('altes' in label)):
         color = reds[j]
         j = j+1
-    elif ('CDS' in label):
+    elif ('cds' in label):
         # color = 'steelblue'
         color = 'cyan'
     else:

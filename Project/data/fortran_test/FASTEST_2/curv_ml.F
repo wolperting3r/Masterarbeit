@@ -97,7 +97,7 @@ do m=1,nblo
         xm = sqrt((x(ha(i, j, k)) - x(ha(i-1, j, k)))**2)
         ym = sqrt((y(ha(i, j, k)) - y(ha(i, j-1, k)))**2)
 
-        if (((cm(ha(i  ,j  ,k)) > 0.02d0) .AND. (cm(ha(i  ,j  ,k)) < 0.98d0)) &  ! war bei den Test meistens 0.98
+        if (((cm(ha(i  ,j  ,k)) > 0.05d0) .AND. (cm(ha(i  ,j  ,k)) < 0.95d0)) &  ! war bei den Test meistens 0.98
             !.AND. ((sqrt(dscdx(inp)**2 + dscdy(inp)**2) > 0.01d0/min(xm, ym))) & ! zusätzliche Bedingung
             !.AND. (checksum >= 2) &
             !.AND. (((c(ha(i+1,j  ,k)) > 0.075) .AND. (c(ha(i+1,j  ,k)) < 0.99))&
@@ -123,7 +123,7 @@ do m=1,nblo
               ! else if (c(ha(i+i_loc, j+j_loc, 1)) > 0.995) then
                 ! ml_last_layer_output(counter) = 1
               ! else
-              ml_last_layer_output(counter) = c(ha(i+i_loc, j+j_loc, 1))
+              ml_last_layer_output(counter) = cm(ha(i+i_loc, j+j_loc, 1))
               ! end if
               counter = counter+1
             end do
@@ -1073,8 +1073,8 @@ do m=1,nblo
           end do
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
-          dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
-          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0  ! CVOFLS
+          ! dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
+          dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0  ! CVOFLS
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
@@ -1259,6 +1259,7 @@ if (curvweightening .eqv. .true.) then
           ! if (dscurv2(inp)/=0d0) then
           if ((cm(inp) > 0.005d0) .AND. (cm(inp) < 0.995d0)) then
             if (thirddim==0) then
+              ! tempcurv(inp)=(dscurv2(inp)*weights(inp)*4 + &
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 dscurv2(ha(i+1,j+1,k))*weights(ha(i+1,j+1,k))+ &  ! von mir
                 dscurv2(ha(i+1,j-1,k))*weights(ha(i+1,j-1,k))+ &  ! von mir
@@ -1270,7 +1271,7 @@ if (curvweightening .eqv. .true.) then
                 dscurv2(ha(i,j-1,k))*weights(ha(i,j-1,k)))/ &
                 (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i+1,j+1,k))+weights(ha(i+1,j-1,k))+&
                 weights(ha(i-1,j+1,k))+weights(ha(i-1,j-1,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))
-                !(weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
+                ! (4*weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
             else
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 dscurv2(ha(i+1,j,k))*weights(ha(i+1,j,k))+ &

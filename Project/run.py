@@ -29,11 +29,11 @@ addstring = ['_1', '_2']
 # Data related
 neg = [True]
 # model_mlp_1000_200-150-120_7x7_rot_flp_cut_dshift1_shift1_bia_int2
-# load_data = ['data_CVOFLS_7x7_g2_eqk']
+# load_data = ['data_CVOFLS_7x7_g2_eqk2']
 # load_data = ['data_CVOFLS_7x7']
 load_data = ['']
 # interpolate = [0, 1, 1.5, 2]
-interpolate = [0, 2]
+interpolate = [1]
 data = ['ellipse']
 plotdata = ['ellipse']
 smearing = [True]
@@ -45,8 +45,8 @@ gauss = [1]
 for i in range(0, 2):
     # MLP
     network = ['mlp']
-    layer = [[200, 150, 120]]
-    # layer = [[100, 80]]
+    # layer = [[200, 150, 120]]
+    layer = [[100, 80], [250, 150]]
     # layer = [[200, 180, 150, 120, 100]]
     # layer = [[100, 80], [200, 150, 120]]
 
@@ -100,9 +100,10 @@ silent = [False]
 geometry = ['ellipse']
 smearing = [True]
 usenormal = [True]
+gauss = [True]
 # interpolate = [0, 1, 1.5, 2]
 interpolate = [0, 1, 1.5, 2]
 # interpolate = [0]
 # interpolate = [2]
-exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal, interpolate=interpolate)
+exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal, interpolate=interpolate, gauss=gauss)
 # '''

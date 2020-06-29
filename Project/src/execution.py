@@ -181,7 +181,7 @@ def save(
 def exe_dg(**kwargs):
     print(f'kwargs:\n{kwargs}')
     # Sort input keyword arguments
-    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'geometry', 'smearing', 'usenormal', 'interpolate']
+    order = ['N_values', 'stencils', 'ek', 'neg', 'silent', 'geometry', 'smearing', 'usenormal', 'interpolate', 'gauss']
     kwargs = {k: kwargs[k] for k in order}
     # Create job list according to input arguments
     job_list = list(itpd(*kwargs.values()))

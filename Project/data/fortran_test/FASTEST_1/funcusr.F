@@ -60,7 +60,7 @@ call setzero(cold,nxyzac,1,nxyzac)
 
 loop_counter = 1
 open(unit=142,file=&
-  'model_mlp_1000_200-150-120_7x7_rot_flp_cut_dshift1_shift1_bia_int1_ned_ncl_g_1',&
+  'model_mlp_1000_200-150-120_7x7_rot_flp_cut_bia_ned_ncl_data_CVOFLS_7x7_g2_eqk2_1',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_nrt_all_smr_nhc_dshift_kappa',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_shift_kappa_8',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_shift_kappa_30',&

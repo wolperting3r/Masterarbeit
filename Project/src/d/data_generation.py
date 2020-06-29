@@ -56,7 +56,7 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal, interpolate):
+def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal, interpolate, gauss):
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
@@ -145,7 +145,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             # Get random side ratio
             # e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
             # e_max = 2
-            e = e_min+u()*(e_max-e_min)
+            e = e_min+(u()**1.5)*(e_max-e_min)
             # Calculate geometry radius
             # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
             # '''
@@ -377,8 +377,10 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         # Apply smearing
         if smearing:
             # Define smearing kernel
-            # kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
-            kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
+            if gauss:
+                kernel = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]  # Gauß
+            else:
+                kernel = [[0, 1, 0], [1, 4, 1], [0, 1, 0]]  # FNB
 
             # Make dictionary for unsmoothed and smoothed stencils
             vof_array_dict = {0: vof_array.copy()}
@@ -483,7 +485,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+'_g.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_e15.feather')
         print(f'File:\n{file_name}')
         # Export file
         # print('NO EXPORT')

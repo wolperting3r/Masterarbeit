@@ -24,7 +24,7 @@ def tecplot_equal_kappa(files, st_sz, filtering, filter):
     n_bins = 500
     data = file.values
     binwidth = (data[:, 0].max()-data[:, 0].min())/n_bins
-    max_per_bin = 2e2
+    max_per_bin = 2e3  # war 2e2
 
     output_data = np.empty((0, int(np.prod(st_sz)+1)))
 
@@ -55,7 +55,7 @@ def tecplot_equal_kappa(files, st_sz, filtering, filter):
                     bin_data = bin_data[:int(min(max_per_bin, bin_data.shape[0]))]
                     output_data = np.concatenate((output_data, bin_data))
 
-    out_filename = os.path.join(parent_path, 'data_CVOFLS_'+str(st_sz[0])+'x'+str(st_sz[1])+(f'_{filter}{filtering}' if filtering else '')+'_eqk.feather')
+    out_filename = os.path.join(parent_path, 'data_CVOFLS_'+str(st_sz[0])+'x'+str(st_sz[1])+(f'_{filter}{filtering}' if filtering else '')+'_eqk2.feather')
 
     # Convert output list to pandas dataframe
     output_df = pd.DataFrame(output_data)
@@ -63,6 +63,7 @@ def tecplot_equal_kappa(files, st_sz, filtering, filter):
     output_df.columns = output_df.columns.astype(str)
     output_df = output_df.rename(columns={'0':'Curvature'})
     print(f'File:\n{out_filename}')
+    # print('NO OUTPUT')
     output_df.reset_index(drop=True).to_feather(out_filename)
     print(f'Generated {output_df.shape[0]} tuples with:\nStencil size:\t{st_sz}\n')
 
