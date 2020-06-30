@@ -16,59 +16,36 @@ def get_data(parameters):
     if ((parameters['data'] == 'all') & (len(parameters['load_data']) == 0)):
         # Data file to load
         # Vorher war hier b und unten keins, für 5x5 geändert
-        if parameters['dshift'] == '0':
-            filename_cir = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_cir' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-            filename_sin = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_sin' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-            filename_ell = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_ell' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-        else:
-            filename_cir = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_cir' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                '_shift1' + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-            filename_sin = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_sin' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                '_shift1' + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
-            filename_ell = 'data_' + \
-                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                ('_neg' if parameters['negative'] else '_pos') + \
-                '_ell' + \
-                ('_smr' if parameters['smear'] else '_nsm') + \
-                '_shift1' + \
-                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                '.feather'
+        filename_cir = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            '_cir' + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
+            ('_shift1' if parameters['dshift'] else '') + \
+            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            ('_g' if parameters['gauss'] else '') + \
+            '.feather'
+        filename_sin = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            '_sin' + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
+            ('_shift1' if parameters['dshift'] else '') + \
+            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            ('_g' if parameters['gauss'] else '') + \
+            '.feather'
+        filename_ell = 'data_' + \
+            str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+            ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+            ('_neg' if parameters['negative'] else '_pos') + \
+            '_ell' + \
+            ('_smr' if parameters['smear'] else '_nsm') + \
+            ('_shift1' if parameters['dshift'] else '') + \
+            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            ('_g' if parameters['gauss'] else '') + \
+            '.feather'
 
         if parameters['dshift'] == '1b':
             filename_cir2 = 'data_' + \
@@ -77,6 +54,7 @@ def get_data(parameters):
                 ('_neg' if parameters['negative'] else '_pos') + \
                 '_cir' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 '_shift1b' + \
                 '.feather'
             filename_sin2 = 'data_' + \
@@ -86,7 +64,7 @@ def get_data(parameters):
                 '_sin' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1' + \
-                '_n' + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 '.feather'
             filename_ell2 = 'data_' + \
                 str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
@@ -95,6 +73,7 @@ def get_data(parameters):
                 '_ell' + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 '_shift1b' + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 '.feather'
         '''
         filename_cir2 = 'data_' + \
@@ -107,41 +86,43 @@ def get_data(parameters):
         '''
 
         parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        print(f'Dataset 1:\t{filename_cir}')
+        print('No circle')
+        # print(f'Dataset 1:\t{filename_cir}')
         print(f'Dataset 2:\t{filename_ell}')
         print(f'Dataset 3:\t{filename_sin}')
 
         # print(f'Dataset 3:\t{filename_cir2}')
-        path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir)
+        # path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir)
         path_sin = os.path.join(parent_path, 'data', 'datasets', filename_sin)
         path_ell = os.path.join(parent_path, 'data', 'datasets', filename_ell)
 
         # path_cir = os.path.join(parent_path, 'data', 'datasets', filename_cir2) # neu
-        data_cir = pd.read_feather(path_cir)
+        # data_cir = pd.read_feather(path_cir)
         data_sin = pd.read_feather(path_sin)
         data_ell = pd.read_feather(path_ell)
 
-        data_sin = data_sin[:int(data_sin.shape[0]/2)]
-        data_cir = data_sin[:int(data_cir.shape[0]/2)]
+        # data_sin = data_sin[:int(data_sin.shape[0]/2)]
+        # data_cir = data_sin[:int(data_cir.shape[0]/2)]
 
         if parameters['dshift'] == '1b':
-            print(f'Dataset 1b:\t{filename_cir2}')
+            # print(f'Dataset 1b:\t{filename_cir2}')
             print(f'Dataset 2b:\t{filename_ell2}')
             print(f'Dataset 3b:\t{filename_sin2}')
-            path_cir2 = os.path.join(parent_path, 'data', 'datasets', filename_cir2)
+            # path_cir2 = os.path.join(parent_path, 'data', 'datasets', filename_cir2)
             path_sin2 = os.path.join(parent_path, 'data', 'datasets', filename_sin2)
             path_ell2 = os.path.join(parent_path, 'data', 'datasets', filename_ell2)
-            data_cir2 = pd.read_feather(path_cir2)
+            # data_cir2 = pd.read_feather(path_cir2)
             data_sin2 = pd.read_feather(path_sin2)
             data_ell2 = pd.read_feather(path_ell2)
-            data_cir2 = data_sin2[:int(data_cir2.shape[0]/4)]
+            # data_cir2 = data_sin2[:int(data_cir2.shape[0]/4)]
             data_sin2 = data_sin2[:int(data_sin2.shape[0]/4)]
             data_ell2 = data_ell2[:int(data_ell2.shape[0]/2)]
-            data = pd.concat([data_cir, data_sin, data_ell, data_cir2, data_sin2, data_ell2], ignore_index=True)
-            #data = pd.concat([data_cir, data_ell, data_cir2, data_ell2], ignore_index=True)
+            # data = pd.concat([data_cir, data_sin, data_ell, data_cir2, data_sin2, data_ell2], ignore_index=True)
+            # data = pd.concat([data_cir, data_ell, data_cir2, data_ell2], ignore_index=True)
+            data = pd.concat([data_sin, data_ell, data_sin2, data_ell2], ignore_index=True)
 
         #data = pd.concat([data_sin, data_ell, data_cir], ignore_index=True)
-        data = pd.concat([data_ell, data_cir], ignore_index=True)
+        data = pd.concat([data_ell, data_sin], ignore_index=True)
 
         # data_cir = pd.read_feather(path_cir) # neu
         # data = pd.concat([data_sin, data_ell, data_cir], ignore_index=True)
@@ -163,28 +144,17 @@ def get_data(parameters):
             elif parameters['data'] == 'circle':
                 geom_str = '_cir'
             # Data file to load
-            if parameters['dshift'] == '0':
-                # _int2 if plot, else _int + interpolation if interpolation != 0, else nothing
-                filename = 'data_' + \
-                    str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                    ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                    ('_neg' if parameters['negative'] else '_pos') + \
-                    geom_str + \
-                    ('_smr' if parameters['smear'] else '_nsm') + \
-                    ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
-                    ('_g' if parameters['gauss'] else '') + \
-                    '.feather'
-            else:
-                filename = 'data_' + \
-                    str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
-                    ('eqk' if parameters['equal_kappa'] else 'eqr') + \
-                    ('_neg' if parameters['negative'] else '_pos') + \
-                    geom_str + \
-                    ('_smr' if parameters['smear'] else '_nsm') + \
-                    '_shift1' + \
-                    ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
-                    ('_g' if parameters['gauss'] else '') + \
-                    '.feather'
+            # _int2 if plot, else _int + interpolation if interpolation != 0, else nothing
+            filename = 'data_' + \
+                str(parameters['stencil_size'][0]) + 'x' + str(parameters['stencil_size'][1]) + '_' + \
+                ('eqk' if parameters['equal_kappa'] else 'eqr') + \
+                ('_neg' if parameters['negative'] else '_pos') + \
+                geom_str + \
+                ('_smr' if parameters['smear'] else '_nsm') + \
+                ('_shift1' if parameters['dshift'] else '') + \
+                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+                ('_g' if parameters['gauss'] else '') + \
+                '.feather'
 
             print(f'Dataset:\t{filename}')
             parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))

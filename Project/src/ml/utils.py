@@ -75,6 +75,8 @@ def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
                     filename_string = filename_string
             elif (key == 'data') and (plotdata_as_data):
                 filename_string = filename_string + '_' + parameters['plotdata']
+            elif (key == 'data') and (not (plotdata_as_data)):
+                filename_string = filename_string + '_' + parameters['data']
             elif key == 'gauss':
                 filename_string = filename_string + ('_g' if value else '')
             elif ((key == 'dshift') and (parameters['dshift'] != '0')):

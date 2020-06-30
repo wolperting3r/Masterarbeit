@@ -21,9 +21,9 @@ shift = [1]
 bias = [True]
 edge = [0]
 custom_loss = [False]
-# addstring = ['_1', '_2', '_3', '_4']
+addstring = ['_1', '_2', '_3', '_4']
 # addstring = ['']
-addstring = ['_1', '_2']
+# addstring = ['_1', '_2']
 # addstring = ['_4']
 
 # Data related
@@ -46,7 +46,9 @@ for i in range(0, 2):
     # MLP
     network = ['mlp']
     # layer = [[200, 150, 120]]
-    layer = [[100, 80], [250, 150]]
+    # layer = [[500, 300, 150]]
+    layer = [[200, 500, 1000, 500, 150]]
+    # layer = [[100, 80], [250, 150]]
     # layer = [[200, 180, 150, 120, 100]]
     # layer = [[100, 80], [200, 150, 120]]
 
