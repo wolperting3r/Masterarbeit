@@ -60,6 +60,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
+    # print('NO EXPORT')
+
     # Script
     N_values = int(N_values)
     visualize = True if (N_values == 1) else False

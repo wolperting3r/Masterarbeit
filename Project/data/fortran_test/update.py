@@ -15,11 +15,11 @@ for folder in folders:
     print(f'Getting {folder}')
     # Mit res
     # if ('3' in folder) or ('4' in folder):
-    os.system(f'rsync -vLa --delete-before --delete-excluded --include="res/***" --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude="out/oscillation.res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
+    # os.system(f'rsync -vLa --delete-before --delete-excluded --include="res/***" --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude="out/oscillation.res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
 
     # Ohne res
     # if ('2' in folder) or ('1' in folder):
-    # os.system(f'rsync -vLa --delete-before --delete-excluded --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude=".res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
+    os.system(f'rsync -vLa --delete-before --delete-excluded --include="out/***" --include="id/***" --include="map/***" --include="funcprp.F" --include="funcusr.F" --include="curv_ml.F" --include="y_pos.txt" --exclude="*" --exclude=".res" --exclude=".map" zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/ /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
     # os.system(f'rsync -va --delete-before zkraus@Maira.fnb.maschinenbau.tu-darmstadt.de:/work/local/zkraus/{maira_folder}/projects/02_Oscillation/src/fhp/fsrc/curv_ml.F /Users/zach/Git/Masterarbeit/Project/data/fortran_test/{folder}/')
 
 print('Executing regex')

@@ -1074,7 +1074,7 @@ do m=1,nblo
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
           dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
-          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0  ! CVOFLS
+          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
@@ -1259,8 +1259,8 @@ if (curvweightening .eqv. .true.) then
           ! if (dscurv2(inp)/=0d0) then
           if ((cm(inp) > 0.005d0) .AND. (cm(inp) < 0.995d0)) then
             if (thirddim==0) then
-              tempcurv(inp)=(dscurv2(inp)*weights(inp)*4 + &
-              ! tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
+              ! tempcurv(inp)=(dscurv2(inp)*weights(inp)*4 + &
+              tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 ! dscurv2(ha(i+1,j+1,k))*weights(ha(i+1,j+1,k))+ &  ! von mir
                 ! dscurv2(ha(i+1,j-1,k))*weights(ha(i+1,j-1,k))+ &  ! von mir
                 ! dscurv2(ha(i-1,j+1,k))*weights(ha(i-1,j+1,k))+ &  ! von mir
@@ -1271,7 +1271,8 @@ if (curvweightening .eqv. .true.) then
                 dscurv2(ha(i,j-1,k))*weights(ha(i,j-1,k)))/ &
                 ! (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i+1,j+1,k))+weights(ha(i+1,j-1,k))+&
                 ! weights(ha(i-1,j+1,k))+weights(ha(i-1,j-1,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))
-                (4*weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
+                (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
+                ! (4*weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
             else
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 dscurv2(ha(i+1,j,k))*weights(ha(i+1,j,k))+ &
@@ -1304,7 +1305,6 @@ if (curvweightening .eqv. .true.) then
     end do
   end do
 end if
-
 
 ! delta = secnds(t1)
 ! print*, delta

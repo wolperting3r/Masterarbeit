@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
+from tensorflow import keras
 
 import os
 import sys
@@ -13,10 +14,15 @@ def create_model(parameters, shape):
         # Add feedforward layers defined in parameters['layers']
         model.add(layers.InputLayer(input_shape=(shape[1],)))
         for l in parameters['layers']:
-            model.add(layers.Dense(l, activation=parameters['activation'], use_bias=parameters['bias']))
+            model.add(layers.Dense(
+                l,
+                activation=parameters['activation'],
+                kernel_initializer=keras.initializers.he_uniform(seed=2),
+                use_bias=parameters['bias']
+            ))
             # if parameters['dropout'] > 0:
                 # model.add(layers.Dropout(parameters['dropout']))
-        model.add(layers.Dense(1, activation='linear'))
+        model.add(layers.Dense(1, activation='linear', kernel_initializer=keras.initializers.he_uniform(seed=2),))
 
     # Convolutional network
     elif parameters['network'] == 'cvn':
@@ -85,11 +91,8 @@ def build_model(parameters, shape):
     # Create tensorflow model
     model = create_model(parameters, shape)
     # Compile model with optimizer and loss function
-    # model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  # loss='mse',
-                  # metrics=['mae', 'mse'])
     model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
-                  loss= custom_loss,   # custom_loss oder 'mse'
+                  loss= (custom_loss if parameters['custom_loss'] else 'mse'),
                   metrics=['mae', 'mse'])
     # Print summary
     for key, value in parameters.items():

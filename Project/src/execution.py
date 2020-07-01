@@ -20,6 +20,7 @@ def ml(
     stencil,
     layer,
     activation,
+    batch_size=128,
     epochs=25,
     learning_rate=1e-3,
     neg=False,
@@ -44,7 +45,6 @@ def ml(
     addstring=False,
 ):
 
-    batch_size = 128
     equal_kappa = True
 
     # Parameters
@@ -107,6 +107,7 @@ def save(
     stencil,
     layer,
     activation,
+    batch_size=128,
     epochs=25,
     learning_rate=1e-3,
     neg=False,
@@ -131,7 +132,6 @@ def save(
     addstring=False,
 ):
 
-    batch_size = 128
     equal_kappa = True
 
     # Parameters
@@ -198,7 +198,7 @@ def exe_dg(**kwargs):
 
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute machine learning
     plot = kwargs.get('plot')
@@ -217,7 +217,7 @@ def exe_ml(**kwargs):
 
 def exe_save(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute saving job list with multithreading
     for job in list(itpd(*kwargs.values())):

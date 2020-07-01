@@ -42,6 +42,8 @@ def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
             filename_string = filename_string + '_' + 'shift' + str(value)
         elif key == 'edge':
             filename_string = filename_string + '_' + ('edg' if value else 'ned')
+        elif (key == 'batch_size') and (parameters['batch_size'] != 128):
+            filename_string = filename_string + '_' + 'bs' + str(value)
         elif key == 'flip':
             filename_string = filename_string + '_' + ('flp' if value else 'nfp')
         elif key == 'stencil_size':

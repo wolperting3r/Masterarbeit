@@ -3,6 +3,7 @@ from tensorflow import keras
 from tqdm.keras import TqdmCallback
 from .utils import param_filename
 from .building import custom_loss
+from keras import backend as K
 
 import os
 import sys
@@ -32,10 +33,12 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
     file_name = os.path.join(path, 'models', 'history', 'history' + param_str + '.csv')
     csv_logger = tf.keras.callbacks.CSVLogger(file_name, separator=',', append=False)
 
+    # Disable Multithreading for reproducibility (https://stackoverflow.com/questions/46421258/limit-number-of-cores-used-in-keras, https://determined.ai/blog/reproducibility-in-ml/)
+    # K.set_session(K.tf.Session(config=K.tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)))
     # Train model
     model.fit(train_dataset,
               validation_data=val_dataset,
-              shuffle=True,
+              shuffle=False,  # war true
               epochs=parameters['epochs'],  # war 10000
               verbose=0,
               callbacks=[TqdmCallback(verbose=(0 if silent else 1)),
@@ -70,6 +73,8 @@ def load_model(parameters, **kwargs):
     print(f'param_str:\n{param_str}')
 
     file_name = os.path.join(path, 'models', 'models', 'model' + param_str + '.h5')
-    model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
-    # model = tf.keras.models.load_model(file_name)
+    if parameters['custom_loss']:
+        model = tf.keras.models.load_model(file_name, custom_objects={'custom_loss': custom_loss})
+    else:
+        model = tf.keras.models.load_model(file_name)
     return model
