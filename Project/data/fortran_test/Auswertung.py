@@ -6,38 +6,42 @@ import matplotlib as mpl
 import re
 
 fig, ax = plt.subplots(1, 1, figsize=(10,5))
-# path = './2006010847 Stabiles Modell dshift1'
-# path = './2006010848 Stabiles Modell shift1'
-# path = './2006011726 Stabiles Modell dshift1b'
-# path = './2006020903 cds Vergleich'
-# path = './2006020903 shift1 dshift1b Artefakte'
-# paths = ['2006031403 CVOFLS', '2006022000 cds Vergleich', '2006022001 altes curv_ml', 'FASTEST_3', 'FASTEST_4']
-# labels = ['Referenz 2 (CVOFLS FNB)', 'CDS', 'ML', 'F3', 'F4']
-
-# paths = ['2006040836 altes w bei k ungleich 0 0.08 0.92 wenig Fehler kleine Amplitude', '2006040837 altes g bei k ungleich 0 0.08 0.92 wenig Fehler kleine Amplitude', '2006040838 altes g 0.01 0.99 Fehler führen zu großer Amplitude', '2006040839 altes 0.01 0.98 0.005 0.995', '2006031403 CVOFLS', '2006031405 shift1','2006022001 altes curv_ml']
-# labels = ['altes w 0.08 0.92', 'altes g 0.08 0.92', 'altes g 0.01 0.99', 'altes 0.01 0.98', 'CVOFLS', 'shift 1', 'alt']
-
-# paths = ['2006020903 cds Vergleich', '2006031402 dshift1 zu viel Dämpfung', '2006031403 CVOFLS', '2006031405 shift1', '2006021958 shift1 weights 0 oder 1', '2006022001 altes curv_ml']
-# labels = ['cds', 'dshift1', 'cvofls', 'shift1', 'shift1 w01', 'alt']
 
 # '''
+# Fastest Auswertung
 paths = [
     'FASTEST_1',
     'FASTEST_2',
     'FASTEST_3',
     'FASTEST_4',
-    '2007011530 int 0 1',
-    '2007011530 int 1 1',
-    '2007011530 int 1.5 1',
+    # '2007011530 int 0 1',
+    # '2007011530 int 0 2',
+    # '2007011530 int 0 3',
+    # '2007011530 int 0 4',
+    # '2007011530 int 0 5',
+    # '2007011530 int 0 6',
+    # '2007011530 int 1 1',
+    # '2007011530 int 1 2',
+    # '2007011530 int 1 3',
+    # '2007011530 int 1 4',
+    # '2007011530 int 1 5',
+    # '2007011530 int 1 6',
+    # '2007011530 int 1.5 1',
+    # '2007011530 int 1.5 2',
+    # '2007011530 int 1.5 3',
+    # '2007011530 int 1.5 4',
+    # '2007011530 int 1.5 5',
+    # '2007011530 int 1.5 6',
     '2007011530 int 2 1',
-    '2007011530 int 0 2',
-    '2007011530 int 1 2',
-    '2007011530 int 1.5 2',
     '2007011530 int 2 2',
-    '2007011530 int 0 3',
-    '2007011530 int 1 3',
-    '2007011530 int 1.5 3',
     '2007011530 int 2 3',
+    '2007011530 int 2 4',
+    '2007011530 int 2 5',
+    '2007011530 int 2 6',
+    # '2007020949 int 1.5 fnb 1',
+    # '2007020949 int 1.5 fnb 2',
+    # '2007020949 int 1.5 fnb 3',
+    # '2007020949 int 1.5 fnb 4',
     # '2006300749 cvofls ml viele Daten 2 am genauesten trainiert bestes Ergebnis', 
     # '2006290804 200 int 1 g cm 0.05 1/',
     # '2006290804 200 int 1 g cm 0.05 2/',
@@ -51,18 +55,34 @@ labels = [
     'F2',
     'F3',
     'F4',
-    '2007011530 int 0 1',
-    '2007011530 int 1 1',
-    '2007011530 int 1.5 1',
+    # '2007011530 int 0 1',
+    # '2007011530 int 0 2',
+    # '2007011530 int 0 3',
+    # '2007011530 int 0 4',
+    # '2007011530 int 0 5',
+    # '2007011530 int 0 6',
+    # '2007011530 int 1 1',
+    # '2007011530 int 1 2',
+    # '2007011530 int 1 3',
+    # '2007011530 int 1 4',
+    # '2007011530 int 1 5',
+    # '2007011530 int 1 6',
+    # '2007011530 int 1.5 1',
+    # '2007011530 int 1.5 2',
+    # '2007011530 int 1.5 3',
+    # '2007011530 int 1.5 4',
+    # '2007011530 int 1.5 5',
+    # '2007011530 int 1.5 6',
     '2007011530 int 2 1',
-    '2007011530 int 0 2',
-    '2007011530 int 1 2',
-    '2007011530 int 1.5 2',
     '2007011530 int 2 2',
-    '2007011530 int 0 3',
-    '2007011530 int 1 3',
-    '2007011530 int 1.5 3',
     '2007011530 int 2 3',
+    '2007011530 int 2 4',
+    '2007011530 int 2 5',
+    '2007011530 int 2 6',
+    # '2007020949 int 1.5 fnb 1',
+    # '2007020949 int 1.5 fnb 2',
+    # '2007020949 int 1.5 fnb 3',
+    # '2007020949 int 1.5 fnb 4',
     # '2006300749 cvofls ml viele Daten 2 am genauesten trainiert bestes Ergebnis', 
     # '2006290804 200 int 1 g cm 0.05 1/',
     # '2006290804 200 int 1 g cm 0.05 2/',
@@ -72,6 +92,50 @@ labels = [
     'CVOFLS'
 ]
 #'''
+
+'''
+# CVOFLS ML
+paths = [
+    '2006031403 CVOFLS',
+    '2006300749 cvofls ml viele Daten 1 am ungenauesten trainiert schlechtestes Ergebnis/',
+    '2006300749 cvofls ml viele Daten 2 am genauesten trainiert bestes Ergebnis/',
+    '2006300749 cvofls ml viele Daten 3/',
+    '2006300749 cvofls ml viele Daten 4/',
+    # '2006221540 cvofls ml g2 7x7 1/',
+    # '2006221540 cvofls ml g2 7x7 2/',
+    # '2006230852 cvofls ml g2 7x7 2x g 1/',
+    # '2006230852 cvofls ml g2 7x7 2x g 2/',
+    '2006230852 cvofls ml g2 9x9 1x g 1/',
+    '2006230852 cvofls ml g2 9x9 1x g 2/',
+    '2006231130 cvofls ml g2 7x7 2x g 1 g01g005/',
+    '2006231130 cvofls ml g2 7x7 2x g 2 g01g005/',
+    '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 1/',
+    '2006231130 cvofls ml g2 7x7 wg 001 neue Daten 2/',
+    '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 3/',
+    '2006231423 cvofls ml g2 7x7 wg 001 neue Daten 4/',
+    # '2006022000 cds Vergleich',
+]
+labels = [
+    'CVOFLS',
+    'CVOFLS ML viele Daten 1',
+    'CVOFLS ML viele Daten 2 (MSE am kleinsten)',
+    'CVOFLS ML viele Daten 3 (MSE am größten)',
+    'CVOFLS ML viele Daten 4',
+    # '2006221540 cvofls ml g2 7x7 1/',
+    # '2006221540 cvofls ml g2 7x7 2/',
+    # '2006230852 cvofls ml g2 7x7 2x g 1/',
+    # '2006230852 cvofls ml g2 7x7 2x g 2/',
+    'CVOFLS ML Datensatz 1',
+    'CVOFLS ML Datensatz 1x',
+    'CVOFLS ML Datensatz 1x',
+    'CVOFLS ML Datensatz 1x',
+    'CVOFLS ML Datensatz 2',
+    'CVOFLS ML Datensatz 2x',
+    'CVOFLS ML Datensatz 2x',
+    'CVOFLS ML Datensatz 2x',
+    # 'CDS',
+]
+# '''
 
 '''
 # Vergleich Scharfes Interface
@@ -90,106 +154,42 @@ labels = [
 # '''
 
 '''
-# Vergleich int
+# Vergleich selbes Netz
 paths = [
-    '2006031403 CVOFLS',
-    '2006022000 cds Vergleich',
-    '2006111502 int 1.5 cm/',
-    '2006111502 int 1 cm/',
-    '2006111502 int 2 cm/',
-    # '2006111639 int 1.5 c/',
-    # '2006111639 int 1 c nicht viel anders, eher schlechter als cm/',
-    # '2006111639 int 2 c/',
-    '2006120751 int 1.5 1 neu/',
-    '2006120751 int 1.5 2 neu/',
-    '2006120751 int 2 1 neu/',
-    '2006120751 int 2 2 neu/',
-    # '2006231431 200 int 1 g 1 c 0.02/',
-    # '2006231431 200 int 1 g 1 c 0.05/',
-    # '2006231431 200 int 1 g 1 cm 0.05/',
-    # '2006231431 200 int 1 g 2 c 0.02/',
-    # '2006231431 200 int 1 g 2 c 0.05/',
-    # '2006231431 200 int 1 g 2 cm 0.05/',
-    # '2006231835 200 int 0 g cm 0.05 1/',
-    # '2006231835 200 int 0 g cm 0.05 2/',
-    # '2006231835 200 int 2 g cm 0.05 1/',
-    # '2006231835 200 int 2 g cm 0.05 2/',
-    # '2006231931 200 int 1.5 g cm 0.05 1/',
-    # '2006231931 200 int 1.5 g cm 0.05 2/',
-    # '2006290804 200 int 1 g cm 0.05 1/',
-    # '2006290804 200 int 1 g cm 0.05 2/',
-    # '2006290804 200 int 1 g cm 0.05 cls 1/',
-    # '2006290804 200 int 1 g cm 0.05 cls 2/',
-    # '2006290947 200 int 1 g c 0.05 1/',
-    # '2006290947 200 int 1 g c 0.05 2/',
-    # '2006290947 200 int 1 g c 0.05 cls 1/',
-    # '2006290947 200 int 1 g c 0.05 cls 2/',
-    # '2006291138 200 int 1 g cm 0.05 1 + 4/',
-    # '2006291138 200 int 1 g cm 0.05 2 + 4/',
-    # '2006291306 200 int 1 g cm 0.03 1 + 4/',
-    # '2006291306 200 int 1 g cm 0.03 2 + 4/',
-    # '2006291411 200 int 1 g cm 0.05 1 +/',
-    # '2006291411 200 int 1 g cm 0.05 1 + 4 0.01/',
-    # '2006291411 200 int 1 g cm 0.05 2 +/',
-    # '2006291411 200 int 1 g cm 0.05 2 + 4 0.01/',
+    '2007011530 int 0 1',
+    '2007011530 int 0 2',
+    '2007011530 int 0 3',
+    '2007011530 int 0 4',
+    '2006031403 CVOFLS'
 ]
 labels = [
-    'CVOFLS',
-    'CDS',
-    '2006111502 int 1.5 cm/',
-    '2006111502 int 1 cm/',
-    '2006111502 int 2 cm/',
-    # '2006111639 int 1.5 c/',
-    # '2006111639 int 1 c nicht viel anders, eher schlechter als cm/',
-    # '2006111639 int 2 c/',
-    '2006120751 int 1.5 1 neu/',
-    '2006120751 int 1.5 2 neu/',
-    '2006120751 int 2 1 neu/',
-    '2006120751 int 2 2 neu/',
-    # '2006231431 200 int 1 g 1 c 0.02/',
-    # '2006231431 200 int 1 g 1 c 0.05/',
-    # '2006231431 200 int 1 g 1 cm 0.05/',
-    # '2006231431 200 int 1 g 2 c 0.02/',
-    # '2006231431 200 int 1 g 2 c 0.05/',
-    # '2006231431 200 int 1 g 2 cm 0.05/',
-    # '2006231835 200 int 0 g cm 0.05 1/',
-    # '2006231835 200 int 0 g cm 0.05 2/',
-    # '2006231835 200 int 2 g cm 0.05 1/',
-    # '2006231835 200 int 2 g cm 0.05 2/',
-    # '2006231931 200 int 1.5 g cm 0.05 1/',
-    # '2006231931 200 int 1.5 g cm 0.05 2/',
-    # '2006290804 200 int 1 g cm 0.05 1/',
-    # '2006290804 200 int 1 g cm 0.05 2/',
-    # '2006290804 200 int 1 g cm 0.05 cls 1/',
-    # '2006290804 200 int 1 g cm 0.05 cls 2/',
-    # '2006290947 200 int 1 g c 0.05 1/',
-    # '2006290947 200 int 1 g c 0.05 2/',
-    # '2006290947 200 int 1 g c 0.05 cls 1/',
-    # '2006290947 200 int 1 g c 0.05 cls 2/',
-    # '2006291138 200 int 1 g cm 0.05 1 + 4/',
-    # '2006291138 200 int 1 g cm 0.05 2 + 4/',
-    # '2006291306 200 int 1 g cm 0.03 1 + 4/',
-    # '2006291306 200 int 1 g cm 0.03 2 + 4/',
-    # '2006291411 200 int 1 g cm 0.05 1 +/',
-    # '2006291411 200 int 1 g cm 0.05 1 + 4 0.01/',
-    # '2006291411 200 int 1 g cm 0.05 2 +/',
-    # '2006291411 200 int 1 g cm 0.05 2 + 4 0.01/',
+    'Netz 1',
+    'Netz 2',
+    'Netz 3',
+    'Netz 4',
+    'CVOFLS'
 ]
-# '''
-# paths = ['FASTEST_1', 'FASTEST_2', '2006042307 dshift1 shift1 flip 0.05 sehr gut', '2006041645 dshift1 shift1 0.03 w + kappa neq 0 g sqr all ganz gut', '2006040836 altes w bei k ungleich 0 0.08 0.92 wenig Fehler kleine Amplitude', '2006031403 CVOFLS', '2006022000 cds Vergleich']
-# labels = ['F1', 'F2', 'flip 0.05', 'dshift1 shift1 0.03', 'altes shift1 0.08 0.92', 'CVOFLS', 'CDS']
+#'''
 
 # reds = ['maroon', 'brown', 'indianred', 'lightcoral']
-reds = ['maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon',]
+# reds = ['maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon',]
+reds = ['red', 'peru', 'darkviolet', 'green',
+        'red', 'peru', 'darkviolet', 'green',
+        'red', 'peru', 'darkviolet', 'green',
+        'red', 'peru', 'darkviolet', 'green',
+        'red', 'peru', 'darkviolet', 'green',
+        'red', 'peru', 'darkviolet', 'green',
+       ]
+# reds = ['tomato', 'red', 'maroon', 'tomato']
 j=0
 k=0
-endtime = 10  # in s
+endtime = 2  # in s
 timestep = 0.000625
 
 refdata = pd.read_csv('Strubelj_128.txt', skiprows=1, names=['t', 'CVOFLS Paper'])
 refdata['t'] = refdata['t']*1/timestep
 refdata = refdata.set_index('t')
-refdata.plot(ax=ax, label='CVOFLS (Paper)', color='darkgray', lw=2, ls='-')
+# refdata.plot(ax=ax, label='CVOFLS (Paper)', color='darkgray', lw=2, ls='-')
 
 colors=iter(plt.cm.rainbow(np.linspace(0,1,len(paths))))
 for i in range(len(paths)):
@@ -241,27 +241,60 @@ for i in range(len(paths)):
     # Get y where c = 0.5 by linear interpolation
     y_05 = y_lower + (c_mid-c_lower)/(c_upper-c_lower)*(y_upper-y_lower)
 
-    if (('CVOFLS' in label)):
-        color = 'dimgray'
-    elif (re.match(r'F\d', label) or ('altes' in label)):
-        color = reds[j]
+    if (re.match(r'F\d', label) or ('altes' in label)):
+        # color = reds[j]
+        color = 'gold'
         j = j+1
-    elif '2007011530' in label:
+    elif re.match(r'2007011530 int 0', path):
+        color = 'red'
+        label = '_nolegend_'
+    elif re.match(r'2007011530 int 1(?!=\.)', path):
+        color = 'peru'
+    elif re.match(r'2007011530 int 1.5', path):
+        color = 'darkviolet'
+    elif re.match(r'2007011530 int 2', path):
+        # color = 'green'
+        color = next(colors)
+    elif ('fnb' in label):
+        color = 'cyan'
+    elif ('2007011530' in label) or ('Netz' in label):
         color = reds[k]
         k = k+1
     elif ('cds' in label) or ('CDS' in label):
         # color = 'steelblue'
         color = 'chocolate'
+    elif ('viele' in label):
+        color = reds[k]
+        k = k+1
+    elif ('CVOFLS ML Datensatz 1' in label):
+        color = 'cyan'
+    elif ('CVOFLS ML Datensatz 2' in label):
+        color = 'darkviolet'
+    # elif re.match(r'2007011530 int 0', path):
+    elif (('CVOFLS' in label)):
+        # color = 'dimgray'
+        color = 'lime'
     else:
         color = next(colors)
 
-    pd.Series(y_05).plot(label=label, c=color, alpha=0.7)
+    # 'red', 'peru', 'darkviolet', 'green',
+    # alpha = 0.7
+    if (label == 'CVOFLS') or ('MSE' in label):
+        alpha = 1
+    else:
+        alpha = 0.5
+
+    if (re.match(r'CVOFLS ML Datensatz \dx', label)):
+        label = '_nolegend_'
+
+    pd.Series(y_05).plot(label=label, c=color, alpha=alpha)
 
 
 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x*timestep}'))
-plt.xticks(np.arange(0, 11/timestep, 2/timestep))
+plt.xticks(np.arange(0, int((endtime+1)/2)/timestep, 2/timestep))
 ax.set_ylabel('y-pos')
 ax.set_xlabel('time [s]')
+ax.set_ylim([0.0545,0.0661])
 
 for i in range(int(np.floor(2*endtime/1.5888)+1)):
     plt.axvline(x=i/2*1.5888/timestep, color='k', lw=0.5)

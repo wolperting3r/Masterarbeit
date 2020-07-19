@@ -126,6 +126,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     # Initialize list for output vectors
     output_list = []
      
+    print('!!!!!!!!\nx_c = 0\n!!!!!!!!')
     for n in range(N_values):
         if not silent:
             # Update progress bar
@@ -147,7 +148,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             # Get random side ratio
             # e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
             # e_max = 2
-            e = e_min+(u()**1.5)*(e_max-e_min)
+            e = e_min+(u()**1)*(e_max-e_min)  # Bei e15 war der Exponent hier 1.5
             # Calculate geometry radius
             # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
             # '''
@@ -163,8 +164,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             r = -L*Delta*2/curvature
 
         # Move midpoint by random amount inside one cell
-        x_c = np.array([u(), u()])*Delta
-        # x_c = np.array([0, 0])
+        # x_c = np.array([u(), u()])*Delta
+        x_c = np.array([0, 0])
 
         ''' Get random point on geometry '''
         if geometry == 'sinus':
@@ -388,7 +389,9 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             vof_array_dict = {0: vof_array.copy()}
 
             # Get random factor between 0 and interpolate. The resulting vof_array will be a linear combination of vof_array smoothed floor(a) and ceil(a) times, where the factor defining the point inbetween both that should be interpolated is a-floor(a). If interpolate = 0 smoothing should be applied once.
-            a = (interpolate*u() if interpolate else 1)
+            # a = (interpolate*u() if interpolate else 1)  # between 0 and interpolate
+            a = ((0.5 + u()*(interpolate - 0.5)) if interpolate else 1)  # between 0.5 and interpolate
+
             for i in range(int(np.ceil(a))):
                 # Attach array filled with nan to dictionary
                 vof_array_dict[i+1] = vof_array.copy()
@@ -487,7 +490,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_e15.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_noxc_intmin05.feather')
         print(f'File:\n{file_name}')
         # Export file
         # print('NO EXPORT')

@@ -154,7 +154,10 @@ def get_data(parameters):
                 ('_shift1' if parameters['dshift'] else '') + \
                 ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 ('_g' if parameters['gauss'] else '') + \
+                '_noxc_intmin05' + \
                 '.feather'
+
+            print('noxcintmin05 DATA LOADED')
 
             print(f'Dataset:\t{filename}')
             parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -181,8 +184,8 @@ def get_data(parameters):
     # Only return data with the curvature being below a certain threshold
     # data = data[np.abs(data.iloc[:, 0]) < 0.15]
     # data = data[np.abs(data.iloc[:, 0]) > 0.015]
-    # print('\n#######\nData ist unter 0.4 abgeschnitten\n#######\n')
-    # data = data[data.iloc[:, 0] > 0.4]
+    # print('\n#######\nData ist über 0.37 abgeschnitten\n#######\n')
+    # data = data[np.abs(data.iloc[:, 0]) < 0.37]
     if parameters['flip']:
         if len(parameters['load_data']) > 0:
             data.iloc[:, 0] = data.iloc[:, 0] # CVOFLS Data

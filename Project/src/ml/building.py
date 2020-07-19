@@ -14,15 +14,25 @@ def create_model(parameters, shape):
         # Add feedforward layers defined in parameters['layers']
         model.add(layers.InputLayer(input_shape=(shape[1],)))
         for l in parameters['layers']:
-            model.add(layers.Dense(
-                l,
-                activation=parameters['activation'],
-                kernel_initializer=keras.initializers.he_uniform(seed=2),
-                use_bias=parameters['bias']
-            ))
+            if parameters['seed']:
+                model.add(layers.Dense(
+                    l,
+                    activation=parameters['activation'],
+                    kernel_initializer=keras.initializers.he_uniform(seed=parameters['seed']),
+                    use_bias=parameters['bias']
+                ))
+            else:
+                model.add(layers.Dense(
+                    l,
+                    activation=parameters['activation'],
+                    use_bias=parameters['bias']
+                ))
             # if parameters['dropout'] > 0:
                 # model.add(layers.Dropout(parameters['dropout']))
-        model.add(layers.Dense(1, activation='linear', kernel_initializer=keras.initializers.he_uniform(seed=2),))
+        if parameters['seed']:
+            model.add(layers.Dense(1, activation='linear', kernel_initializer=keras.initializers.he_uniform(seed=parameters['seed']),))
+        else:
+            model.add(layers.Dense(1, activation='linear',))
 
     # Convolutional network
     elif parameters['network'] == 'cvn':
