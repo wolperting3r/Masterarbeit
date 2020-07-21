@@ -3,6 +3,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import tikzplotlib as tkz
+import regex
 import re
 
 fig, ax = plt.subplots(1, 1, figsize=(10,5))
@@ -10,10 +12,78 @@ fig, ax = plt.subplots(1, 1, figsize=(10,5))
 # '''
 # Fastest Auswertung
 paths = [
+    # '2007011530 int 0 1',
+    # '2007011530 int 0 2',
+    # '2007011530 int 0 3',
+    # '2007011530 int 0 4',
+    # '2007011530 int 0 5',
+    # '2007011530 int 0 6',
+    # '2007011530 int 1 1',
+    # '2007011530 int 1 2',
+    # '2007011530 int 1 3',
+    # '2007011530 int 1 4',
+    # '2007011530 int 1 5',
+    # '2007011530 int 1 6',
+    # '2007011530 int 1.5 1',
+    # '2007011530 int 1.5 2',
+    # '2007011530 int 1.5 3',
+    # '2007011530 int 1.5 4',
+    # '2007011530 int 1.5 5',
+    # '2007011530 int 1.5 6',
+    # '2007011530 int 2 1',
+    # '2007011530 int 2 2',
+    # '2007011530 int 2 3',
+    # '2007011530 int 2 4',
+    # '2007011530 int 2 5',
+    # '2007011530 int 2 6',
+    # '2007020949 int 1.5 fnb 1',
+    # '2007020949 int 1.5 fnb 2',
+    # '2007020949 int 1.5 fnb 3',
+    # '2007020949 int 1.5 fnb 4',
+    # '2006300749 cvofls ml viele Daten 2 am genauesten trainiert bestes Ergebnis', 
+    # '2006290804 200 int 1 g cm 0.05 1/',
+    # '2006290804 200 int 1 g cm 0.05 2/',
+    # '2006291138 200 int 1 g cm 0.05 1 + 4',
+    # '2006291138 200 int 1 g cm 0.05 2 + 4',
+    # '2006022000 cds Vergleich',
+    '2007211250 int 2 s1',
+    '2007211250 int 2 s2',
+    '2007211250 int 2 s3',
+    '2007211250 int 2 s4',
+    '2007211250 int 2 s6',
+    '2007211250 int 2 s7',
+    '2007211250 int 2 s8',
+    '2007211250 int 2 s9',
+    '2007211250 int 2 s10',
+    '2007211250 int 2 s11',
+    '2007211250 int 2 s12',
+    '2007211250 int 2 s13',
+    '2007211250 int 2 s14',
+    '2007211250 int 2 s15',
+    '2007211250 int 2 s16',
+    '2007212130 int 0 s1',
+    '2007212130 int 0 s2',
+    '2007212130 int 0 s3',
+    '2007212130 int 0 s4',
+    '2007212130 int 0 s5',
+    '2007212130 int 0 s6',
+    '2007212130 int 0 s7',
+    '2007212130 int 0 s8',
+    # '2007212130 int 0 s9',
+    # '2007212130 int 0 s10',
+    # '2007212130 int 0 s11',
+    # '2007212130 int 0 s12',
+    # '2007212130 int 0 s13',
+    # '2007212130 int 0 s14',
+    # '2007212130 int 0 s15',
+    # '2007212130 int 0 s16',
     'FASTEST_1',
     'FASTEST_2',
     'FASTEST_3',
     'FASTEST_4',
+    '2006031403 CVOFLS'
+]
+labels = [
     # '2007011530 int 0 1',
     # '2007011530 int 0 2',
     # '2007011530 int 0 3',
@@ -32,12 +102,12 @@ paths = [
     # '2007011530 int 1.5 4',
     # '2007011530 int 1.5 5',
     # '2007011530 int 1.5 6',
-    '2007011530 int 2 1',
-    '2007011530 int 2 2',
-    '2007011530 int 2 3',
-    '2007011530 int 2 4',
-    '2007011530 int 2 5',
-    '2007011530 int 2 6',
+    # '2007011530 int 2 1',
+    # '2007011530 int 2 2',
+    # '2007011530 int 2 3',
+    # '2007011530 int 2 4',
+    # '2007011530 int 2 5',
+    # '2007011530 int 2 6',
     # '2007020949 int 1.5 fnb 1',
     # '2007020949 int 1.5 fnb 2',
     # '2007020949 int 1.5 fnb 3',
@@ -48,47 +118,41 @@ paths = [
     # '2006291138 200 int 1 g cm 0.05 1 + 4',
     # '2006291138 200 int 1 g cm 0.05 2 + 4',
     # '2006022000 cds Vergleich',
-    '2006031403 CVOFLS'
-]
-labels = [
+    '2007211250 int 2 s1',
+    '2007211250 int 2 s2',
+    '2007211250 int 2 s3',
+    '2007211250 int 2 s4',
+    '2007211250 int 2 s6',
+    '2007211250 int 2 s7',
+    '2007211250 int 2 s8',
+    '2007211250 int 2 s9',
+    '2007211250 int 2 s10',
+    '2007211250 int 2 s11',
+    '2007211250 int 2 s12',
+    '2007211250 int 2 s13',
+    '2007211250 int 2 s14',
+    '2007211250 int 2 s15',
+    '2007211250 int 2 s16',
+    '2007212130 int 0 s1',
+    '2007212130 int 0 s2',
+    '2007212130 int 0 s3',
+    '2007212130 int 0 s4',
+    '2007212130 int 0 s5',
+    '2007212130 int 0 s6',
+    '2007212130 int 0 s7',
+    '2007212130 int 0 s8',
+    # '2007212130 int 0 s9',
+    # '2007212130 int 0 s10',
+    # '2007212130 int 0 s11',
+    # '2007212130 int 0 s12',
+    # '2007212130 int 0 s13',
+    # '2007212130 int 0 s14',
+    # '2007212130 int 0 s15',
+    # '2007212130 int 0 s16',
     'F1',
     'F2',
     'F3',
     'F4',
-    # '2007011530 int 0 1',
-    # '2007011530 int 0 2',
-    # '2007011530 int 0 3',
-    # '2007011530 int 0 4',
-    # '2007011530 int 0 5',
-    # '2007011530 int 0 6',
-    # '2007011530 int 1 1',
-    # '2007011530 int 1 2',
-    # '2007011530 int 1 3',
-    # '2007011530 int 1 4',
-    # '2007011530 int 1 5',
-    # '2007011530 int 1 6',
-    # '2007011530 int 1.5 1',
-    # '2007011530 int 1.5 2',
-    # '2007011530 int 1.5 3',
-    # '2007011530 int 1.5 4',
-    # '2007011530 int 1.5 5',
-    # '2007011530 int 1.5 6',
-    '2007011530 int 2 1',
-    '2007011530 int 2 2',
-    '2007011530 int 2 3',
-    '2007011530 int 2 4',
-    '2007011530 int 2 5',
-    '2007011530 int 2 6',
-    # '2007020949 int 1.5 fnb 1',
-    # '2007020949 int 1.5 fnb 2',
-    # '2007020949 int 1.5 fnb 3',
-    # '2007020949 int 1.5 fnb 4',
-    # '2006300749 cvofls ml viele Daten 2 am genauesten trainiert bestes Ergebnis', 
-    # '2006290804 200 int 1 g cm 0.05 1/',
-    # '2006290804 200 int 1 g cm 0.05 2/',
-    # '2006291138 200 int 1 g cm 0.05 1 + 4',
-    # '2006291138 200 int 1 g cm 0.05 2 + 4',
-    # '2006022000 cds Vergleich',
     'CVOFLS'
 ]
 #'''
@@ -154,25 +218,52 @@ labels = [
 # '''
 
 '''
-# Vergleich selbes Netz
+# Vergleich selbes Netz int 0
 paths = [
     '2007011530 int 0 1',
     '2007011530 int 0 2',
     '2007011530 int 0 3',
     '2007011530 int 0 4',
+    '2007011530 int 0 5',
+    '2007011530 int 0 6',
     '2006031403 CVOFLS'
 ]
 labels = [
-    'Netz 1',
-    'Netz 2',
-    'Netz 3',
-    'Netz 4',
+    'ANNs',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
+    'CVOFLS'
+]
+#'''
+
+'''
+# Vergleich selbes Netz int 2
+paths = [
+    '2007011530 int 2 1',
+    '2007011530 int 2 2',
+    '2007011530 int 2 3',
+    '2007011530 int 2 4',
+    '2007011530 int 2 5',
+    '2007011530 int 2 6',
+    '2006031403 CVOFLS'
+]
+labels = [
+    'ANNs',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
+    '_nolegend_',
     'CVOFLS'
 ]
 #'''
 
 # reds = ['maroon', 'brown', 'indianred', 'lightcoral']
 # reds = ['maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon', 'maroon', 'red', 'tomato', 'lightsalmon',]
+'''
 reds = ['red', 'peru', 'darkviolet', 'green',
         'red', 'peru', 'darkviolet', 'green',
         'red', 'peru', 'darkviolet', 'green',
@@ -180,7 +271,8 @@ reds = ['red', 'peru', 'darkviolet', 'green',
         'red', 'peru', 'darkviolet', 'green',
         'red', 'peru', 'darkviolet', 'green',
        ]
-# reds = ['tomato', 'red', 'maroon', 'tomato']
+# '''
+reds = ['tomato', 'red', 'maroon', 'brown']
 j=0
 k=0
 endtime = 2  # in s
@@ -241,20 +333,32 @@ for i in range(len(paths)):
     # Get y where c = 0.5 by linear interpolation
     y_05 = y_lower + (c_mid-c_lower)/(c_upper-c_lower)*(y_upper-y_lower)
 
+    if (label == 'CVOFLS') or ('MSE' in label):
+        alpha = 1
+    else:
+        alpha = 0.5
+    linewidth = 1.5
+
     if (re.match(r'F\d', label) or ('altes' in label)):
-        # color = reds[j]
-        color = 'gold'
+        color = reds[j]
+        # color = 'gold'
         j = j+1
+        linewidth = 2
     elif re.match(r'2007011530 int 0', path):
         color = 'red'
-        label = '_nolegend_'
+        # label = '_nolegend_'
     elif re.match(r'2007011530 int 1(?!=\.)', path):
         color = 'peru'
     elif re.match(r'2007011530 int 1.5', path):
         color = 'darkviolet'
-    elif re.match(r'2007011530 int 2', path):
-        # color = 'green'
-        color = next(colors)
+    elif re.match(r'2007011530 int 2(?!=\ss)', path):
+        color = 'darkviolet'
+        # color = next(colors)
+    elif re.match(r'2007211250 int 2', path):
+        color = 'cyan'
+        # color = next(colors)
+    elif re.match(r'2007212130 int 0', path):
+        color = 'orange'
     elif ('fnb' in label):
         color = 'cyan'
     elif ('2007011530' in label) or ('Netz' in label):
@@ -279,22 +383,21 @@ for i in range(len(paths)):
 
     # 'red', 'peru', 'darkviolet', 'green',
     # alpha = 0.7
-    if (label == 'CVOFLS') or ('MSE' in label):
-        alpha = 1
-    else:
-        alpha = 0.5
 
     if (re.match(r'CVOFLS ML Datensatz \dx', label)):
         label = '_nolegend_'
 
-    pd.Series(y_05).plot(label=label, c=color, alpha=alpha)
+    pd.Series(y_05).plot(label=label, c=color, alpha=alpha, linewidth=linewidth)
 
 
 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: f'{x*timestep}'))
-plt.xticks(np.arange(0, int((endtime+1)/2)/timestep, 2/timestep))
-ax.set_ylabel('y-pos')
-ax.set_xlabel('time [s]')
-ax.set_ylim([0.0545,0.0661])
+plt.xticks(np.arange(start=0, step=1.5888/(2*timestep), stop=int((endtime))/timestep))
+
+ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda y, pos: '%.2E' % np.round((y-0.075/2)*0.1, 4)))
+plt.yticks(np.arange(start=(0.002*10)+0.075/2, step=0.005 , stop=(0.003*10)+0.075/2))
+ax.set_ylabel('y-Pos [m]')
+ax.set_xlabel('Zeit [s]')
+# ax.set_ylim([0.0540,0.0661])
 
 for i in range(int(np.floor(2*endtime/1.5888)+1)):
     plt.axvline(x=i/2*1.5888/timestep, color='k', lw=0.5)
@@ -302,4 +405,16 @@ for i in range(int(np.floor(2*endtime/1.5888)+1)):
 fig.tight_layout()
 plt.legend()
 plt.savefig('result.png', dpi=150)
+'''
+# Export tikz file
+tkz.save('result.tex', axis_height='7cm', axis_width='15cm', extra_axis_parameters={'scaled y ticks=manual:{$\cdot10^{-3}$}{\pgfmathparse{#1-1}}'})
+with open('result.tex', 'r') as myfile:
+    data = myfile.read()
+    data = re.sub('semithick', 'ultra thick', data)
+    data = regex.sub(r'(?<=yticklabels\=\{.*)(\d\.\d)\d*E\-03', r'\1', data)
+
+with open('result.tex', 'w') as myfile:
+    myfile.write(data)
+# '''
+
 plt.show()

@@ -1,4 +1,4 @@
-699792/699792 - 25s - loss: 6.4243e-04 - mean_absolute_error: 0.0170 - mean_squared_error: 6.4243e-04
+699792/699792 - 33s - loss: 6.4243e-04 - mean_absolute_error: 0.0170 - mean_squared_error: 6.4243e-04
 [0.0006424299800838082, 0.01699116, 0.0006424295]
 
 

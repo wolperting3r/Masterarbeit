@@ -22,12 +22,17 @@ shift = [1]
 bias = [True]
 edge = [0]
 custom_loss = [False]
-seed = [1, 2, 3, 4]
+# seed = [1, 2, 3, 4]
+# seed = [5, 6, 7, 8]
+# seed = [9, 10, 11, 12]
+seed = [13, 14, 15, 16]
+# seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+# seed = [7, 8]
 # addstring = ['_1', '_2', '_3', '_4']
 # addstring = ['_cut0.37']
 # addstring = ['_1', '_2']
 # addstring = ['_4']
-addstring = ['_noxc_intmin05']
+addstring = ['']
 
 # Data related
 neg = [True]
@@ -36,7 +41,7 @@ neg = [True]
 # load_data = ['data_CVOFLS_7x7']
 load_data = ['']
 # interpolate = [0, 1, 1.5, 2]
-interpolate = [2]
+interpolate = [0]
 data = ['ellipse']
 plotdata = ['ellipse']
 smearing = [True]
@@ -63,7 +68,6 @@ for i in range(0, 2):
         exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
         exe_save(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
     # '''
-
 '''
 # CVN
 network = ['cvn']

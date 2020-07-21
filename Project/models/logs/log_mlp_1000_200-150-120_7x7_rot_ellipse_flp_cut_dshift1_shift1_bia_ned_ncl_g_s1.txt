@@ -1,8 +1,8 @@
-699792/699792 - 23s - loss: 6.3759e-04 - mean_absolute_error: 0.0170 - mean_squared_error: 6.3759e-04
+699792/699792 - 10s - loss: 6.3759e-04 - mean_absolute_error: 0.0170 - mean_squared_error: 6.3759e-04
 [0.0006375868768967433, 0.01697773, 0.00063758745]
 
 
-149955/149955 - 4s - loss: 6.3239e-04 - mean_absolute_error: 0.0169 - mean_squared_error: 6.3239e-04
+149955/149955 - 2s - loss: 6.3239e-04 - mean_absolute_error: 0.0169 - mean_squared_error: 6.3239e-04
 [0.0006323947878210488, 0.016886817, 0.0006323943]
 
 
