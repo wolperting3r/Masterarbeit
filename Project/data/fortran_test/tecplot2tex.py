@@ -74,7 +74,6 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
                 values[j-2, :, :] = np.reshape(numbers[
                     2*np.prod(gs)+(j-2)*(gs[0]-1)*(gs[1]-1) : 2*np.prod(gs)+(j-2)*(gs[0]-1)*(gs[1]-1)+(gs[0]-1)*(gs[1]-1)
                 ], (gs[0]-1, gs[1]-1))
-        values = np.rot90(values, axes=(1, 2))
         if (0 == 1): # no export
             fig, ax = plt.subplots()
             ax.imshow(values[0, :, :], cmap='Greys_r')
@@ -87,26 +86,33 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             ax = plt.Axes(fig, [0., 0., 1., 1.])
             ax.set_axis_off()
             fig.add_axes(ax)
-            # ''' # Artefakt
+            ''' # Artefakt
+            values = np.rot90(values, k=3, axes=(1, 2)) 
             sqrsize = 45
-            xlower = 25
-            ylower = 60
+            xlower = 17
+            ylower = 68
             # '''
             ''' # Zebra
+            values = np.rot90(values, k=1, axes=(1, 2)) 
             sqrsize = 45
-            xlower = 20
-            ylower = 50
+            xlower = 10
+            ylower = 42
+            # '''
+            # ''' # Falsche Werte
+            # values = np.rot90(values, k=1, axes=(1, 2)) 
+            sqrsize = 128
+            xlower = 0
+            ylower = 0
             # '''
             limits = [[xlower, xlower+sqrsize], [ylower, ylower+sqrsize]] # x, y
             y, x = np.meshgrid(np.linspace(limits[1][0], limits[1][1], limits[1][1]-limits[1][0]), np.linspace(limits[0][0], limits[0][1], limits[0][1]-limits[0][0]))
             print(f'x.shape:\t{x.shape}')
-            # pcm = ax.pcolormesh(x, y, values[1, :, :], cmap='viridis', norm=plt.Normalize(-30, 100))
-            pcm = ax.pcolormesh(x, y, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='viridis', norm=plt.Normalize(-30, 100))
+            # Krümmung
+            # pcm = ax.pcolormesh(x, y, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='viridis', norm=plt.Normalize(-30, 100))
+            pcm = ax.pcolormesh(x, y, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='RdBu', norm=colors.TwoSlopeNorm(vmin=-30, vcenter=0, vmax=100))
+            # Konzentration
             # pcm = ax.pcolormesh(x, y, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.1, vmax=1))
-            # fig.colorbar(pcm, shrink=0.7)
-            # ax.imshow(values[0, :, :], cmap='Greys_r', norm=plt.Normalize(0, 1))
             # tkz.save('result2d.tex', axis_height='7cm', axis_width='7cm') 
-            # plt.show()
             # '''
             plt.savefig('result2d.eps')
 
@@ -118,13 +124,14 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             with open('result2d.eps', 'w') as myfile:
                 myfile.write(data)
             # '''
+            plt.show()
 
 
 
 gridsize = 128
 files = [
-    # '2007201919 ml falsche Werte',
-    '2005181419 c<01 c>99 abgeschnitten artefakte',
+    '2007201919 ml falsche Werte',
+    # '2005181419 c<01 c>99 abgeschnitten artefakte',
     # '2006041146 dshift1 0.05 0.95 gewichtung mit 141 stencil streifenmuster',
 ]
 

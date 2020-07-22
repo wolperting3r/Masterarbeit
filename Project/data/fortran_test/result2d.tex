@@ -2,20 +2,25 @@
 \begin{tikzpicture}
 
 \begin{axis}[
+colorbar,
+colorbar style={ylabel={}},
+colormap/viridis,
 height=7cm,
 hide x axis,
 hide y axis,
+point meta max=100,
+point meta min=-30,
 tick align=outside,
 tick pos=left,
 width=7cm,
 x grid style={white!69.0196078431373!black},
-xmin=0, xmax=1,
+xmin=25, xmax=70,
 xtick style={color=black},
 y grid style={white!69.0196078431373!black},
-ymin=0, ymax=1,
+ymin=60, ymax=105,
 ytick style={color=black}
 ]
-\addplot graphics [includegraphics cmd=\pgfimage,xmin=0, xmax=1, ymin=0, ymax=1] {result2d-002.png};
+\addplot graphics [includegraphics cmd=\pgfimage,xmin=25, xmax=70, ymin=60, ymax=105] {result2d-002.png};
 \end{axis}
 
 \end{tikzpicture}
