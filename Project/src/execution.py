@@ -204,8 +204,13 @@ def exe_ml(**kwargs):
     # Sort input keyword arguments
     order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'seed', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
-    # Execute machine learning
     plot = kwargs.get('plot')
+    # Execute machine learning
+    '''
+    for job in list(itpd(*kwargs.values())):
+        ml(**dict(zip(kwargs.keys(), job)))
+    # '''
+    # '''
     if not plot[0]: # Execute training job list with multithreading
         kwargs['plotdata'] = [False]
         jobs = []
@@ -217,6 +222,7 @@ def exe_ml(**kwargs):
         # Execute validation job list with multithreading
         for job in list(itpd(*kwargs.values())):
             ml(**dict(zip(kwargs.keys(), job)))
+    # '''
 
 
 def exe_save(**kwargs):

@@ -126,7 +126,6 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     # Initialize list for output vectors
     output_list = []
      
-    print('!!!!!!!!\nx_c = 0\n!!!!!!!!')
     for n in range(N_values):
         if not silent:
             # Update progress bar
@@ -164,8 +163,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             r = -L*Delta*2/curvature
 
         # Move midpoint by random amount inside one cell
-        # x_c = np.array([u(), u()])*Delta
-        x_c = np.array([0, 0])
+        x_c = np.array([u(), u()])*Delta
+        # x_c = np.array([0, 0])
 
         ''' Get random point on geometry '''
         if geometry == 'sinus':
@@ -204,6 +203,9 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             pt_x = pm()*np.sqrt((((-e**2*r**2*L*Delta*2)/curvature)**(2/3)-r**2)/(e**4-e**2))
             pt_y = pm()*np.sqrt(r**2-e**2*(pt_x)**2)
 
+            # kappa = L*Delta*(-2*e**2*r**2)/(((e**4-e**2)*(pt_x)**2+r**2)**(3/2))
+            # print(f'{curvature}\t{kappa}')
+
             # Rotate with random angle
             rot = u()*2*np.pi
             rot_matrix = [[np.cos(rot), -np.sin(rot)],
@@ -223,7 +225,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
                           x_c[1]+x_rel[1]])
 
         # Round point to get origin of local coordinates in global coordinates relative to geometry origin
-        round_point = np.floor(x*1/Delta*L)*Delta/L
+        round_point = np.floor(x*1/(Delta*L))*Delta*L
 
 
         ''' 1. Evaluate VOF values on cross around origin to get gradient, shift along gradient '''
@@ -293,7 +295,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         else:
             shift_vector = np.array([-grad_y, -grad_x])
         shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
-        round_point = round_point + shift_point*shift_vector*Delta/L
+        round_point = round_point + shift_point*shift_vector*Delta*L
         # '''
 
         ''' Plot Ellipse/Circle '''
@@ -490,10 +492,10 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_noxc_intmin05.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_intmin05.feather')
         print(f'File:\n{file_name}')
         # Export file
-        # print('NO EXPORT')
-        output_df.reset_index(drop=True).to_feather(file_name)
+        print('NO EXPORT')
+        # output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

@@ -154,6 +154,7 @@ def get_data(parameters):
                 ('_shift1' if parameters['dshift'] else '') + \
                 ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 ('_g' if parameters['gauss'] else '') + \
+                '_intmin05' + \
                 '.feather'
 
             print(f'Dataset:\t{filename}')
@@ -366,8 +367,11 @@ def process_data(dataset, parameters, reshape):
             features = np.concatenate((features, kappa), axis=1)
     # '''
     if parameters['cut']:
+        # print('!!! cut 0.1 0.8 !!!')
         features[np.nonzero(features < 0.005)] = 0  # war 0.01
         features[np.nonzero(features > 0.995)] = 1  # war 0.99
+        # features[np.nonzero(features < 0.1)] = 0  # war 0.01
+        # features[np.nonzero(features > 0.9)] = 1  # war 0.99
 
     return [labels, features, angle]
 
