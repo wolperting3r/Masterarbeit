@@ -539,7 +539,6 @@ class Edge(BaseEstimator, TransformerMixin):
                 in_both_x = np.array([[ib[0], ib[1], ib[2]] for ib in in_both_x])
                 in_both_x = in_both_x[in_both_x[:, 0].argsort()]
 
-                # Oder hier direkt die Indizes finden?
                 if tuple(combination) in set([tuple([1, 0]), tuple([2, 0])]):
                     # One single (1 0 0 0 0)
                     # Find columns for given rows where mask_x = 1 (value to be copied)
@@ -1045,27 +1044,25 @@ class Edge(BaseEstimator, TransformerMixin):
         pairs1_y = data_cut[pairs_y[:, 0, 0], pairs_y[:, 0, 2], pairs_y[:, 0, 1], 0]
         pairs2_y = data_cut[pairs_y[:, 1, 0], pairs_y[:, 1, 2], pairs_y[:, 1, 1], 0]
 
-        # Calculate mean of pairs
-        mean_x = (pairs1_x + pairs2_x)/2
-        mean_y = (pairs1_y + pairs2_y)/2
+        # Calculate interpolated position between pairs
+        pos_x = (0.5 - pairs1_x)/(pairs2_x - pairs1_x)
+        pos_y = (0.5 - pairs1_y)/(pairs2_y - pairs1_y)
 
-        # Decide weather mean should be written on bigger or smaller value
-        on_bigger_x = np.where(mean_x < 0.5, mean_x + 0.5, 0)
-        on_smaller_x = np.where(mean_x >= 0.5, mean_x - 0.5, 0)
-        on_bigger_y = np.where(mean_y < 0.5, mean_y + 0.5, 0)
-        on_smaller_y = np.where(mean_y >= 0.5, mean_y - 0.5, 0)
+        # pos_x < 0.5 & p1 > p2: write 0.5+pos_x on p1 and 0 on p2
+        # pos_x >= 0.5 & p1 <= p2: write 1.5-pos_x on p2 and 0 on p1
+        # pos_x < 0.5 & p1 <= p2: write 0.5-pos_x on p1 and 1 on p2
+        # pos_x >= 0.5 & p1 > p2: write pos_x-0.5 on p2 and 1 on p1
+        
+        int_p1_x = (np.where( ((pos_x < 0.5) & (pairs1_x > pairs2_x)), 0.5 + pos_x, 0) +
+                    np.where( ((pos_x < 0.5) & (pairs1_x <= pairs2_x)), 0.5 - pos_x, 0))
+        int_p2_x = (np.where( ((pos_x >= 0.5) & (pairs1_x > pairs2_x)), pos_x - 0.5, 0) +
+                    np.where( ((pos_x >= 0.5) & (pairs1_x <= pairs2_x)), 1.5 - pos_x, 0))
+        int_p1_y = (np.where( ((pos_y < 0.5) & (pairs1_y > pairs2_y)), 0.5 + pos_y, 0) +
+                    np.where( ((pos_y < 0.5) & (pairs1_y <= pairs2_y)), 0.5 - pos_y, 0))
+        int_p2_y = (np.where( ((pos_y >= 0.5) & (pairs1_y > pairs2_y)), pos_y - 0.5, 0) +
+                    np.where( ((pos_y >= 0.5) & (pairs1_y <= pairs2_y)), 1.5 - pos_y, 0))
 
-        # Find out where p1 > p2 and where p1 <= p2
-        p1_bigger_x = np.where(pairs1_x > pairs2_x, 1, 0)
-        p1_smaller_x = np.where(pairs1_x <= pairs2_x, 1, 0)
-        p1_bigger_y = np.where(pairs1_y > pairs2_y, 1, 0)
-        p1_smaller_y = np.where(pairs1_y <= pairs2_y, 1, 0)
-
-        # Get values that should be written on p1/p2
-        int_p1_x = np.multiply(p1_bigger_x, on_bigger_x) + np.multiply(p1_smaller_x, on_smaller_x)
-        int_p2_x = np.multiply(p1_bigger_x, on_smaller_x) + np.multiply(p1_smaller_x, on_bigger_x)
-        int_p1_y = np.multiply(p1_bigger_y, on_bigger_y) + np.multiply(p1_smaller_y, on_smaller_y)
-        int_p2_y = np.multiply(p1_bigger_y, on_smaller_y) + np.multiply(p1_smaller_y, on_bigger_y)
+        # Other p does not need to be set to 1 because stencil is filled with 1s later anyway
 
         interp_x[pairs_x[:, 0, 0], pairs_x[:, 0, 2], pairs_x[:, 0, 1], 0] = int_p1_x
         interp_x[pairs_x[:, 1, 0], pairs_x[:, 1, 2], pairs_x[:, 1, 1], 0] = int_p2_x
@@ -1099,49 +1096,37 @@ class Edge(BaseEstimator, TransformerMixin):
         triplets2_y = data_cut[triplets_y[:, 1, 0], triplets_y[:, 1, 2], triplets_y[:, 1, 1], 0]
         triplets3_y = data_cut[triplets_y[:, 2, 0], triplets_y[:, 2, 2], triplets_y[:, 2, 1], 0]
 
-        # Calculate mean of pairs
-        mean_x_1 = (triplets1_x + triplets2_x)/2
-        mean_x_2 = (triplets2_x + triplets3_x)/2
+        # Calculate interpolated position between pairs
+        pos_x_1 = (0.5 - triplets1_x)/(triplets2_x - triplets1_x)
+        pos_x_2 = (0.5 - triplets3_x)/(triplets2_x - triplets3_x)
 
-        mean_y_1 = (triplets1_y + triplets2_y)/2
-        mean_y_2 = (triplets2_y + triplets3_y)/2
+        pos_y_1 = (0.5 - triplets1_y)/(triplets2_y - triplets1_y)
+        pos_y_2 = (0.5 - triplets3_y)/(triplets2_y - triplets3_y)
 
-        # Decide weather mean should be written on bigger or smaller value
-        on_bigger_x_1 = np.where(mean_x_1 < 0.5, mean_x_1 + 0.5, 0)
-        on_bigger_x_2 = np.where(mean_x_2 < 0.5, mean_x_2 + 0.5, 0)
-        on_smaller_x_1 = np.where(mean_x_1 >= 0.5, mean_x_1 - 0.5, 0)
-        on_smaller_x_2 = np.where(mean_x_2 >= 0.5, mean_x_2 - 0.5, 0)
+        # Get values on outer points
+        int_t1_x = (np.where( ((pos_x_1 < 0.5) & (triplets1_x > triplets2_x)), 0.5 + pos_x_1, 0) +
+                    np.where( ((pos_x_1 < 0.5) & (triplets1_x <= triplets2_x)), 0.5 - pos_x_1, 0))
+        int_t3_x = (np.where( ((pos_x_2 < 0.5) & (triplets3_x > triplets2_x)), 0.5 + pos_x_1, 0) +
+                    np.where( ((pos_x_2 < 0.5) & (triplets3_x <= triplets2_x)), 0.5 - pos_x_1, 0))
+        
+        int_t1_y = (np.where( ((pos_y_1 < 0.5) & (triplets1_y > triplets2_y)), 0.5 + pos_y_1, 0) +
+                    np.where( ((pos_y_1 < 0.5) & (triplets1_y <= triplets2_y)), 0.5 - pos_y_1, 0))
+        int_t3_y = (np.where( ((pos_y_2 < 0.5) & (triplets3_y > triplets2_y)), 0.5 + pos_y_1, 0) +
+                    np.where( ((pos_y_2 < 0.5) & (triplets3_y <= triplets2_y)), 0.5 - pos_y_1, 0))
+        
+        # If middle value of triplet should be overwritten with left and right values, overwrite it with the mean of both values
+        int_t2_x_1 = (np.where( ((pos_x_1 >= 0.5) & (triplets1_x > triplets2_x)), pos_x_1 - 0.5, 0) +
+                      np.where( ((pos_x_1 >= 0.5) & (triplets1_x <= triplets2_x)), 1.5 - pos_x_1, 0))
 
-        on_bigger_y_1 = np.where(mean_y_1 < 0.5, mean_y_1 + 0.5, 0)
-        on_bigger_y_2 = np.where(mean_y_2 < 0.5, mean_y_2 + 0.5, 0)
-        on_smaller_y_1 = np.where(mean_y_1 >= 0.5, mean_y_1 - 0.5, 0)
-        on_smaller_y_2 = np.where(mean_y_2 >= 0.5, mean_y_2 - 0.5, 0)
+        int_t2_x_2 = (np.where( ((pos_x_2 >= 0.5) & (triplets3_x > triplets2_x)), pos_x_2 - 0.5, 0) +
+                      np.where( ((pos_x_2 >= 0.5) & (triplets3_x <= triplets2_x)), 1.5 - pos_x_2, 0))
 
-        # Find out where p1 > p2 and where p1 <= p2
-        t1_bigger_x_1 = np.where(triplets1_x > triplets2_x, 1, 0)
-        t1_smaller_x_1 = np.where(triplets1_x <= triplets2_x, 1, 0)
-        t2_bigger_x_2 = np.where(triplets2_x > triplets3_x, 1, 0)
-        t2_smaller_x_2 = np.where(triplets2_x <= triplets3_x, 1, 0)
-
-        t1_bigger_y_1 = np.where(triplets1_y > triplets2_y, 1, 0)
-        t1_smaller_y_1 = np.where(triplets1_y <= triplets2_y, 1, 0)
-        t2_bigger_y_2 = np.where(triplets2_y > triplets3_y, 1, 0)
-        t2_smaller_y_2 = np.where(triplets2_y <= triplets3_y, 1, 0)
-
-        # Get values that should be written on p1/p2
-        int_t1_x = np.multiply(t1_bigger_x_1, on_bigger_x_1) + np.multiply(t1_smaller_x_1, on_smaller_x_1)
-        int_t3_x = np.multiply(t2_bigger_x_2, on_smaller_x_2) + np.multiply(t2_smaller_x_2, on_bigger_x_2)
-
-        int_t1_y = np.multiply(t1_bigger_y_1, on_bigger_y_1) + np.multiply(t1_smaller_y_1, on_smaller_y_1)
-        int_t3_y = np.multiply(t2_bigger_y_2, on_smaller_y_2) + np.multiply(t2_smaller_y_2, on_bigger_y_2)
-
-        # if middle value of triplet should be overwritten with left and right mean, overwrite it with the mean of both means
-        int_t2_x_1 = np.multiply(t1_bigger_x_1, on_smaller_x_1) + np.multiply(t1_smaller_x_1, on_bigger_x_1)
-        int_t2_x_2 = np.multiply(t2_bigger_x_2, on_bigger_x_2) + np.multiply(t2_smaller_x_2, on_smaller_x_2)
         int_t2_x = np.where(((int_t2_x_1 != 0) & (int_t2_x_2 != 0)), (int_t2_x_1+int_t2_x_2)/2, int_t2_x_1+int_t2_x_2)
 
-        int_t2_y_1 = np.multiply(t1_bigger_y_1, on_smaller_y_1) + np.multiply(t1_smaller_y_1, on_bigger_y_1)
-        int_t2_y_2 = np.multiply(t2_bigger_y_2, on_bigger_y_2) + np.multiply(t2_smaller_y_2, on_smaller_y_2)
+        int_t2_y_1 = (np.where( ((pos_y_1 >= 0.5) & (triplets1_y > triplets2_y)), pos_y_1 - 0.5, 0) +
+                      np.where( ((pos_y_1 >= 0.5) & (triplets1_y <= triplets2_y)), 1.5 - pos_y_1, 0))
+        int_t2_y_2 = (np.where( ((pos_y_2 >= 0.5) & (triplets3_y > triplets2_y)), pos_y_2 - 0.5, 0) +
+                      np.where( ((pos_y_2 >= 0.5) & (triplets3_y <= triplets2_y)), 1.5 - pos_y_2, 0))
         int_t2_y = np.where(((int_t2_y_1 != 0) & (int_t2_y_2 != 0)), (int_t2_y_1+int_t2_y_2)/2, int_t2_y_1+int_t2_y_2)
 
         # Write values to output stencils

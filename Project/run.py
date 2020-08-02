@@ -20,12 +20,13 @@ flip = [True]
 cut = [True]
 shift = [1]
 bias = [True]
-edge = [0]
+edge = [1]
 custom_loss = [False]
+seed = [1]
 # seed = [1, 2]
 # seed = [3, 4]
 # seed = [1, 2, 3, 4]
-seed = [5, 6, 7, 8]
+# seed = [5, 6, 7, 8]
 # seed = [9, 10, 11, 12]
 # seed = [13, 14, 15, 16]
 # seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -35,7 +36,7 @@ seed = [5, 6, 7, 8]
 # addstring = ['_1', '_2']
 # addstring = ['_4']
 # addstring = ['_cut0109']
-addstring = ['']
+addstring = ['_neuEdge']
 
 # Data related
 neg = [True]
@@ -48,11 +49,11 @@ interpolate = [1]
 data = ['ellipse']
 plotdata = ['ellipse']
 smearing = [True]
-dshift = ['1']  # 0, 1, 1b
-gauss = [0]
+dshift = [1]  # 0, 1, '1b'
+gauss = [1]
 
 if __name__ == '__main__':
-    '''
+    # '''
     # 1.: Train, 2.: Plot
     for i in range(0, 2):
         # MLP
@@ -64,6 +65,9 @@ if __name__ == '__main__':
         # layer = [[100, 80], [250, 150]]
         # layer = [[200, 180, 150, 120, 100]]
         # layer = [[100, 80], [200, 150, 120]]
+        # layer = [[80], [120], [100, 80], [200, 150], [200, 150, 120]]
+        # layer = [[100, 80, 50], [100, 100, 100], [150, 120, 100]]
+        # layer = [[80], [120], [100, 80], [200, 150], [200, 150, 120], [100, 80, 50], [100, 100, 100], [150, 120, 100]]
 
         if i == 0:
             plot = [False]
@@ -100,24 +104,25 @@ if __name__ == '__main__':
     # '''
 
     ''' Data Generation '''
-    # '''
+    '''
     stencils = [[7, 7]]
     # stencils = [[5, 5]]
     # stencils = [[9, 9]]
     ek = [True]
     neg = [True]
     # N_values = [7e6]
-    N_values = [2e6]
+    N_values = [1e6]
     # N_values = [1]
     silent = [False]
     # geometry = ['sinus', 'ellipse']
-    geometry = ['ellipse']
-    smearing = [True]
+    geometry = ['ellipse', 'circle']
+    smearing = [False]
     usenormal = [True]
+    dshift = [False]
     gauss = [False]
     # interpolate = [1, 1.5, 2]
-    interpolate = [1]
+    interpolate = [0]
     # interpolate = [0]
     # interpolate = [2]
-    exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal, interpolate=interpolate, gauss=gauss)
+    exe_dg(stencils=stencils, ek=ek, neg=neg, N_values=N_values, silent=silent, geometry=geometry, smearing=smearing, usenormal=usenormal, dshift=dshift, interpolate=interpolate, gauss=gauss)
     # '''

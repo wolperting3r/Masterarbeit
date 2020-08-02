@@ -56,7 +56,7 @@ def cross(mid_pt, max_pt, rev_y=False):
     return cross_points
 
 
-def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal, interpolate, gauss):
+def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, usenormal, dshift, interpolate, gauss):
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
@@ -238,65 +238,66 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             # Create pandas dataframe to fetch shape of geometry in local coordinates
             vof_df = pd.DataFrame(index=range(cr_sz[0]), columns=range(cr_sz[1]))
 
-        # Generate cross points in x and y direction
-        cross_point_origins = cross(round_point, st_crp, rev_y=True)
-        cross_point_indices = cross(cr_mid, st_crp/Delta).astype(int)
-        
-        for idx, ill in enumerate(cross_point_indices):
-            # Get origin coordinates too
-            lo = cross_point_origins[idx]
-            # Values of local grid relative to geometry origin
-            # Local grid origin in lower left corner, x: l.t.r., y: b.t.t.
-            # (!! y on global grid = local grid origins is from top to bottom!)
-            [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
-                                   local_grid[1] + lo[1] - x_c[1]])
-            if (geometry == 'sinus') or (geometry == 'ellipse'):
-                # Rotate geometry back to calculate geometry
-                x_ltmp = x_l.copy()
-                y_ltmp = y_l.copy()
-                x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
-                y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
+        if dshift:
+            # Generate cross points in x and y direction
+            cross_point_origins = cross(round_point, st_crp, rev_y=True)
+            cross_point_indices = cross(cr_mid, st_crp/Delta).astype(int)
+            
+            for idx, ill in enumerate(cross_point_indices):
+                # Get origin coordinates too
+                lo = cross_point_origins[idx]
+                # Values of local grid relative to geometry origin
+                # Local grid origin in lower left corner, x: l.t.r., y: b.t.t.
+                # (!! y on global grid = local grid origins is from top to bottom!)
+                [y_l, x_l] = np.array([local_grid[0] + lo[0] - x_c[0],
+                                       local_grid[1] + lo[1] - x_c[1]])
+                if (geometry == 'sinus') or (geometry == 'ellipse'):
+                    # Rotate geometry back to calculate geometry
+                    x_ltmp = x_l.copy()
+                    y_ltmp = y_l.copy()
+                    x_l = x_ltmp*np.cos(rot)+y_ltmp*np.sin(rot)
+                    y_l = -x_ltmp*np.sin(rot)+y_ltmp*np.cos(rot)
 
-            if geometry == 'sinus':
-                # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
-                r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
-                # Calculate 1s and 0s on local grid
-                r_area = np.where(r_sqr <= 0, 1, 0)
+                if geometry == 'sinus':
+                    # Get radii on local grid (np.multiply way faster than np.power) y = a*sin(f pi x)
+                    r_sqr = - y_l + a*np.sin(f*np.pi*x_l)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= 0, 1, 0)
 
-            elif geometry == 'ellipse':
-                # Get radii on local grid r^2 = e^2*x^2 + y^2
-                r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
-                # Calculate 1s and 0s on local grid
-                r_area = np.where(r_sqr <= r*r, 1, 0)
+                elif geometry == 'ellipse':
+                    # Get radii on local grid r^2 = e^2*x^2 + y^2
+                    r_sqr = e**2*np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= r*r, 1, 0)
 
-            elif geometry == 'circle':
-                # Get radii on local grid r^2 = x^2 + y^2 + z^2
-                r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
-                # Calculate 1s and 0s on local grid
-                r_area = np.where(r_sqr <= r*r, 1, 0)
+                elif geometry == 'circle':
+                    # Get radii on local grid r^2 = x^2 + y^2 + z^2
+                    r_sqr = np.multiply(x_l, x_l) + np.multiply(y_l, y_l)
+                    # Calculate 1s and 0s on local grid
+                    r_area = np.where(r_sqr <= r*r, 1, 0)
 
-            # Get VOF values by integration over local grid
-            vof = np.sum(r_area)/r_area.size
-            # Write vof value into stencil value array
-            vof_array[ill[0], ill[1]] = vof
-            if visualize:
-                # Save the r_area array (containing the shape of the geometry) for plotting
-                vof_df.iloc[ill[0], ill[1]] = r_area
+                # Get VOF values by integration over local grid
+                vof = np.sum(r_area)/r_area.size
+                # Write vof value into stencil value array
+                vof_array[ill[0], ill[1]] = vof
+                if visualize:
+                    # Save the r_area array (containing the shape of the geometry) for plotting
+                    vof_df.iloc[ill[0], ill[1]] = r_area
 
-        # Calculate gradient with central finite difference:
-        grad_y = vof_array[cr_mid[0]+1, cr_mid[1]]-vof_array[cr_mid[0]-1, cr_mid[1]]
-        grad_x = vof_array[cr_mid[0], cr_mid[1]+1]-vof_array[cr_mid[0], cr_mid[1]-1]
-        # Calculate normal vector
-        normal = -1/np.sqrt(grad_y*grad_y+grad_x*grad_x)*np.array([grad_y, grad_x])
+            # Calculate gradient with central finite difference:
+            grad_y = vof_array[cr_mid[0]+1, cr_mid[1]]-vof_array[cr_mid[0]-1, cr_mid[1]]
+            grad_x = vof_array[cr_mid[0], cr_mid[1]+1]-vof_array[cr_mid[0], cr_mid[1]-1]
+            # Calculate normal vector
+            normal = -1/np.sqrt(grad_y*grad_y+grad_x*grad_x)*np.array([grad_y, grad_x])
 
-        # Shift round point by random amount to cover points around the interface as well
-        if usenormal:
-            shift_vector = normal
-        else:
-            shift_vector = np.array([-grad_y, -grad_x])
-        shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
-        round_point = round_point + shift_point*shift_vector*Delta*L
-        # '''
+            # Shift round point by random amount to cover points around the interface as well
+            if usenormal:
+                shift_vector = normal
+            else:
+                shift_vector = np.array([-grad_y, -grad_x])
+            shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
+            round_point = round_point + shift_point*shift_vector*Delta*L
+            # '''
 
         ''' Plot Ellipse/Circle '''
         if visualize:
@@ -391,8 +392,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             vof_array_dict = {0: vof_array.copy()}
 
             # Get random factor between 0 and interpolate. The resulting vof_array will be a linear combination of vof_array smoothed floor(a) and ceil(a) times, where the factor defining the point inbetween both that should be interpolated is a-floor(a). If interpolate = 0 smoothing should be applied once.
-            # a = (interpolate*u() if interpolate else 1)  # between 0 and interpolate
-            a = ((0.5 + u()*(interpolate - 0.5)) if interpolate else 1)  # between 0.5 and interpolate
+            a = (interpolate*u() if interpolate else 1)  # between 0 and interpolate
+            # a = ((0.5 + u()*(interpolate - 0.5)) if interpolate else 1)  # between 0.5 and interpolate
 
             for i in range(int(np.ceil(a))):
                 # Attach array filled with nan to dictionary
@@ -492,10 +493,10 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+'_shift1'+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_intmin05.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+('_shift1' if dshift else '')+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'.feather')
         print(f'File:\n{file_name}')
         # Export file
-        print('NO EXPORT')
-        # output_df.reset_index(drop=True).to_feather(file_name)
+        # print('NO EXPORT')
+        output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

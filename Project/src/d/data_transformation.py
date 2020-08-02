@@ -152,10 +152,11 @@ def get_data(parameters):
                 geom_str + \
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 ('_shift1' if parameters['dshift'] else '') + \
-                ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+                (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
                 ('_g' if parameters['gauss'] else '') + \
-                '_intmin05' + \
                 '.feather'
+                # ('_int2' if (parameters['plot'] and parameters['smear']) else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+                # '_intmin05' + \
 
             print(f'Dataset:\t{filename}')
             parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))

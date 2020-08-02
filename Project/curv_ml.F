@@ -45,10 +45,6 @@ real*8,allocatable,dimension(:) :: ml_last_layer_output
 real*8,allocatable,dimension(:) :: ml_layer_input
 real*8,allocatable,dimension(:) :: ml_tmp
 real*8 :: ml_sum, ml_weight, ml_biasweight, rotation, ml_flip_sum_first, ml_flip_sum_last
-integer,allocatable,dimension(:,:) :: ml_mask, ml_mask_x, ml_mask_y, ml_and_mask_x, ml_and_mask_y
-real*8,allocatable,dimension(:) :: ml_sum_mask_x, ml_sum_mask_y, ml_sum_and_mask_x, ml_sum_and_mask_y
-real*8,allocatable,dimension(:,:) :: ml_interp_x, ml_interp_y, ml_data_x, ml_data_y, ml_data_cut, ml_mask_cut
-real*8,allocatable,dimension(:) :: ml_row, ml_and_row
 integer :: ml_loc
 real*8 :: ml_sum_rc, ml_mean, ml_mean2
 real*8 :: xm, ym
@@ -88,37 +84,38 @@ call calgradc(ngr,0,1,c,dscdx,dscdy,dscdz, &
 stz = sqrt(real(ml_n_features))
 stzh = (stz-1)/2
 
-allocate(ml_mask(stz, stz))
-allocate(ml_mask_x((stz-2), (stz-2)))
-allocate(ml_mask_y((stz-2), (stz-2)))
-allocate(ml_and_mask_x((stz-2), (stz-3)))
-allocate(ml_and_mask_y((stz-3), (stz-2)))
-allocate(ml_sum_mask_x((stz-2)))
-allocate(ml_sum_mask_y((stz-2)))
-allocate(ml_sum_and_mask_x((stz-3)))
-allocate(ml_sum_and_mask_y((stz-3)))
-
-allocate(ml_interp_x((stz-2), (stz-2)))
-allocate(ml_interp_y((stz-2), (stz-2)))
-allocate(ml_data_cut((stz-2), (stz-2)))
-allocate(ml_mask_cut((stz-2), (stz-2)))
-allocate(ml_data_x((stz-2), (stz-2)))
-allocate(ml_data_y((stz-2), (stz-2)))
-allocate(ml_row((stz-2)))
-allocate(ml_and_row((stz-3)))
-
-
-! t1 = secnds(0.0)
-! if ((it > 3200) .and. (it < 3500)) then
-! if (it == 200) then
- ! export = 0
-! else if (it == 201) then
- ! !STOP
- ! export = 0
-! else
- ! export = 0
-! end if
-
+if (it == 99) then
+  print*, "cm 99"
+  do m=1,nblo
+    call setind(ngr,m, &
+#             include "listsetind.h"
+               ier)
+    do k=2,nkm
+      do j=2,njm
+        do i=2,nim
+          inp=ha(i,j,k)
+          ! print"(f6.3)", cm(inp)
+        end do
+      end do
+    end do
+  end do
+end if
+if (it == 100) then
+  print*, "cm 100"
+  do m=1,nblo
+    call setind(ngr,m, &
+#             include "listsetind.h"
+               ier)
+    do k=2,nkm
+      do j=2,njm
+        do i=2,nim
+          inp=ha(i,j,k)
+          ! print"(f6.3)", cm(inp)
+        end do
+      end do
+    end do
+  end do
+end if
 
 do m=1,nblo
   call setind(ngr,m, &
@@ -132,7 +129,7 @@ do m=1,nblo
         xm = sqrt((x(ha(i, j, k)) - x(ha(i-1, j, k)))**2)
         ym = sqrt((y(ha(i, j, k)) - y(ha(i, j-1, k)))**2)
 
-        if (((cm(ha(i  ,j  ,k)) > 0.06d0) .AND. (cm(ha(i  ,j  ,k)) < 0.94d0)) &  ! war bei den Test meistens 0.98
+        if (((cm(ha(i  ,j  ,k)) > 0.05d0) .AND. (cm(ha(i  ,j  ,k)) < 0.95d0)) &  ! war bei den Test meistens 0.98
             !.AND. ((sqrt(dscdx(inp)**2 + dscdy(inp)**2) > 0.01d0/min(xm, ym))) & ! zusätzliche Bedingung
             !.AND. (checksum >= 2) &
             !.AND. (((c(ha(i+1,j  ,k)) > 0.075) .AND. (c(ha(i+1,j  ,k)) < 0.99))&
@@ -153,18 +150,18 @@ do m=1,nblo
           do j_loc=-stzh,stzh
             do i_loc=-stzh,stzh
               ! Set blocks where c < 0.005 to 0
-              ! if (c(ha(i+i_loc, j+j_loc, 1)) < 0.005) then
-                ! ml_last_layer_output(counter) = 0
-              ! else if (c(ha(i+i_loc, j+j_loc, 1)) > 0.995) then
-                ! ml_last_layer_output(counter) = 1
-              ! else
-              ml_last_layer_output(counter) = c(ha(i+i_loc, j+j_loc, 1))
-              ! end if
+              if (cm(ha(i+i_loc, j+j_loc, 1)) < 0.005) then
+                ml_last_layer_output(counter) = 0
+              else if (cm(ha(i+i_loc, j+j_loc, 1)) > 0.995) then
+                ml_last_layer_output(counter) = 1
+              else
+                ml_last_layer_output(counter) = cm(ha(i+i_loc, j+j_loc, 1))
+              end if
               counter = counter+1
             end do
           end do
 
-          if (1 == 0) then  ! rotation switch
+          if (1 == 1) then  ! rotation switch
             allocate(ml_tmp(ml_layer_nodes(1)))
             do counter=1,ml_layer_nodes(1)
               ml_tmp = 0
@@ -249,13 +246,13 @@ do m=1,nblo
           end if
 
 
-          if (1 == 1) then  ! edge switch
+          if (ml_edge_on == 1) then  ! edge switch
 
               ! Test
               ! deallocate(ml_last_layer_output)
               ! allocate(ml_last_layer_output(81))
 
-              ! ml_last_layer_output = (/&
+              ! ml_last_layer_output = (/&  ! Test x
                 ! 1.0,  1.0,  0.4, 1.0,  0.2,  0.2,  0.2,  0.0, 0.0,&
                 ! 1.0,  1.0,  0.9, 1.0,  0.6,  0.45, 0.45, 0.0, 0.0,&
                 ! 1.0,  1.0,  1.0, 1.0,  1.0,  0.9,  0.9,  0.2, 0.9,&
@@ -266,10 +263,10 @@ do m=1,nblo
                 ! 1.0,  0.601,0.3, 0.05, 0.0,  0.0,  0.0,  0.0, 0.0,&
                 ! 1.0,  0.4,  0.2, 0.01, 0.0,  0.0,  0.0,  0.0, 0.0&
               ! /)  
-              ! ml_last_layer_output = (/&
+              ! ml_last_layer_output = (/&  ! Test y
                 ! 1.0,  1.0,   1.0,  1.0,  1.0,  1.0,  1.0, 1.0,  1.0,&
                 ! 0.4,  0.601, 0.8,  1.0,  1.0,  1.0,  1.0, 1.0,  1.0,&
-                ! 0.2,  0.3,   0.7,  0.9,  1.0,  1.0,  1.0, 0.9,  0.4,&
+                ! 0.2,  0.3,   0.75,  0.9,  1.0,  1.0,  1.0, 0.9,  0.4,&
                 ! 0.01, 0.05,  0.1,  0.8,  1.0,  1.0,  1.0, 1.0,  1.0,&
                 ! 0.0,  0.0,   0.4,  0.55, 0.75, 1.0,  1.0, 0.6,  0.2,&
                 ! 0.0,  0.0,   0.4,  0.55, 0.75, 1.0,  0.9, 0.45, 0.2,&
@@ -280,6 +277,25 @@ do m=1,nblo
 
               ! stz = 9
               ! stzh = 4
+              ! deallocate(ml_mask)
+              ! deallocate(ml_mask_x)
+              ! deallocate(ml_mask_y)
+              ! deallocate(ml_and_mask_x)
+              ! deallocate(ml_and_mask_y)
+              ! deallocate(ml_sum_mask_x)
+              ! deallocate(ml_sum_mask_y)
+              ! deallocate(ml_sum_and_mask_x)
+              ! deallocate(ml_sum_and_mask_y)
+
+              ! deallocate(ml_interp_x)
+              ! deallocate(ml_interp_y)
+              ! deallocate(ml_data_cut)
+              ! deallocate(ml_mask_cut)
+              ! deallocate(ml_data_x)
+              ! deallocate(ml_data_y)
+              ! deallocate(ml_row)
+              ! deallocate(ml_and_row)
+
               ! allocate(ml_mask(stz, stz))
               ! allocate(ml_mask_x((stz-2), (stz-2)))
               ! allocate(ml_mask_y((stz-2), (stz-2)))
@@ -298,6 +314,7 @@ do m=1,nblo
               ! allocate(ml_data_y((stz-2), (stz-2)))
               ! allocate(ml_row((stz-2)))
               ! allocate(ml_and_row((stz-3)))
+              ! End of test settings
 
             do j_loc=1,stz
               do i_loc=1,stz
@@ -342,8 +359,7 @@ do m=1,nblo
               end do
             end do
 
-
-            ! Get mask_x, mask_y
+            ! Get mask_x, mask_y (biggest value location where c<0.5, smallest where c>0.5)
             do j_loc=2,stz-1
               do i_loc=2,stz-1
                 ml_mask_x(j_loc-1, i_loc-1) = or(&
@@ -429,24 +445,61 @@ do m=1,nblo
                 ml_and_row(i_loc) = ml_and_mask_x(j_loc, i_loc)
               end do
 
-              ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)",&
-                ! ml_last_layer_output(j_loc*stz+1), ml_last_layer_output(j_loc*stz+2), ml_last_layer_output(j_loc*stz+3),&
-                ! ml_last_layer_output(j_loc*stz+4), ml_last_layer_output(j_loc*stz+5), ml_last_layer_output(j_loc*stz+6),&
-                ! ml_last_layer_output(j_loc*stz+7), ml_last_layer_output(j_loc*stz+8), ml_last_layer_output(j_loc*stz+9)
-              ! print"(f12.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
-              ! print"(i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_mask(j_loc+1, 1),&
-              ! ml_mask(j_loc+1, 2), ml_mask(j_loc+1, 3), ml_mask(j_loc+1, 4), ml_mask(j_loc+1, 5),&
-              ! ml_mask(j_loc+1, 6), ml_mask(j_loc+1, 7), ml_mask(j_loc+1, 8), ml_mask(j_loc+1, 9)
-              ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_mask_x(j_loc, 1),&
-              ! ml_mask_x(j_loc, 2), ml_mask_x(j_loc, 3), ml_mask_x(j_loc, 4), ml_mask_x(j_loc, 5),&
-              ! ml_mask_x(j_loc, 6), ml_mask_x(j_loc, 7)
-              ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1)", ml_and_mask_x(j_loc, 1),&
-              ! ml_and_mask_x(j_loc, 2), ml_and_mask_x(j_loc, 3), ml_and_mask_x(j_loc, 4), ml_and_mask_x(j_loc, 5),&
-              ! ml_and_mask_x(j_loc, 6)
-              ! print"(f6.3)", ml_sum_mask_x(j_loc)
-              ! print"(f6.3)", ml_sum_and_mask_x(j_loc)
-              ! print*, ' '
-
+              ! Debugging for 9x9:
+                ! print*, "Input:"
+                ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ! ml_last_layer_output(j_loc*stz+1),&
+                  ! ml_last_layer_output(j_loc*stz+2),&
+                  ! ml_last_layer_output(j_loc*stz+3),&
+                  ! ml_last_layer_output(j_loc*stz+4),&
+                  ! ml_last_layer_output(j_loc*stz+5),&
+                  ! ml_last_layer_output(j_loc*stz+6),&
+                  ! ml_last_layer_output(j_loc*stz+7),&
+                  ! ml_last_layer_output(j_loc*stz+8),&
+                  ! ml_last_layer_output(j_loc*stz+9)
+                ! print*, "Row:"
+                ! print"(f12.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+                ! print*, "Mask:"
+                ! print"(i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)",&
+                  ! ml_mask(j_loc+1, 1),&
+                  ! ml_mask(j_loc+1, 2),&
+                  ! ml_mask(j_loc+1, 3),&
+                  ! ml_mask(j_loc+1, 4),&
+                  ! ml_mask(j_loc+1, 5),&
+                  ! ml_mask(j_loc+1, 6),&
+                  ! ml_mask(j_loc+1, 7),&
+                  ! ml_mask(j_loc+1, 8),&
+                  ! ml_mask(j_loc+1, 9)
+                ! print*, "Mask_x:"
+                ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)",&
+                  ! ml_mask_x(j_loc, 1),&
+                  ! ml_mask_x(j_loc, 2),&
+                  ! ml_mask_x(j_loc, 3),&
+                  ! ml_mask_x(j_loc, 4),&
+                  ! ml_mask_x(j_loc, 5),&
+                  ! ml_mask_x(j_loc, 6),&
+                  ! ml_mask_x(j_loc, 7)
+                ! print*, "Mask_and_x:"
+                ! print"(i12.1, i6.1, i6.1, i6.1, i6.1, i6.1)",&
+                  ! ml_and_mask_x(j_loc, 1),&
+                  ! ml_and_mask_x(j_loc, 2),&
+                  ! ml_and_mask_x(j_loc, 3),&
+                  ! ml_and_mask_x(j_loc, 4),&
+                  ! ml_and_mask_x(j_loc, 5),&
+                  ! ml_and_mask_x(j_loc, 6)
+                ! print*, "Output:"
+                ! print"(f12.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ! ml_interp_x(j_loc, 1),&
+                  ! ml_interp_x(j_loc, 2),&
+                  ! ml_interp_x(j_loc, 3),&
+                  ! ml_interp_x(j_loc, 4),&
+                  ! ml_interp_x(j_loc, 5),&
+                  ! ml_interp_x(j_loc, 6),&
+                  ! ml_interp_x(j_loc, 7)
+                ! print"(f6.3)", ml_sum_mask_x(j_loc)
+                ! print"(f6.3)", ml_sum_and_mask_x(j_loc)
+                ! print*, ' '
+                ! STOP
               
               ! Decide case
               if ((ml_sum_mask_x(j_loc) == 1) .and. (ml_sum_and_mask_x(j_loc) == 0)) then
@@ -465,51 +518,83 @@ do m=1,nblo
 
               else if ((ml_sum_mask_x(j_loc) == 2) .and. (ml_sum_and_mask_x(j_loc) == 1)) then
                 ! One pair (0 1 1 0 0 0)
-                ! Take mean of row and copy (+/-0.5) on bigger if < 0.5, smaller if > 0.5
-                ml_sum_rc = 0
-                do i_loc=1,stz-2
-                  ml_sum_rc = ml_sum_rc + ml_row(i_loc)
-                end do
 
-                ml_mean = ml_sum_rc/2
+                ! Calculate interpolated position (0.5 - p1)/(p2 - p1), p1 <= p2
+                if ((ml_row(maxloc(ml_row, mask=(ml_row>0), dim=1))- ml_row(minloc(ml_row, mask=(ml_row>0), dim=1))) .ne. 0)&
+                  then
+                  ml_mean = (0.5d0 - ml_row(minloc(ml_row, mask=(ml_row>0), dim=1)))/&
+                    (ml_row(maxloc(ml_row, mask=(ml_row>0), dim=1))- ml_row(minloc(ml_row, mask=(ml_row>0), dim=1)))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0))) = ml_mean-0.5d0
+                if (ml_mean >= 0.5d0) then
+                  ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                  ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0))) = 0
+                  ml_interp_x(j_loc, maxloc(ml_row, mask=(ml_row>0))) = 1.5d0 - ml_mean
                 else
-                  ! Write ml_mean+0.5 on bigger value
-                  ml_interp_x(j_loc, maxloc(ml_row)) = ml_mean+0.5d0
+                  ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                  ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0))) = 0.5d0 - ml_mean
+                  ml_interp_x(j_loc, maxloc(ml_row, mask=(ml_row>0))) = 1
                 end if
+
+                ! Trigger start
+                if (ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0), dim=1)) < 0) then
+                  print*, "One pair, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, minloc(ml_row, mask=(ml_row>0)))
+                else if (ml_interp_x(j_loc, maxloc(ml_row, mask=(ml_row>0), dim=1)) < 0) then
+                  print*, "One pair, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, maxloc(ml_row, mask=(ml_row>0)))
+                end if
+                ! Trigger end
 
               else if ((ml_sum_mask_x(j_loc) == 3) .and. (ml_sum_and_mask_x(j_loc) == 1)) then
                 ! One pair, one single (1 1 0 0 1)
-                ! Get mean of pair
-                ml_mean = ((ml_row(maxloc(ml_and_row, DIM=1)) + ml_row((maxloc(ml_and_row, DIM=1)+1)))/2)
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                ml_loc = maxloc(ml_and_row, DIM=1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
+
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
-                    ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)+1
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0
+                    ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
                   else
-                    ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5 on bigger value
-                  if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
-                    ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1))) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
                   else
-                    ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)+1
-                    ml_interp_x(j_loc, (maxloc(ml_and_row, DIM=1)+1)) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, "One pair, one single, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, "One pair, one single, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                end if
+                ! Trigger end
 
                 ! Set values of pair in row to zero so only single is left
                 ml_row(maxloc(ml_and_row, DIM=1)) = 0
@@ -524,76 +609,199 @@ do m=1,nblo
                 ! Get first index of triplet (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
 
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-                ml_mean2 = (ml_row(ml_loc+1) + ml_row(ml_loc+2))/2
-
-                if (ml_mean > 0.5d0) then
-                  ml_mean = ml_mean - 0.5d0
+                ! Calculate interpolated position between pairs
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ml_mean = ml_mean + 0.5d0
+                  ml_mean = 0.5d0
+                end if
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc+2)) .ne. 0) then
+                  ml_mean2 = (0.5d0 - ml_row(ml_loc+2))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc+2))
+                else
+                  ml_mean2 = 0.5d0
                 end if
 
-                if (ml_mean2 > 0.5d0) then
-                  ml_mean2 = ml_mean2 - 0.5d0
-                else
-                  ml_mean2 = ml_mean2 + 0.5d0
-                end if
+                ! Get values on outer points (p1 = outer, p2 = inner)
 
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
 
-                if (and( xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
-                  xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
-                  ! Clash -> mean of means on inner
-                  ml_interp_x(j_loc, (ml_loc+1)) = (ml_mean+ml_mean2)/2
-                else
-                  ! No clash
-                  if (xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
-                    ! Write ml_mean on inner
-                    ml_interp_x(j_loc, (ml_loc+1)) = ml_mean
-                  else
-                    ! Write ml_mean on outer
-                    ml_interp_x(j_loc, ml_loc) = ml_mean
+                ! if ml_mean > 0.5 for both pairs -> clash on middle value
+                if ((ml_mean >= 0.5d0) .and. (ml_mean2 >= 0.5d0)) then
+                  if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0 ! p1
+                    ! p2_1 = 1.5d0 - ml_mean
+
+                    if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 0 ! p3
+                      ml_interp_x(j_loc, ml_loc+1) = ((1.5d0 - ml_mean)+(1.5d0 - ml_mean2))/2 ! (p2_1 + p2_2)/2
+                    else ! p3 > p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 > p2 -> Write ml_mean-0.5 on p2 and 1 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 1 ! p3
+                      ml_interp_x(j_loc, ml_loc+1) = ((1.5d0 - ml_mean)+(ml_mean2 - 0.5d0))/2 ! (p2_1 + p2_2)/2
+                    end if
+
+                  else ! p1 > p2
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ! p2_1 = ml_mean - 0.5d0
+
+                    if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean2 on p2 and 0 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 0 ! p3
+                      ml_interp_x(j_loc, ml_loc+1) = ((ml_mean - 0.5d0)+(1.5d0 - ml_mean2))/2 ! (p2_1 + p2_2)/2
+                    else ! p3 > p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 > p2 -> Write ml_mean2-0.5 on p2 and 1 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 1 ! p3
+                      ml_interp_x(j_loc, ml_loc+1) = ((ml_mean - 0.5d0)+(ml_mean2 - 0.5d0))/2 ! (p2_1 + p2_2)/2
+                    end if
+                  end if
+                else ! not ((ml_mean >= 0.5d0) .and. (ml_mean2 >= 0.5d0)) -> no clash
+                  ! pair 1
+                  if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                    if (ml_mean >= 0.5d0) then
+                      ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                      ml_interp_x(j_loc, ml_loc) = 0
+                      ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
+                    else
+                      ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                      ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                      ml_interp_x(j_loc, ml_loc+1) = 1
+                    end if
+                  else ! p1 > p2
+                    if (ml_mean >= 0.5d0) then
+                      ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                      ml_interp_x(j_loc, ml_loc) = 1
+                      ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
+                    else
+                      ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                      ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                      ml_interp_x(j_loc, ml_loc+1) = 0
+                    end if
                   end if
 
-                  if (xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
-                    ! Write ml_mean2 on inner
-                    ml_interp_x(j_loc, (ml_loc+1)) = ml_mean2
-                  else
-                    ! Write ml_mean2 on outer
-                    ml_interp_x(j_loc, (ml_loc+2)) = ml_mean2
+                  ! pair 2
+                  if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                    if (ml_mean2 >= 0.5d0) then
+                      ! pos_x(=ml_mean2) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean2 on p2 and 0 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 0
+                      ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean2
+                    else
+                      ! pos_x(=ml_mean2) < 0.5, p3 <= p2 -> Write 0.5-ml_mean2 on p3 and 1 on p2
+                      ml_interp_x(j_loc, ml_loc+2) = 0.5d0 - ml_mean2
+                      ml_interp_x(j_loc, ml_loc+1) = 1
+                    end if
+                  else ! p3 > p2
+                    if (ml_mean2 >= 0.5d0) then
+                      ! pos_x(=ml_mean2) >= 0.5, p3 > p2 -> Write ml_mean2-0.5 on p2 and 1 on p3
+                      ml_interp_x(j_loc, ml_loc+2) = 1
+                      ml_interp_x(j_loc, ml_loc+1) = ml_mean2 - 0.5d0
+                    else
+                      ! pos_x(=ml_mean2) < 0.5, p3 > p2 -> Write 0.5+ml_mean2 on p3 and 0 on p2
+                      ml_interp_x(j_loc, ml_loc+2) = 0.5d0 + ml_mean2
+                      ml_interp_x(j_loc, ml_loc+1) = 0
+                    end if
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, "Triplets, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, "Triplets, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                else if (ml_interp_x(j_loc, ml_loc+2) < 0) then
+                  print*, "Triplets, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+2)
+                end if
+                ! Trigger end
+
 
               else if ((ml_sum_mask_x(j_loc) == 4) .and. (ml_sum_and_mask_x(j_loc) == 2)) then
+                ! print*, "Input:"
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_last_layer_output(j_loc*stz+1),&
+                  ml_last_layer_output(j_loc*stz+2),&
+                  ml_last_layer_output(j_loc*stz+3),&
+                  ml_last_layer_output(j_loc*stz+4),&
+                  ml_last_layer_output(j_loc*stz+5),&
+                  ml_last_layer_output(j_loc*stz+6),&
+                  ml_last_layer_output(j_loc*stz+7)
+                ! print*, "Row:"
+                print"(f12.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+                ! print*, "Mask:"
+                print"(i6.1, i6.1, i6.1, i6.1, i6.1, i6.1, i6.1)",&
+                  ml_mask(j_loc+1, 1),&
+                  ml_mask(j_loc+1, 2),&
+                  ml_mask(j_loc+1, 3),&
+                  ml_mask(j_loc+1, 4),&
+                  ml_mask(j_loc+1, 5),&
+                  ml_mask(j_loc+1, 6),&
+                  ml_mask(j_loc+1, 7)
+                ! print*, "Mask_x:"
+                print"(i12.1, i6.1, i6.1, i6.1, i6.1)",&
+                  ml_mask_x(j_loc, 1),&
+                  ml_mask_x(j_loc, 2),&
+                  ml_mask_x(j_loc, 3),&
+                  ml_mask_x(j_loc, 4),&
+                  ml_mask_x(j_loc, 5)
+                ! print*, "Mask_and_x:"
+                print"(i12.1, i6.1, i6.1, i6.1)",&
+                  ml_and_mask_x(j_loc, 1),&
+                  ml_and_mask_x(j_loc, 2),&
+                  ml_and_mask_x(j_loc, 3),&
+                  ml_and_mask_x(j_loc, 4)
                 ! Two pairs, separated (1 1 0 1 1)
                 ! Get first index of first pair (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0
+                    ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, '1'
+                  print*, "Two pairs, seperated, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, '2'
+                  print*, "Two pairs, seperated, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                end if
+                ! Trigger end
 
                 ! Set values in row to 0
                 ml_row(ml_loc) = 0
@@ -602,57 +810,104 @@ do m=1,nblo
 
                 ! And repeat for second pair
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
-                  else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
-                  end if
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ! Write ml_mean+0.5 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
+                  ml_mean = 0.5d0
+                end if
+
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0
+                    ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 1
+                  end if
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
+                  else
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, '3'
+                  print*, "Two pairs, seperated, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, '4'
+                  print*, "Two pairs, seperated, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                end if
+                ! Trigger end
+                ! print*, "Output:"
+                print"(f12.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_interp_x(j_loc, 1),&
+                  ml_interp_x(j_loc, 2),&
+                  ml_interp_x(j_loc, 3),&
+                  ml_interp_x(j_loc, 4),&
+                  ml_interp_x(j_loc, 5)
+                print"(f6.3)", ml_sum_mask_x(j_loc)
+                print"(f6.3)", ml_sum_and_mask_x(j_loc)
+                ! print*, ' '
+                ! STOP
 
               else if ((ml_sum_mask_x(j_loc) == 4) .and. (ml_sum_and_mask_x(j_loc) == 3)) then
                 ! Two pairs, combined (1 1 1 1 0)
 
                 ! Get first index of first pair (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do i_loc=1,stz-2
                   ml_interp_x(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0
+                    ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, "Two pairs, combined, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, "Two pairs, combined, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                end if
+                ! Trigger end
 
                 ! Set values in row to 0
                 ml_row(ml_loc) = 0
@@ -662,27 +917,44 @@ do m=1,nblo
 
                 ! And repeat for second pair
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean-0.5d0
-                  else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean-0.5d0
-                  end if
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ! Write ml_mean+0.5 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_x(j_loc, ml_loc) = ml_mean+0.5d0
+                  ml_mean = 0.5d0
+                end if
+
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_x(j_loc, ml_loc) = 0
+                    ml_interp_x(j_loc, ml_loc+1) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_x(j_loc, ml_loc+1) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 - ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 1
+                  end if
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_x(j_loc, ml_loc) = 1
+                    ml_interp_x(j_loc, ml_loc+1) = ml_mean - 0.5d0
+                  else
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_x(j_loc, ml_loc) = 0.5d0 + ml_mean
+                    ml_interp_x(j_loc, ml_loc+1) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_x(j_loc, ml_loc) < 0) then
+                  print*, "Two pairs, combined, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc)
+                else if (ml_interp_x(j_loc, ml_loc+1) < 0) then
+                  print*, "Two pairs, combined, x"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_x(j_loc, ml_loc+1)
+                end if
+                ! Trigger end
 
               end if
             end do
@@ -714,55 +986,88 @@ do m=1,nblo
 
               else if ((ml_sum_mask_y(i_loc) == 2) .and. (ml_sum_and_mask_y(i_loc) == 1)) then
                 ! One pair (0 1 1 0 0 0)
-                ! Take mean of row and copy (+/-0.5) on bigger if < 0.5, smaller if > 0.5
-                ml_sum_rc = 0
-                do j_loc=1,stz-2
-                  ml_sum_rc = ml_sum_rc + ml_row(j_loc)
-                end do
 
-                ml_mean = ml_sum_rc/2
+                ! Calculate interpolated position (0.5 - p1)/(p2 - p1), p1 <= p2
+                if ((ml_row(maxloc(ml_row, mask=(ml_row>0), dim=1))- ml_row(minloc(ml_row, mask=(ml_row>0), dim=1))) .ne. 0) &
+                  then
+                  ml_mean = (0.5d0 - ml_row(minloc(ml_row, mask=(ml_row>0), dim=1)))/&
+                    (ml_row(maxloc(ml_row, mask=(ml_row>0), dim=1))- ml_row(minloc(ml_row, mask=(ml_row>0), dim=1)))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5 on smaller value
-                  ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc) = ml_mean-0.5d0
+                if (ml_mean >= 0.5d0) then
+                  ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                  ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc) = 0
+                  ml_interp_y(maxloc(ml_row, mask=(ml_row>0)), i_loc) = 1.5d0 - ml_mean
                 else
-                  ! Write ml_mean+0.5 on bigger value
-                  ml_interp_y(maxloc(ml_row), i_loc) = ml_mean+0.5d0
+                  ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                  ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc) = 0.5d0 - ml_mean
+                  ml_interp_y(maxloc(ml_row, mask=(ml_row>0)), i_loc) = 1
                 end if
+
+                ! Trigger start
+                if (ml_interp_y(minloc(ml_row, mask=(ml_row>0), dim=1), i_loc) < 0) then
+                  print*, "One pair, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(minloc(ml_row, mask=(ml_row>0)), i_loc)
+                else if (ml_interp_y(minloc(ml_row, mask=(ml_row>0), dim=1)+1, i_loc) < 0) then
+                  print*, "One pair, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(minloc(ml_row, mask=(ml_row>0))+1, i_loc)
+                end if
+                ! Trigger end
 
               else if ((ml_sum_mask_y(i_loc) == 3) .and. (ml_sum_and_mask_y(i_loc) == 1)) then
                 ! One pair, one single (1 1 0 0 1)
-                ! Get mean of pair
-                ml_mean = ((ml_row(maxloc(ml_and_row, DIM=1)) + ml_row((maxloc(ml_and_row, DIM=1)+1)))/2)
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                ml_loc = maxloc(ml_and_row, DIM=1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
+
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5d0 on smaller value
-                  if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
-                    ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)+1
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0
+                    ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
                   else
-                    ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5d0 on bigger value
-                  if (ml_row(maxloc(ml_and_row, DIM=1)) .ge. ml_row(maxloc(ml_and_row, DIM=1)+1)) then
-                    ! maxloc(ml_and_row) is bigger, so write on maxloc(ml_and_row)
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)), i_loc) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
                   else
-                    ! maxloc(ml_and_row) is smaller, so write on maxloc(ml_and_row)+1
-                    ml_interp_y((maxloc(ml_and_row, DIM=1)+1), i_loc) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 0
                   end if
                 end if
 
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "One pair, one single, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "One pair, one single, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                end if
+                ! Trigger end
+
                 ! Set values of pair in row to zero so only single is left
-                ml_row(maxloc(ml_and_row, DIM=1)) = 0
-                ml_row(maxloc(ml_and_row, DIM=1)+1) = 0
+                ml_row(ml_loc) = 0
+                ml_row(ml_loc+1) = 0
                 ! Copy single
                 ml_interp_y(maxloc(ml_row, DIM=1), i_loc) = ml_row(maxloc(ml_row, DIM=1))
 
@@ -773,76 +1078,165 @@ do m=1,nblo
                 ! Get first index of triplet (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
 
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-                ml_mean2 = (ml_row(ml_loc+1) + ml_row(ml_loc+2))/2
-
-                if (ml_mean > 0.5d0) then
-                  ml_mean = ml_mean - 0.5d0
+                ! Calculate interpolated position between pairs
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ml_mean = ml_mean + 0.5d0
+                  ml_mean = 0.5d0
+                end if
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc+2)) .ne. 0) then
+                  ml_mean2 = (0.5d0 - ml_row(ml_loc+2))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc+2))
+                else
+                  ml_mean2 = 0.5d0
                 end if
 
-                if (ml_mean2 > 0.5d0) then
-                  ml_mean2 = ml_mean2 - 0.5d0
-                else
-                  ml_mean2 = ml_mean2 + 0.5d0
-                end if
+                ! Get values on outer points (p1 = outer, p2 = inner)
 
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
 
-                if (and( xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1))),&
-                  xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1))))) then
-                  ! Clash -> mean of means
-                  ml_interp_y((ml_loc+1), i_loc) = (ml_mean+ml_mean2)/2
-                else
-                  ! No clash
-                  if (xor((ml_mean > 0.5d0), (ml_row(ml_loc) > ml_row(ml_loc+1)))) then
-                    ! Write ml_mean on inner
-                    ml_interp_y((ml_loc+1), i_loc) = ml_mean
-                  else
-                    ! Write ml_mean on outer
-                    ml_interp_y(ml_loc, i_loc) = ml_mean
+                ! if ml_mean > 0.5 for both pairs -> clash on middle value
+                if ((ml_mean >= 0.5d0) .and. (ml_mean2 >= 0.5d0)) then
+                  if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0 ! p1
+                    ! p2_1 = 1.5d0 - ml_mean
+
+                    if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 0 ! p3
+                      ml_interp_y(ml_loc+1, i_loc) = ((1.5d0 - ml_mean)+(1.5d0 - ml_mean2))/2 ! (p2_1 + p2_2)/2
+                    else ! p3 > p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 > p2 -> Write ml_mean-0.5 on p2 and 1 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 1 ! p3
+                      ml_interp_y(ml_loc+1, i_loc) = ((1.5d0 - ml_mean)+(ml_mean2 - 0.5d0))/2 ! (p2_1 + p2_2)/2
+                    end if
+
+                  else ! p1 > p2
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ! p2_1 = ml_mean - 0.5d0
+
+                    if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean2 on p2 and 0 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 0 ! p3
+                      ml_interp_y(ml_loc+1, i_loc) = ((ml_mean - 0.5d0)+(1.5d0 - ml_mean2))/2 ! (p2_1 + p2_2)/2
+                    else ! p3 > p2
+                      ! pos_x(=ml_mean) >= 0.5, p3 > p2 -> Write ml_mean2-0.5 on p2 and 1 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 1 ! p3
+                      ml_interp_y(ml_loc+1, i_loc) = ((ml_mean - 0.5d0)+(ml_mean2 - 0.5d0))/2 ! (p2_1 + p2_2)/2
+                    end if
+                  end if
+                else ! not ((ml_mean >= 0.5d0) .and. (ml_mean2 >= 0.5d0)) -> no clash
+                  ! pair 1
+                  if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                    if (ml_mean >= 0.5d0) then
+                      ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                      ml_interp_y(ml_loc, i_loc) = 0
+                      ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
+                    else
+                      ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                      ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                      ml_interp_y(ml_loc+1, i_loc) = 1
+                    end if
+                  else ! p1 > p2
+                    if (ml_mean >= 0.5d0) then
+                      ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                      ml_interp_y(ml_loc, i_loc) = 1
+                      ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
+                    else
+                      ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                      ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                      ml_interp_y(ml_loc+1, i_loc) = 0
+                    end if
                   end if
 
-                  if (xor((ml_mean2 > 0.5d0), (ml_row(ml_loc+2) > ml_row(ml_loc+1)))) then
-                    ! Write ml_mean2 on inner
-                    ml_interp_y((ml_loc+1), i_loc) = ml_mean2
-                  else
-                    ! Write ml_mean2 on outer
-                    ml_interp_y((ml_loc+2), i_loc) = ml_mean2
+                  ! pair 2
+                  if (ml_row(ml_loc+2) .le. ml_row(ml_loc+1)) then ! p3 <= p2
+                    if (ml_mean2 >= 0.5d0) then
+                      ! pos_x(=ml_mean2) >= 0.5, p3 <= p2 -> Write 1.5-ml_mean2 on p2 and 0 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 0
+                      ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean2
+                    else
+                      ! pos_x(=ml_mean2) < 0.5, p3 <= p2 -> Write 0.5-ml_mean2 on p3 and 1 on p2
+                      ml_interp_y(ml_loc+2, i_loc) = 0.5d0 - ml_mean2
+                      ml_interp_y(ml_loc+1, i_loc) = 1
+                    end if
+                  else ! p3 > p2
+                    if (ml_mean2 >= 0.5d0) then
+                      ! pos_x(=ml_mean2) >= 0.5, p3 > p2 -> Write ml_mean2-0.5 on p2 and 1 on p3
+                      ml_interp_y(ml_loc+2, i_loc) = 1
+                      ml_interp_y(ml_loc+1, i_loc) = ml_mean2 - 0.5d0
+                    else
+                      ! pos_x(=ml_mean2) < 0.5, p3 > p2 -> Write 0.5+ml_mean2 on p3 and 0 on p2
+                      ml_interp_y(ml_loc+2, i_loc) = 0.5d0 + ml_mean2
+                      ml_interp_y(ml_loc+1, i_loc) = 0
+                    end if
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "Triplet, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "Triplet, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                else if (ml_interp_y(ml_loc+2, i_loc) < 0) then
+                  print*, "Triplet, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+2, i_loc)
+                end if
+                ! Trigger end
 
               else if ((ml_sum_mask_y(i_loc) == 4) .and. (ml_sum_and_mask_y(i_loc) == 2)) then
                 ! Two pairs, separated (1 1 0 1 1)
                 ! Get first index of first pair (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5d0 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0
+                    ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5d0 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "1"
+                  print*, "Two pairs, seperated, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "2"
+                  print*, "Two pairs, seperated, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                end if
+                ! Trigger end
 
                 ! Set values in row to 0
                 ml_row(ml_loc) = 0
@@ -851,57 +1245,95 @@ do m=1,nblo
 
                 ! And repeat for second pair
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-
-                if (ml_mean > 0.5) then
-                  ! Write ml_mean-0.5 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
-                  else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
-                  end if
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ! Write ml_mean+0.5d0 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
+                  ml_mean = 0.5d0
+                end if
+
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0
+                    ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 1
+                  end if
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
+                  else
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "3"
+                  print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+                  print*, "Two pairs, seperated, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "4"
+                  print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_row
+                  print*, "Two pairs, seperated, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                end if
+                ! Trigger end
 
               else if ((ml_sum_mask_y(i_loc) == 4) .and. (ml_sum_and_mask_y(i_loc) == 3)) then
                 ! Two pairs, combined (1 1 1 1 0)
 
                 ! Get first index of first pair (maxloc returns first max value)
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
+                else
+                  ml_mean = 0.5d0
+                end if
 
                 do j_loc=1,stz-2
                   ml_interp_y(j_loc, i_loc) = 0
                 end do
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5d0 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0
+                    ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 1
                   end if
-                else
-                  ! Write ml_mean+0.5d0 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "Two pairs, combined, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "Two pairs, combined, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                end if
+                ! Trigger end
 
                 ! Set values in row to 0
                 ml_row(ml_loc) = 0
@@ -911,30 +1343,121 @@ do m=1,nblo
 
                 ! And repeat for second pair
                 ml_loc = maxloc(ml_and_row, DIM=1)
-                ml_mean = (ml_row(ml_loc) + ml_row(ml_loc+1))/2
-
-                if (ml_mean > 0.5d0) then
-                  ! Write ml_mean-0.5d0 on smaller value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean-0.5d0
-                  else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean-0.5d0
-                  end if
+                ! Get interpolated interface position of pair (0.5 - p1)/(p2 - p1)
+                if ((ml_row(ml_loc+1)- ml_row(ml_loc)) .ne. 0) then
+                  ml_mean = (0.5d0 - ml_row(ml_loc))/&
+                    (ml_row(ml_loc+1)- ml_row(ml_loc))
                 else
-                  ! Write ml_mean+0.5d0 on bigger value
-                  if (ml_row(ml_loc) > ml_row(ml_loc+1)) then
-                    ! ml_loc > ml_loc + 1, so write on ml_loc
-                    ml_interp_y(ml_loc, i_loc) = ml_mean+0.5d0
+                  ml_mean = 0.5d0
+                end if
+
+                if (ml_row(ml_loc) .le. ml_row(ml_loc+1)) then ! p1 <= p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 <= p2 -> Write 1.5-ml_mean on p2 and 0 on p1
+                    ml_interp_y(ml_loc, i_loc) = 0
+                    ml_interp_y(ml_loc+1, i_loc) = 1.5d0 - ml_mean
                   else
-                    ! ml_loc <= ml_loc + 1, so write on ml_loc+1
-                    ml_interp_y(ml_loc+1, i_loc) = ml_mean+0.5d0
+                    ! pos_x(=ml_mean) < 0.5, p1 <= p2 -> Write 0.5-ml_mean on p1 and 1 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 - ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 1
+                  end if
+                else ! p1 > p2
+                  if (ml_mean >= 0.5d0) then
+                    ! pos_x(=ml_mean) >= 0.5, p1 > p2 -> Write ml_mean-0.5 on p2 and 1 on p1
+                    ml_interp_y(ml_loc, i_loc) = 1
+                    ml_interp_y(ml_loc+1, i_loc) = ml_mean - 0.5d0
+                  else
+                    ! pos_x(=ml_mean) < 0.5, p1 > p2 -> Write 0.5+ml_mean on p1 and 0 on p2
+                    ml_interp_y(ml_loc, i_loc) = 0.5d0 + ml_mean
+                    ml_interp_y(ml_loc+1, i_loc) = 0
                   end if
                 end if
+                ! Trigger start
+                if (ml_interp_y(ml_loc, i_loc) < 0) then
+                  print*, "Two pairs, combined, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc, i_loc)
+                else if (ml_interp_y(ml_loc+1, i_loc) < 0) then
+                  print*, "Two pairs, combined, y"
+                  print"(i6.1, i6.1, f6.3)", i, j, ml_interp_y(ml_loc+1, i_loc)
+                end if
+                ! Trigger end
+
 
               end if
             end do
+
+            if ((it == 99) .and. (i == 68) .and. (j == 118)) then
+              print*, 'data_cut'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                ml_data_cut(j_locc, 1),&
+                ml_data_cut(j_locc, 2),&
+                ml_data_cut(j_locc, 3),&
+                ml_data_cut(j_locc, 4),&
+                ml_data_cut(j_locc, 5)
+              end do
+              print*, 'interp_x'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_interp_x(j_locc, 1),&
+                  ml_interp_x(j_locc, 2),&
+                  ml_interp_x(j_locc, 3),&
+                  ml_interp_x(j_locc, 4),&
+                  ml_interp_x(j_locc, 5)
+              end do
+              print*, 'interp_y'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_interp_y(j_locc, 1),&
+                  ml_interp_y(j_locc, 2),&
+                  ml_interp_y(j_locc, 3),&
+                  ml_interp_y(j_locc, 4),&
+                  ml_interp_y(j_locc, 5)
+              end do
+            end if
+            if ((it == 100) .and. (i == 68) .and. (j == 118)) then
+              print*, 'data_cut'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                ml_data_cut(j_locc, 1),&
+                ml_data_cut(j_locc, 2),&
+                ml_data_cut(j_locc, 3),&
+                ml_data_cut(j_locc, 4),&
+                ml_data_cut(j_locc, 5)
+              end do
+              print*, 'interp_x'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_interp_x(j_locc, 1),&
+                  ml_interp_x(j_locc, 2),&
+                  ml_interp_x(j_locc, 3),&
+                  ml_interp_x(j_locc, 4),&
+                  ml_interp_x(j_locc, 5)
+              end do
+              print*, 'interp_y'
+              do j_locc=1,stz-2
+                print"(f6.3, f6.3, f6.3, f6.3, f6.3)",&
+                  ml_interp_y(j_locc, 1),&
+                  ml_interp_y(j_locc, 2),&
+                  ml_interp_y(j_locc, 3),&
+                  ml_interp_y(j_locc, 4),&
+                  ml_interp_y(j_locc, 5)
+              end do
+              ! STOP
+            end if
+
+
+            ! do j_loc=1,stz-2
+              ! do i_loc=1,stz-2
+               ! if ((ml_interp_x(j_loc, i_loc) > 1) .or. (ml_interp_x(j_loc, i_loc) < 0)) then
+                 ! STOP
+                ! end if
+               ! if ((ml_interp_y(j_loc, i_loc) > 1) .or. (ml_interp_y(j_loc, i_loc) < 0)) then
+                 ! STOP
+                ! end if
+              ! end do
+            ! end do
+            
 
             ! Fill with mask 
             do j_loc=1,stz-2
@@ -951,8 +1474,7 @@ do m=1,nblo
               end do
             end do
 
-            ! Test
-
+            ! Test (until STOP)
             ! print*, ' '
             ! print"(1i2)", j_loc
             ! print*, ' '
@@ -965,20 +1487,19 @@ do m=1,nblo
                 ! ml_data_cut(j_locc, 3), ml_data_cut(j_locc, 4), ml_data_cut(j_locc, 5), ml_data_cut(j_locc, 6),&
                 ! ml_data_cut(j_locc, 7)
             ! end do
-
             ! print*, 'interp_x'
             ! do j_locc=1,stz-2
               ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_interp_x(j_locc, 1), ml_interp_x(j_locc, 2),&
                 ! ml_interp_x(j_locc, 3), ml_interp_x(j_locc, 4), ml_interp_x(j_locc, 5), ml_interp_x(j_locc, 6),&
                 ! ml_interp_x(j_locc, 7)
             ! end do
-
             ! print*, 'interp_y'
             ! do j_locc=1,stz-2
               ! print"(f6.3, f6.3, f6.3, f6.3, f6.3, f6.3, f6.3)", ml_interp_y(j_locc, 1), ml_interp_y(j_locc, 2),&
                 ! ml_interp_y(j_locc, 3), ml_interp_y(j_locc, 4), ml_interp_y(j_locc, 5), ml_interp_y(j_locc, 6),&
                 ! ml_interp_y(j_locc, 7)
             ! end do
+            ! STOP
 
             deallocate(ml_last_layer_output)
             allocate(ml_last_layer_output(2*(stz-2)**2))
@@ -1010,11 +1531,11 @@ do m=1,nblo
             ! do j_loc=1,stz-3
               ! print*, ml_and_row(j_loc)
             ! end do
-            do j_loc=1,stz-2
-              do i_loc=1,stz-2
-                print*, ml_data_cut(j_loc, i_loc)
-              end do
-            end do
+            ! do j_loc=1,stz
+              ! do i_loc=1,stz
+                ! print*, c(j_loc, i_loc)
+              ! end do
+            ! end do
 
             ! print*, 'cm'
             ! do j_loc=1,stz-2
@@ -1025,23 +1546,23 @@ do m=1,nblo
                 ! print*, ml_and_mask_x(j_loc, i_loc)
               ! end do
             ! end do
-            ! do j_loc=-stzh,stzh
-              ! do i_loc=-stzh,stzh
-                ! print*, cm(ha(i+i_loc, j+j_loc, 1))
-              ! end do
-            ! end do
-            print*, 'cm'
-            do j_loc=1,stz-2
-              do i_loc=1,stz-2
-                print*, ml_interp_x(j_loc, i_loc)
+            do j_loc=-stzh,stzh
+              do i_loc=-stzh,stzh
+                print*, cm(ha(i+i_loc, j+j_loc, 1))
               end do
             end do
-            ! do i_loc=1,stz**2  ! export rotated cm
-              ! print*, ml_last_layer_output(i_loc)
+            print*, 'cm'
+            ! do j_loc=1,stz
+              ! do i_loc=1,stz
+                ! print*, cm(j_loc, i_loc)
+              ! end do
             ! end do
+            do i_loc=1,2*((stz-2)**2)  ! export rotated cm
+              print*, ml_last_layer_output(i_loc)
+            end do
           end if
 
-          STOP
+          ! STOP
 
           ! Hidden Layers
           do n=2,ml_n_layers
@@ -1109,13 +1630,16 @@ do m=1,nblo
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
           dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
+          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
           if (export == 1) then
-            !print*, 'last output', dscurv2(inp)
+            ! print*, 'last output', dscurv2(inp)
+            print*, 'last output', ml_last_layer_output(1)
             !print*, 'last output', rotation
           endif
+          ! STOP
           ! print*, 'size last layer', size(ml_last_layer_output)
 
           ! if (((ml_last_layer_output(1) > -4.1167E-002) .AND. (ml_last_layer_output(1) < -4.1164E-002)) &
@@ -1289,20 +1813,22 @@ if (curvweightening .eqv. .true.) then
         do j=2,njm
           inp=ha(i,j,k)
           ! if (dscurv2(inp)/=0d0) then
-          if ((cm(inp) > 0.005d0) .AND. (cm(inp) < 0.995d0)) then
+          if ((cm(inp) > 0.0075d0) .AND. (cm(inp) < 0.9925d0)) then
             if (thirddim==0) then
+              ! tempcurv(inp)=(dscurv2(inp)*weights(inp)*4 + &
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
-                dscurv2(ha(i+1,j+1,k))*weights(ha(i+1,j+1,k))+ &  ! von mir
-                dscurv2(ha(i+1,j-1,k))*weights(ha(i+1,j-1,k))+ &  ! von mir
-                dscurv2(ha(i-1,j+1,k))*weights(ha(i-1,j+1,k))+ &  ! von mir
-                dscurv2(ha(i-1,j-1,k))*weights(ha(i-1,j-1,k))+ &  ! von mir
+                ! dscurv2(ha(i+1,j+1,k))*weights(ha(i+1,j+1,k))+ &  ! von mir
+                ! dscurv2(ha(i+1,j-1,k))*weights(ha(i+1,j-1,k))+ &  ! von mir
+                ! dscurv2(ha(i-1,j+1,k))*weights(ha(i-1,j+1,k))+ &  ! von mir
+                ! dscurv2(ha(i-1,j-1,k))*weights(ha(i-1,j-1,k))+ &  ! von mir
                 dscurv2(ha(i+1,j,k))*weights(ha(i+1,j,k))+ &
                 dscurv2(ha(i-1,j,k))*weights(ha(i-1,j,k))+ &
                 dscurv2(ha(i,j+1,k))*weights(ha(i,j+1,k))+ &
                 dscurv2(ha(i,j-1,k))*weights(ha(i,j-1,k)))/ &
-                (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i+1,j+1,k))+weights(ha(i+1,j-1,k))+&
-                weights(ha(i-1,j+1,k))+weights(ha(i-1,j-1,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))
-                !(weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
+                ! (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i+1,j+1,k))+weights(ha(i+1,j-1,k))+&
+                ! weights(ha(i-1,j+1,k))+weights(ha(i-1,j-1,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))
+                (weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
+                ! (4*weights(inp)+weights(ha(i+1,j,k))+weights(ha(i-1,j,k))+weights(ha(i,j+1,k))+weights(ha(i,j-1,k)))  ! vor meiner Aenderung
             else
               tempcurv(inp)=(dscurv2(inp)*weights(inp) + &
                 dscurv2(ha(i+1,j,k))*weights(ha(i+1,j,k))+ &
