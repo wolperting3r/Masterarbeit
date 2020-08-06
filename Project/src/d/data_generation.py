@@ -65,7 +65,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     # Script
     N_values = int(N_values)
     visualize = True if (N_values == 1) else False
-    visualize = False
+    # visualize = False
     debug = False
 
     # Initialize progress bar
@@ -496,7 +496,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+('_shift1' if dshift else '')+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'.feather')
         print(f'File:\n{file_name}')
         # Export file
-        # print('NO EXPORT')
-        output_df.reset_index(drop=True).to_feather(file_name)
+        print('NO EXPORT')
+        # output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

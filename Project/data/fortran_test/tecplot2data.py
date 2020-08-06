@@ -193,36 +193,38 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
     output_df.reset_index(drop=True).to_feather(file_name)
     print(f'Generated {output_df.shape[0]} tuples with:\nStencil size:\t{st_sz}')
 
-gridsize = 256
-files = [
-    f'2007181652 staticBubble {gridsize} ml mit w+g',
-    f'2007181652 staticBubble {gridsize} ml ohne w+g',
-    f'2007181652 staticBubble {gridsize} cds mit w+g', 
-    f'2007181652 staticBubble {gridsize} cds ohne w+g', 
-    f'2007181652 staticBubble {gridsize} cvofls',
-]
+if __name__ == '__main__':
+    gridsize = 128
+    files = [
+        # f'2007181652 staticBubble {gridsize} ml mit w+g',
+        # f'2007181652 staticBubble {gridsize} ml ohne w+g',
+        # f'2007181652 staticBubble {gridsize} cds mit w+g', 
+        # f'2007181652 staticBubble {gridsize} cds ohne w+g', 
+        # f'2007181652 staticBubble {gridsize} cvofls',
+        f'FASTEST_1',
+    ]
 
-# st_sz = [[5, 5], [7, 7], [9, 9]]
-st_sz = [[7, 7]]
-# st_sz = [[5, 5]]
+    # st_sz = [[5, 5], [7, 7], [9, 9]]
+    st_sz = [[7, 7]]
+    # st_sz = [[5, 5]]
 
-filtering = [0]
-filter = ['g']
+    filtering = [0]
+    filter = ['g']
 
-oszb = [False]
+    oszb = [False]
 
-kwargs = {'f': files, 'oszb': oszb, 'st_sz': st_sz, 'filtering': filtering, 'filter': filter}
+    kwargs = {'f': files, 'oszb': oszb, 'st_sz': st_sz, 'filtering': filtering, 'filter': filter}
 
-job_list = list(itertools.product(*kwargs.values()))
-'''
-# Single Process (for plotting)
-for job in job_list:
-    tecplot2data(**dict(zip(kwargs.keys(), job)))
-# '''
-# '''
-# Multiprocessing
-jobs = []
-[jobs.append(Process(target=tecplot2data, args=job)) for job in job_list]
-[j.start() for j in jobs]
-[j.join() for j in jobs]
-# '''
+    job_list = list(itertools.product(*kwargs.values()))
+    '''
+    # Single Process (for plotting)
+    for job in job_list:
+        tecplot2data(**dict(zip(kwargs.keys(), job)))
+    # '''
+    # '''
+    # Multiprocessing
+    jobs = []
+    [jobs.append(Process(target=tecplot2data, args=job)) for job in job_list]
+    [j.start() for j in jobs]
+    [j.join() for j in jobs]
+    # '''

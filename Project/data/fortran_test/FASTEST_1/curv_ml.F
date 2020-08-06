@@ -82,6 +82,7 @@ call calgradc(ngr,0,1,c,dscdx,dscdy,dscdz, &
         ier)  
 
 
+
 stz = sqrt(real(ml_n_features))
 stzh = (stz-1)/2
 
@@ -118,6 +119,7 @@ do m=1,nblo
           do j_loc=-stzh,stzh
             do i_loc=-stzh,stzh
               ! Set blocks where c < 0.005 to 0
+
               if (cm(ha(i+i_loc, j+j_loc, 1)) < 0.005) then
                 ml_last_layer_output(counter) = 0
               else if (cm(ha(i+i_loc, j+j_loc, 1)) > 0.995) then
@@ -2174,9 +2176,8 @@ do m=1,nblo
             deallocate(ml_layer_input)
           end do
           ! Last output of ML network is the curvature 
-          ! dscurv2(inp)=-1*ml_last_layer_output(1)*0.5*gridsize/8
-          dscurv2(inp)=1*ml_last_layer_output(1)*0.5d0*gridsize/0.075d0
-          ! dscurv2(inp)=1*ml_last_layer_output(1)*gridsize/0.075d0
+          ! dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/8d0 ! Static Bubble
+          dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/0.075d0 ! Osc. Bubble
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
@@ -2406,6 +2407,77 @@ if (curvweightening .eqv. .true.) then
       end do
     end do
   end do
+end if
+
+! Relaxation when changes are big
+if (1 == 1) then
+  if (it .ne. ml_last_it) then
+    do m=1,nblo
+      call setind(ngr,m, &
+#             include "listsetind.h"
+                 ier)
+      do k=2,nkm
+        do j=2,njm
+          do i=2,nim
+            ! Overwrite last curvature field
+            ml_last_curv(i-1, j-1) = ml_tmp_curv(i-1, j-1)
+          end do
+        end do
+      end do
+    end do
+  end if
+  do m=1,nblo
+    call setind(ngr,m, &
+#             include "listsetind.h"
+               ier)
+    do k=2,nkm
+      do j=2,njm
+        do i=2,nim
+          inp=ha(i,j,k)
+          ! Compare with last curvature field
+          if ((ml_last_curv(i-1, j-1) .ne. 0) .and. (dscurv2(inp) .ne. 0)) then  ! only continue if last curvature was not 0
+            ! If new value is more than 50% different from old value
+            if (abs(ml_last_curv(i-1, j-1) - dscurv2(inp)) > abs(ml_last_curv(i-1, j-1)/2d0)) then
+              ! Relax value
+              dscurv2(inp) = 0.1*dscurv2(inp) + 0.9*ml_last_curv(i-1, j-1)
+            end if
+          else if (dscurv2(inp) .ne. 0) then
+            ml_sum = 0d0
+            ml_loc = 0d0
+            ! Get mean of neighbours ne 0
+            if (ml_last_curv(i, j-1) .ne. 0d0) then
+              ml_loc = ml_loc + 1d0
+              ml_sum = ml_sum + ml_last_curv(i, j-1)
+            end if
+            if (ml_last_curv(i-1, j) .ne. 0d0) then
+              ml_loc = ml_loc + 1d0
+              ml_sum = ml_sum + ml_last_curv(i-1, j)
+            end if
+            if (ml_last_curv(i-1, j-2) .ne. 0d0) then
+              ml_loc = ml_loc + 1d0
+              ml_sum = ml_sum + ml_last_curv(i-1, j-2)
+            end if
+            if (ml_last_curv(i-2, j-1) .ne. 0d0) then
+              ml_loc = ml_loc + 1d0
+              ml_sum = ml_sum + ml_last_curv(i-2, j-1)
+            end if
+            if (ml_loc .ne. 0d0) then
+              ml_sum = ml_sum/ml_loc
+            else 
+              ml_sum = 0d0
+            end if
+            if ((abs(ml_sum - dscurv2(inp)) > abs(ml_sum/2d0)) .and. (ml_sum .ne. 0d0)) then
+              ! Relax value
+              dscurv2(inp) = 0.1*dscurv2(inp) + 0.9*ml_sum
+            end if
+          end if
+          ! Store last curvature field
+          ml_tmp_curv(i-1, j-1) = dscurv2(inp)
+        end do
+      end do
+    end do
+  end do
+  ml_last_it = it
 end if
 
 

@@ -20,7 +20,12 @@ np.set_printoptions(suppress=True, linewidth=np.inf, threshold=np.inf)
 
 def tecplot2data(f, oszb, st_sz, filtering, filter):
     print(f'Generating data from {f} with stencil {st_sz[0]}x{st_sz[1]}')
-    with open(os.path.join(f, 'res', 'oscillation.dat'), 'r') as myfile:
+    if os.path.isfile(os.path.join(f, 'res', 'oscillation.dat')):
+        file_name = os.path.join(f, 'res', 'oscillation.dat')
+    elif os.path.isfile(os.path.join(f, 'res', 'staticbubble.dat')):
+        file_name = os.path.join(f, 'res', 'staticbubble.dat')
+
+    with open(file_name, 'r') as myfile:
         data = myfile.read()
         # Append 'zone t' to file for capturing blocks later
         data = data + '\nZONE T'
@@ -107,11 +112,16 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             limits = [[xlower, xlower+sqrsize], [ylower, ylower+sqrsize]] # x, y
             y, x = np.meshgrid(np.linspace(limits[1][0], limits[1][1], limits[1][1]-limits[1][0]), np.linspace(limits[0][0], limits[0][1], limits[0][1]-limits[0][0]))
             print(f'x.shape:\t{x.shape}')
-            # Krümmung
-            # pcm = ax.pcolormesh(x, y, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='viridis', norm=plt.Normalize(-30, 100))
-            pcm = ax.pcolormesh(x, y, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='RdBu', norm=colors.TwoSlopeNorm(vmin=-30, vcenter=0, vmax=100))
-            # Konzentration
-            # pcm = ax.pcolormesh(x, y, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.1, vmax=1))
+            # Krümmung oszillierende Blase (-30 - 100)
+            # pcm = ax.pcolormesh(y, x, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='RdBu', norm=colors.TwoSlopeNorm(vmin=-30, vcenter=0, vmax=100))
+            # Krümmung statische Blase (-0.3 - 1)
+            pcm = ax.pcolormesh(y, x, values[1, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='RdBu', norm=colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=1))
+
+            # Konzentration verzerrte Skala
+            # pcm = ax.pcolormesh(y, x, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.1, vmax=1))
+            # Konzentration lineare Skala
+            # pcm = ax.pcolormesh(y, x, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.5, vmax=1))
+
             # tkz.save('result2d.tex', axis_height='7cm', axis_width='7cm') 
             # '''
             plt.savefig('result2d.eps')
@@ -130,9 +140,15 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
 
 gridsize = 128
 files = [
-    '2007201919 ml falsche Werte',
+    # '2007201919 ml falsche Werte',
+    # '2008031037 Edge neu Relaxation Gauss Ellipse s1',
+    # '2008031037 Edge neu Relaxation Gauss Ellipse s1',
     # '2005181419 c<01 c>99 abgeschnitten artefakte',
     # '2006041146 dshift1 0.05 0.95 gewichtung mit 141 stencil streifenmuster',
+    # '2008041519 staticBubble 128 ml sharp',
+    # '2008031931 Edge neu Relaxation FNB Ellipse s15 15s',
+    # f'2007181652 staticBubble {gridsize} cvofls',
+    f'2007181652 staticBubble {gridsize} cds mit w+g',
 ]
 
 # st_sz = [[5, 5], [7, 7], [9, 9]]

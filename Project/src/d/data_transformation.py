@@ -23,7 +23,7 @@ def get_data(parameters):
             '_cir' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             ('_shift1' if parameters['dshift'] else '') + \
-            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
             ('_g' if parameters['gauss'] else '') + \
             '.feather'
         filename_sin = 'data_' + \
@@ -33,7 +33,7 @@ def get_data(parameters):
             '_sin' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             ('_shift1' if parameters['dshift'] else '') + \
-            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
             ('_g' if parameters['gauss'] else '') + \
             '.feather'
         filename_ell = 'data_' + \
@@ -43,7 +43,7 @@ def get_data(parameters):
             '_ell' + \
             ('_smr' if parameters['smear'] else '_nsm') + \
             ('_shift1' if parameters['dshift'] else '') + \
-            ('_int2' if parameters['plot'] else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
+            (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
             ('_g' if parameters['gauss'] else '') + \
             '.feather'
 
@@ -101,7 +101,7 @@ def get_data(parameters):
         data_sin = pd.read_feather(path_sin)
         data_ell = pd.read_feather(path_ell)
 
-        # data_sin = data_sin[:int(data_sin.shape[0]/2)]
+        data_sin = data_sin[:int(data_sin.shape[0]/2)]
         # data_cir = data_sin[:int(data_cir.shape[0]/2)]
 
         if parameters['dshift'] == '1b':
@@ -153,7 +153,7 @@ def get_data(parameters):
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 ('_shift1' if parameters['dshift'] else '') + \
                 (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                ('_g' if parameters['gauss'] else '') + \
+                ('_g' if parameters['gauss'] else '_intmin05') + \
                 '.feather'
                 # ('_int2' if (parameters['plot'] and parameters['smear']) else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 # '_intmin05' + \

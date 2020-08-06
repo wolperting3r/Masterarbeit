@@ -60,7 +60,7 @@ call setzero(cold,nxyzac,1,nxyzac)
 
 loop_counter = 1
 open(unit=142,file=&
-  'model_mlp_1000_200-150-120_7x7_rot_ellipse_flp_cut_dshift1_shift1_bia_int1_edg_ncl_g_s1_neuEdge',&
+  'model_mlp_1000_200-150-120_7x7_rot_ellipse_flp_cut_dshift1_shift1_bia_int1_edg_ncl_s15_neuEdge',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_nrt_all_smr_nhc_dshift_kappa',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_shift_kappa_8',&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_rot_all_smr_nhc_shift_kappa_30',&
@@ -68,6 +68,24 @@ open(unit=142,file=&
 !open(unit=142,file='model_mlp_1000_200-150-120_7x7_eqk_0.0001_128_relu_neg_nag_nrt_all_smr_nhc_shift_kappa',&
   action='read',status='old',iostat=stat)
 if (stat == 0) then
+        allocate(ml_tmp_curv(128, 128))
+        allocate(ml_last_curv(128, 128))
+        ! initialize ml_tmp_curv
+        do m=1,nblo
+        call setind(ngr,m, &
+#                   include "listsetind.h"
+                    ier)
+          do k=2,nkm
+            do i=2,nim
+              do j=2,njm
+                ml_tmp_curv(i-1, j-1) = 0
+                ml_last_curv(i-1, j-1) = 0
+              end do 
+            end do 
+          end do 
+        end do 
+
+        
         read(142,*) ml_n_features       ! number of input features
         read(142,*) ml_n_layers         ! number of layers (including input, including output)
         ! Input layer is a layer too

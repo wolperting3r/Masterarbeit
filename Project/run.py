@@ -9,7 +9,7 @@ epochs = [1000]
 batch_size = [128]
 stencil = [[7, 7]]
 activation = ['relu']
-learning_rate = [1e-4]
+learning_rate = [2e-4]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
@@ -20,13 +20,16 @@ flip = [True]
 cut = [True]
 shift = [1]
 bias = [True]
-edge = [1]
+edge = [0]
 custom_loss = [False]
-seed = [1]
 # seed = [1, 2]
+# seed = [1, 2]
+# seed = [3, 4, 5, 6]
+# seed = [7, 8, 9, 10]
+# seed = [11, 12, 13, 14]
 # seed = [3, 4]
 # seed = [1, 2, 3, 4]
-# seed = [5, 6, 7, 8]
+seed = [5, 6, 7, 8]
 # seed = [9, 10, 11, 12]
 # seed = [13, 14, 15, 16]
 # seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -36,7 +39,7 @@ seed = [1]
 # addstring = ['_1', '_2']
 # addstring = ['_4']
 # addstring = ['_cut0109']
-addstring = ['_neuEdge']
+addstring = ['_80Test']
 
 # Data related
 neg = [True]
@@ -50,25 +53,15 @@ data = ['ellipse']
 plotdata = ['ellipse']
 smearing = [True]
 dshift = [1]  # 0, 1, '1b'
-gauss = [1]
+gauss = [0]
+network = ['mlp']
+# layer = [[200, 150, 120]]
+layer = [[80]]
 
 if __name__ == '__main__':
-    # '''
+    '''
     # 1.: Train, 2.: Plot
     for i in range(0, 2):
-        # MLP
-        network = ['mlp']
-        # layer = [[200, 150, 120]]
-        layer = [[200, 200, 200, 200, 200]]
-        # layer = [[500, 300, 150]]
-        # layer = [[200, 500, 1000, 500, 150]]
-        # layer = [[100, 80], [250, 150]]
-        # layer = [[200, 180, 150, 120, 100]]
-        # layer = [[100, 80], [200, 150, 120]]
-        # layer = [[80], [120], [100, 80], [200, 150], [200, 150, 120]]
-        # layer = [[100, 80, 50], [100, 100, 100], [150, 120, 100]]
-        # layer = [[80], [120], [100, 80], [200, 150], [200, 150, 120], [100, 80, 50], [100, 100, 100], [150, 120, 100]]
-
         if i == 0:
             plot = [False]
             exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
@@ -104,19 +97,19 @@ if __name__ == '__main__':
     # '''
 
     ''' Data Generation '''
-    '''
+    # '''
     stencils = [[7, 7]]
     # stencils = [[5, 5]]
     # stencils = [[9, 9]]
     ek = [True]
     neg = [True]
     # N_values = [7e6]
-    N_values = [1e6]
-    # N_values = [1]
+    # N_values = [1e6]
+    N_values = [1]
     silent = [False]
     # geometry = ['sinus', 'ellipse']
-    geometry = ['ellipse', 'circle']
-    smearing = [False]
+    geometry = ['ellipse']
+    smearing = [True]
     usenormal = [True]
     dshift = [False]
     gauss = [False]

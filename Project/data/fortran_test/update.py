@@ -1,10 +1,11 @@
 import os
 import re
 
-folders = ['FASTEST_1', 'FASTEST_2', 'FASTEST_3', 'FASTEST_4']
-# folders = ['FASTEST_1', 'FASTEST_2']
+# folders = ['FASTEST_1', 'FASTEST_2', 'FASTEST_3', 'FASTEST_4']
+# folders = ['FASTEST_1', 'FASTEST_2', 'FASTEST_3']
 # folders = ['FASTEST_3', 'FASTEST_4']
-# folders = ['FASTEST_1']
+# folders = ['FASTEST_1', 'FASTEST_3']
+folders = ['FASTEST_1']
 
 for folder in folders:
     # if folder == 'FASTEST_1':
