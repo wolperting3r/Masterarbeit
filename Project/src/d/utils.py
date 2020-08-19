@@ -6,10 +6,13 @@ def gt(time0):
     return str(f'{np.round(time.time() - time0,3)} s')
 
 
-def u(low=0.0, high=1.0):
+def u(low=0.0, high=1.0, **kwargs):
     # np.random.seed(11)
     #np.random.seed(1)
     # np.random.seed(4)
+    if 'seed' in kwargs.keys():
+        if kwargs['seed'] != 0:
+            np.random.seed(kwargs['seed'])
     return np.random.uniform(low=low, high=high)
 
 
@@ -68,6 +71,8 @@ def plot_ellipse(ax1, r, e, x, x_c, rot, curvature):
     # ax1.set_xlim([-0.5, 0.5])
     # ax1.set_ylim([-0.5, 0.5])
     ax1.set_aspect('equal')
+    return [x_plt, y_plt, x]
+
 
 
 def plot_sinus(ax1, f, a, x, x_c, rot, curvature):
@@ -144,4 +149,5 @@ def plot_vof(ax2, vof_df, vof_array, st_sz, Delta_vof):
                  backgroundcolor='w')
     # Show geometry
     ax2.imshow(image, cmap='Greys_r')
+    return image
 

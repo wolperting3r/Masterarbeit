@@ -5,20 +5,21 @@ from src.execution import exe_dg
 
 ''' Train '''
 # Network related
-epochs = [1000]
+epochs = [40]
 batch_size = [128]
-stencil = [[7, 7]]
+# stencil = [[9, 9]]
+stencil = [[3, 3], [5, 5], [7, 7], [9, 9]]
 activation = ['relu']
-learning_rate = [2e-4]
+learning_rate = [1e-4]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
 
 angle = [False]
 rot = [True]
-flip = [True]
-cut = [True]
-shift = [1]
+flip = [False]
+cut = [False]
+shift = [0]
 bias = [True]
 edge = [0]
 custom_loss = [False]
@@ -28,8 +29,9 @@ custom_loss = [False]
 # seed = [7, 8, 9, 10]
 # seed = [11, 12, 13, 14]
 # seed = [3, 4]
+seed = [1]
 # seed = [1, 2, 3, 4]
-seed = [5, 6, 7, 8]
+# seed = [5, 6, 7, 8]
 # seed = [9, 10, 11, 12]
 # seed = [13, 14, 15, 16]
 # seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -39,27 +41,27 @@ seed = [5, 6, 7, 8]
 # addstring = ['_1', '_2']
 # addstring = ['_4']
 # addstring = ['_cut0109']
-addstring = ['_80Test']
+addstring = ['']
 
 # Data related
 neg = [True]
 # model_mlp_1000_200-150-120_7x7_rot_flp_cut_dshift1_shift1_bia_int2
 # load_data = ['data_CVOFLS_7x7_g2_eqk2']
-# load_data = ['data_CVOFLS_7x7']
+# load_data = ['data_CVOFLS_7x7_f_eqk']
 load_data = ['']
 # interpolate = [0, 1, 1.5, 2]
-interpolate = [1]
+interpolate = [0]
 data = ['ellipse']
 plotdata = ['ellipse']
-smearing = [True]
-dshift = [1]  # 0, 1, '1b'
+smearing = [False]
+dshift = [0]  # 0, 1, '1b'
 gauss = [0]
 network = ['mlp']
 # layer = [[200, 150, 120]]
 layer = [[80]]
 
 if __name__ == '__main__':
-    '''
+   #  '''
     # 1.: Train, 2.: Plot
     for i in range(0, 2):
         if i == 0:
@@ -97,19 +99,19 @@ if __name__ == '__main__':
     # '''
 
     ''' Data Generation '''
-    # '''
-    stencils = [[7, 7]]
+    '''
+    stencils = [[3, 3], [5, 5], [7, 7], [9, 9]]
     # stencils = [[5, 5]]
     # stencils = [[9, 9]]
     ek = [True]
     neg = [True]
     # N_values = [7e6]
-    # N_values = [1e6]
-    N_values = [1]
+    N_values = [1e6]
+    # N_values = [1]
     silent = [False]
     # geometry = ['sinus', 'ellipse']
     geometry = ['ellipse']
-    smearing = [True]
+    smearing = [False]
     usenormal = [True]
     dshift = [False]
     gauss = [False]

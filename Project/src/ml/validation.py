@@ -57,6 +57,7 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
         lims = [-0.5, 0.5]
     else:
         lims = [-1, 1]
+    lims = [-0.6, 0.6]
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.set_xlabel('True Values')

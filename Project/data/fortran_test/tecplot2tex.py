@@ -24,6 +24,8 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
         file_name = os.path.join(f, 'res', 'oscillation.dat')
     elif os.path.isfile(os.path.join(f, 'res', 'staticbubble.dat')):
         file_name = os.path.join(f, 'res', 'staticbubble.dat')
+    else:
+        print('file not found')
 
     with open(file_name, 'r') as myfile:
         data = myfile.read()
@@ -46,7 +48,7 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
 
         # Get x/y from first block 
         # coordinates = {}
-        block = blocks[0]
+        block = blocks[1]
         numbers = np.array(re.findall(r'(\-?\d\.\d+E[\+\-]\d{2})', block))
         # print(f'len(numbers):\t{len(numbers)}')
         coordinates = np.empty((2, gs[0], gs[1], gs[2]))
@@ -88,6 +90,7 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             # Make figure without border
             fig = plt.figure(frameon=False)
             fig.set_size_inches(10,10)
+            # fig.set_size_inches(10,5)
             ax = plt.Axes(fig, [0., 0., 1., 1.])
             ax.set_axis_off()
             fig.add_axes(ax)
@@ -104,12 +107,18 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             ylower = 42
             # '''
             # ''' # Falsche Werte
-            # values = np.rot90(values, k=1, axes=(1, 2)) 
+            values = np.rot90(values, k=1, axes=(1, 2)) 
             sqrsize = 128
             xlower = 0
             ylower = 0
-            # '''
             limits = [[xlower, xlower+sqrsize], [ylower, ylower+sqrsize]] # x, y
+            ''' Falsche Werte'' # Horn
+            values = np.rot90(values, k=1, axes=(1, 2)) 
+            sqrsize = 20
+            xlower = 22
+            ylower = 47
+            limits = [[xlower, xlower+sqrsize], [ylower, ylower+int(sqrsize/2)]] # x, y
+            # '''
             y, x = np.meshgrid(np.linspace(limits[1][0], limits[1][1], limits[1][1]-limits[1][0]), np.linspace(limits[0][0], limits[0][1], limits[0][1]-limits[0][0]))
             print(f'x.shape:\t{x.shape}')
             # Krümmung oszillierende Blase (-30 - 100)
@@ -121,6 +130,8 @@ def tecplot2data(f, oszb, st_sz, filtering, filter):
             # pcm = ax.pcolormesh(y, x, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.1, vmax=1))
             # Konzentration lineare Skala
             # pcm = ax.pcolormesh(y, x, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0, vcenter=0.5, vmax=1))
+            # Konzentration stark verzerrt um 0.5
+            # pcm = ax.pcolormesh(x, y, values[0, limits[0][0]:limits[0][1], limits[1][0]:limits[1][1]], cmap='Greys_r', norm=colors.TwoSlopeNorm(vmin=0.485, vcenter=0.5, vmax=0.505))
 
             # tkz.save('result2d.tex', axis_height='7cm', axis_width='7cm') 
             # '''
@@ -148,7 +159,11 @@ files = [
     # '2008041519 staticBubble 128 ml sharp',
     # '2008031931 Edge neu Relaxation FNB Ellipse s15 15s',
     # f'2007181652 staticBubble {gridsize} cvofls',
-    f'2007181652 staticBubble {gridsize} cds mit w+g',
+    # f'2007181652 staticBubble {gridsize} cds mit w+g',
+    # f'2007181652 staticBubble {gridsize} cds mit w+g',
+    # '2008111045 Edge neu Relaxation FNB Ellipse 64 s2',
+    # f'2008151036 staticBubble {gridsize} HF',
+    f'2008161150 staticBubble {gridsize} ml sharp 9x9',
 ]
 
 # st_sz = [[5, 5], [7, 7], [9, 9]]

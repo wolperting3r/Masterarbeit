@@ -12,44 +12,24 @@ fig, ax = plt.subplots(1, 1, figsize=(10,5))
 # '''
 # Fastest Auswertung
 paths = [
-    # '2008031931 Edge neu Relaxation FNB Ellipse s1',
-    '2008031931 Edge neu Relaxation FNB Ellipse s2',
-    '2008031931 Edge neu Relaxation FNB Ellipse s3',
-    '2008031931 Edge neu Relaxation FNB Ellipse s4',
-    '2008031931 Edge neu Relaxation FNB Ellipse s5',
-    '2008031931 Edge neu Relaxation FNB Ellipse s6',
-    '2008031931 Edge neu Relaxation FNB Ellipse s7',
-    '2008031931 Edge neu Relaxation FNB Ellipse s8',
-    '2008031931 Edge neu Relaxation FNB Ellipse s9',
-    '2008031931 Edge neu Relaxation FNB Ellipse s10',
-    '2008031931 Edge neu Relaxation FNB Ellipse s11',
-    '2008031931 Edge neu Relaxation FNB Ellipse s12',
-    '2008031931 Edge neu Relaxation FNB Ellipse s13',
-    '2008031931 Edge neu Relaxation FNB Ellipse s14',
-    'FASTEST_1',
-    # 'FASTEST_2',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s1',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s2',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s3',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s4',
+    # 'FASTEST_1',
+    'FASTEST_2',
     # 'FASTEST_3',
     # 'FASTEST_4',
     '2006031403 CVOFLS',
     '2006022000 cds Vergleich',
 ]
 labels = [
-    # '2008031931 Edge neu Relaxation FNB Ellipse s1',
-    '2008031931 Edge neu Relaxation FNB Ellipse s2',
-    '2008031931 Edge neu Relaxation FNB Ellipse s3',
-    '2008031931 Edge neu Relaxation FNB Ellipse s4',
-    '2008031931 Edge neu Relaxation FNB Ellipse s5',
-    '2008031931 Edge neu Relaxation FNB Ellipse s6',
-    '2008031931 Edge neu Relaxation FNB Ellipse s7',
-    '2008031931 Edge neu Relaxation FNB Ellipse s8',
-    '2008031931 Edge neu Relaxation FNB Ellipse s9',
-    '2008031931 Edge neu Relaxation FNB Ellipse s10',
-    '2008031931 Edge neu Relaxation FNB Ellipse s11',
-    '2008031931 Edge neu Relaxation FNB Ellipse s12',
-    '2008031931 Edge neu Relaxation FNB Ellipse s13',
-    '2008031931 Edge neu Relaxation FNB Ellipse s14',
-    'F1',
-    # 'F2',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s1',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s2',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s3',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s4',
+    # 'F1',
+    'F2',
     # 'F3',
     # 'F4',
     'CVOFLS',
@@ -175,7 +155,7 @@ reds = ['red', 'peru', 'darkviolet', 'green',
 reds = ['tomato', 'red', 'maroon', 'brown']
 j=0
 k=0
-endtime = 3  # in s
+endtime = 2 # in s
 timestep = 0.000625
 
 refdata = pd.read_csv('Strubelj_128.txt', skiprows=1, names=['t', 'CVOFLS Paper'])

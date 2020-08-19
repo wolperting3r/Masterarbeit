@@ -92,7 +92,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
                 st_sz = np.add(st_sz, [2, 2])
 
     # Geometry
-    st_sz_kappa = min(max(st_sz), 7)  # 9 for +/- 0.44
+    # st_sz_kappa = min(max(st_sz), 7)  # 9 for +/- 0.44
+    st_sz_kappa = 7
     R_min = st_sz_kappa/2*Delta
     R_max = 0.5
 
@@ -296,6 +297,7 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             else:
                 shift_vector = np.array([-grad_y, -grad_x])
             shift_point = np.round(2*(u()-0.5), 0)  # 4 = +/-2, 2 = +/-1
+            # shift_point = shift_point*(1-(curvature-kappa_min)/(kappa_max-kappa_min))  # 1 for kappa = kappa_min, 0 for kappa = kappa_max (shift anti proportional to kappa)
             round_point = round_point + shift_point*shift_vector*Delta*L
             # '''
 
@@ -392,8 +394,9 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             vof_array_dict = {0: vof_array.copy()}
 
             # Get random factor between 0 and interpolate. The resulting vof_array will be a linear combination of vof_array smoothed floor(a) and ceil(a) times, where the factor defining the point inbetween both that should be interpolated is a-floor(a). If interpolate = 0 smoothing should be applied once.
-            a = (interpolate*u() if interpolate else 1)  # between 0 and interpolate
+            # a = (interpolate*u() if interpolate else 1)  # between 0 and interpolate
             # a = ((0.5 + u()*(interpolate - 0.5)) if interpolate else 1)  # between 0.5 and interpolate
+            a = ((0.25 + u()*(interpolate - 0.25)) if interpolate else 1)  # between 0.25 and interpolate
 
             for i in range(int(np.ceil(a))):
                 # Attach array filled with nan to dictionary
@@ -439,10 +442,6 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         # Only proceed if data is valid (invalid = middle point of stencil does not contain interface)
         # Invalid values are created when the interface is flat and exactly between two cells
         if (vof_array[st_mid_tmp[0], st_mid_tmp[1]] > 0) & (vof_array[st_mid_tmp[0], st_mid_tmp[1]] < 1):
-            '''
-                e = 100
-            if True:
-            # '''
             if neg:
                 # Invert values by 50% chance
                 if u() > 0.5:
@@ -493,10 +492,10 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         elif geometry == 'circle':
             geom_str = '_cir'
         # Create file name
-        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+('_shift1' if dshift else '')+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'.feather')
+        file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+('_shift1' if dshift else '')+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_eqkmax.feather')
         print(f'File:\n{file_name}')
         # Export file
-        print('NO EXPORT')
-        # output_df.reset_index(drop=True).to_feather(file_name)
+        # print('NO EXPORT')
+        output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

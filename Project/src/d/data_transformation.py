@@ -153,13 +153,21 @@ def get_data(parameters):
                 ('_smr' if parameters['smear'] else '_nsm') + \
                 ('_shift1' if parameters['dshift'] else '') + \
                 (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '') + \
-                ('_g' if parameters['gauss'] else '_intmin05') + \
-                '.feather'
+                ('_g' if parameters['gauss'] else '')
                 # ('_int2' if (parameters['plot'] and parameters['smear']) else (('_int' + str(parameters['interpolate'])) if parameters['interpolate'] else '')) + \
                 # '_intmin05' + \
+            parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+            # if os.path.isfile(os.path.join(parent_path, 'data', 'datasets', filename+'_propshift.feather')):
+                # filename = filename+'_propshift.feather'
+            if os.path.isfile(os.path.join(parent_path, 'data', 'datasets', filename+'_eqkmax.feather')):
+                filename = filename+'_eqkmax.feather'
+            elif not os.path.isfile(os.path.join(parent_path, 'data', 'datasets', filename+'.feather')):
+                if os.path.isfile(os.path.join(parent_path, 'data', 'datasets', filename+'_intmin05.feather')):
+                    filename = filename+'_intmin05.feather'
+            else:
+                filename = filename+'.feather'
 
             print(f'Dataset:\t{filename}')
-            parent_path = os.path.dirname(os.path.abspath(sys.argv[0]))
             path = os.path.join(parent_path, 'data', 'datasets', filename)
             data = pd.read_feather(path)
 
@@ -368,11 +376,8 @@ def process_data(dataset, parameters, reshape):
             features = np.concatenate((features, kappa), axis=1)
     # '''
     if parameters['cut']:
-        # print('!!! cut 0.1 0.8 !!!')
-        features[np.nonzero(features < 0.005)] = 0  # war 0.01
-        features[np.nonzero(features > 0.995)] = 1  # war 0.99
-        # features[np.nonzero(features < 0.1)] = 0  # war 0.01
-        # features[np.nonzero(features > 0.9)] = 1  # war 0.99
+        features[np.nonzero(features < 0.005)] = 0
+        features[np.nonzero(features > 0.995)] = 1
 
     return [labels, features, angle]
 

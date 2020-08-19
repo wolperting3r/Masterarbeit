@@ -54,10 +54,13 @@ integer, dimension(1, 1) :: ml_case
 integer:: stz
 integer:: stzh
 integer:: checksum
-integer:: gridsize = 128
+integer:: gridsize = 40
 integer :: counter, w_idx_beg, b_idx_beg, i_loc, j_loc, n, o, p, counter1, i_shift, j_shift
 integer :: j_locc, i_locc ! Am Ende l√schen
 integer :: export = 0
+
+real*4 :: t1, t2, t3, t4, delta, delta_ml, delta_pre, delta_tmp !F√r timing
+integer :: timing = 0
 
 integer :: icphi
 ! integer,intent(in)  :: ngr
@@ -81,11 +84,14 @@ call calgradc(ngr,0,1,c,dscdx,dscdy,dscdz, &
 #               include "listcalgradcc.h"
         ier)  
 
-
-
 stz = sqrt(real(ml_n_features))
 stzh = (stz-1)/2
-
+if (timing == 1) then
+  t1 = secnds(0.0)
+  delta_ml = 0.0
+  delta_pre = 0.0
+  delta_tmp = 0.0
+end if
 do m=1,nblo
   call setind(ngr,m, &
 #             include "listsetind.h"
@@ -93,6 +99,9 @@ do m=1,nblo
   do k=2,nkm
     do j=2,njm
       do i=2,nim
+        if (timing == 1) then
+          t2 = secnds(0.0)
+        end if
         inp=ha(i,j,k)
 
         xm = sqrt((x(ha(i, j, k)) - x(ha(i-1, j, k)))**2)
@@ -2109,9 +2118,10 @@ do m=1,nblo
               print*, ml_last_layer_output(i_loc)
             end do
           end if
-
-          ! STOP
-
+          if (timing == 1) then
+            delta_pre = delta_pre + secnds(t2)
+            t3 = secnds(0.0)
+          end if
           ! Hidden Layers
           do n=2,ml_n_layers
             ! # ml_layer_input will be the input of the current layer, ml_last_layer_ouput will be used to save the results for the next layer
@@ -2143,6 +2153,9 @@ do m=1,nblo
               end do
             end if
 
+            if (timing == 1) then
+              t4 = secnds(0.0)
+            end if
             ! Calculate current layer input*weights + bias
             do o=1,ml_layer_nodes(n)
               ml_sum = 0d0
@@ -2161,6 +2174,9 @@ do m=1,nblo
                 ml_last_layer_output(o) = ml_sum
               end if
             end do
+            if (timing == 1) then
+              delta_tmp = delta_tmp + secnds(t4)
+            end if
 
             ! Apply activation function (only for relu, do nothing if activation is linear)
             if (ml_layer_activation(n) == 'relu') then
@@ -2177,7 +2193,9 @@ do m=1,nblo
           end do
           ! Last output of ML network is the curvature 
           ! dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/8d0 ! Static Bubble
-          dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/0.075d0 ! Osc. Bubble
+          ! dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/0.075d0 ! Osc. Bubble
+          dscurv2(inp)=ml_last_layer_output(1)*0.5d0*gridsize/1d0 ! Osc. Bubble
+          ! dscurv2(inp)=ml_last_layer_output(1)*gridsize/0.075d0 ! Osc. Bubble CVOFLS
 
           ! print*, dscurv2(inp)
           ! dscurv2(inp) = 0.5
@@ -2194,6 +2212,9 @@ do m=1,nblo
           ! ) then
 
           deallocate(ml_last_layer_output)
+          if (timing == 1) then
+            delta_ml = delta_ml + secnds(t3)
+          end if
         else
           ! If concentration in stencil midpoint is 0 or 1, set curvature to 0
           dscurv2(inp)=0d0
@@ -2204,6 +2225,18 @@ do m=1,nblo
 end do
 ! print*, 'STOP'
 ! STOP
+if (timing == 1) then
+  delta = secnds(t1)
+  print*, 'Pre-Processing+Auswertung'
+  print*, delta
+  print*, 'Pre-Processing'
+  print*, delta_pre
+  print*, 'Ausmultiplizieren des Netzes'
+  print*, delta_tmp
+  print*, 'Gesamte Auswertung des Netzes'
+  print*, delta_ml
+  t3 = secnds(0.0)
+end if
 
 curvfiltering=.true.  ! war false
  !1-lsp0,2-binominal,3-5pointcheby,4-lsp2
@@ -2478,6 +2511,15 @@ if (1 == 1) then
     end do
   end do
   ml_last_it = it
+end if
+if (timing == 1) then
+  print*, 'Post-Processing'
+  delta = secnds(t3)
+  print*, delta
+  print*, 'Gesamt'
+  delta = secnds(t1)
+  print*, delta
+  print*, ' '
 end if
 
 

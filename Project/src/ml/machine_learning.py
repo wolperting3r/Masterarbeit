@@ -42,12 +42,6 @@ def learning(parameters, silent=False, plot=True): # Get data (reshape if networ
         print(f'Training data: {train_data.shape}')
     # '''
     '''
-    ind = 0
-    print_data_grad = test_data.transpose((0, 1, 3, 2))[ind]
-    # print_data_grad = test_data[ind]
-    print(f'\nGedreht:\n{print_data_grad}')
-    # '''
-    '''
     # Make output = input to train autoencoder
     if parameters['network'] == 'autoencdec':
         train_labels = train_data

@@ -3,8 +3,8 @@ import re
 # path = 'FASTEST_2'
 # paths = ['FASTEST_1', 'FASTEST_3']
 paths = [
-    '2006200857 cvofls Netz eqk',
-    '2006200857 cvofls Netz',
+    # '2006200857 cvofls Netz eqk',
+    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s1',
 ]
 for path in paths:
     with open('./'+path+'/y_pos.txt', 'r') as myfile:

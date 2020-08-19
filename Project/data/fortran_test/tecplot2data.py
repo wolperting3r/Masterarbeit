@@ -201,7 +201,12 @@ if __name__ == '__main__':
         # f'2007181652 staticBubble {gridsize} cds mit w+g', 
         # f'2007181652 staticBubble {gridsize} cds ohne w+g', 
         # f'2007181652 staticBubble {gridsize} cvofls',
-        f'FASTEST_1',
+        # f'2008130957 staticBubble 128 ml sharp 9x9',
+        '2008151036 staticBubble 64 HF',
+        '2008151036 staticBubble 128 HF',
+        '2008151036 staticBubble 256 HF',
+        '2008161150 staticBubble 64 ml sharp 9x9',
+        '2008161150 staticBubble 256 ml sharp 9x9',
     ]
 
     # st_sz = [[5, 5], [7, 7], [9, 9]]
