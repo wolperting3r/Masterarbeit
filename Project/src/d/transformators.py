@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import sys
+from scipy import ndimage
 from sklearn.base import (
     BaseEstimator,  # for get_params, set_params
     TransformerMixin     # for fit_transform
@@ -140,21 +141,6 @@ class FindGradient(BaseEstimator, TransformerMixin):
             # Get gradient in midpoint only (much faster) if angle matrix is not needed
             [grad_y, grad_x] = self.get_mid_gradient(data)
 
-        '''
-        # Test
-        print(f'grad_x.shape:\n{grad_x.shape}')
-        print(f'grad_y.shape:\n{grad_y.shape}')
-        print(f'data.shape:\n{data.shape}')
-        ind = 1
-        # print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
-        # print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
-        print_data_gradx = grad_x[:,ind]
-        print_data_grady = grad_y[:,ind]
-        print_data_grad = data.transpose((0, 1, 3, 2))[ind]
-        print(f'\nGrad_x:\n{print_data_gradx}')
-        print(f'\nGrad_y:\n{print_data_grady}')
-        print(f'\nData:\n{print_data_grad}')
-        # '''
         # Reshape to tensor if angle matrix is needed, otherwise just output vectors
         if (data.shape != shape) & (self.parameters['angle']):
             # Reshape transformed data to original shape
@@ -188,13 +174,6 @@ class FindAngle(BaseEstimator, TransformerMixin):
             grad_x = np.reshape(grad_x, (shape[0], st_sz[0], st_sz[1], 1))
             grad_y = np.reshape(grad_y, (shape[0], st_sz[0], st_sz[1], 1))
 
-        '''
-        ind = 6
-        print('\nVor der Drehung:')
-        print(f'grad_x[:, ind]:\t{grad_x[:, ind]}')
-        print(f'grad_y[:, ind]:\t{grad_y[:, ind]}')
-        print(f'np.arctan2:\t{np.arctan2(-grad_y, -grad_x+1e-10)[:, ind][0]*180/np.pi}')
-        # '''
         if (self.rotation_angle != 0):
             # Rotate gradient vector by rotation_angle
             grad_x_tmp = grad_x.copy()
@@ -202,14 +181,6 @@ class FindAngle(BaseEstimator, TransformerMixin):
             grad_x = np.cos(self.rotation_angle)*grad_x_tmp - np.sin(self.rotation_angle)*grad_y_tmp
             grad_y = np.sin(self.rotation_angle)*grad_x_tmp + np.cos(self.rotation_angle)*grad_y_tmp
             print('Gradient rotiert!')
-
-        '''
-        print('\nNach der Drehung:')
-        print(f'grad_x[:, ind]:\t{grad_x[:, ind]}')
-        print(f'grad_y[:, ind]:\t{grad_y[:, ind]}')
-        print(f'np.arctan2:\t{np.arctan2(-grad_y, -grad_x+1e-10)[:, ind][0]*180/np.pi}\n')
-        # '''
-
 
         # Calculate angles of negative gradient (is actually a vector if grad arrays are vectors)
         angle_matrix = np.arctan2(-grad_y, -grad_x+1e-10)
@@ -259,12 +230,6 @@ class Rotate(BaseEstimator, TransformerMixin):
         # rotation = (np.floor(mid_angle*4).astype(int))  # Old
         rotation = (np.floor(mid_angle*8).astype(int))
         # Get indices where vof values should be rotated 0/90/180/270
-        # rotation0 = np.argwhere(rotation == 0)
-        '''  # Old
-        rotation90 = np.argwhere(rotation == 1)
-        rotation180 = np.argwhere(rotation == 2)
-        rotation270 = np.argwhere(rotation == 3)
-        # '''
         # Get indices where vof values should be rotated/flipped along y = -x
         rot0 = np.argwhere(rotation == 7)  # nothing
         rot0f = np.argwhere(rotation == 6)  # flip
@@ -274,35 +239,8 @@ class Rotate(BaseEstimator, TransformerMixin):
         rot180f = np.argwhere(rotation == 2)  # rot 180 + flip
         rot270 = np.argwhere(rotation == 1)  # rot 270
         rot270f = np.argwhere(rotation == 0)  # rot 270 + flip
-        
-        '''
-        # Test
-        # 6: rot 2 3 1
-        # 7: rot 3 1 0
-        ind = 4
-        print_data_nrt = data[ind].reshape((st_sz[0], st_sz[1])).copy()
-        # '''
 
         # Rotate data
-        # data[rotation0] = data[rotation0]
-        # Rotate by rotation
-        '''
-        data[rotation90] = np.rot90(data[rotation90], 1, axes=(3, 2))
-        data[rotation180] = np.rot90(data[rotation180], 2, axes=(3, 2))
-        data[rotation270] = np.rot90(data[rotation270], 3, axes=(3, 2))
-        # '''
-        # '''
-        '''  # Old
-        # Rotate by mirroring
-        data[rotation90] = np.rot90(data[rotation90], 1, axes=(3, 2))
-        data[rotation180] = np.flip(data[rotation180], axis=3)  # flip along y-axis
-        data[rotation270] = np.flip(np.rot90(data[rotation270], 1, axes=(3, 2)), axis=3)
-
-        # Flip data along x-axis if sum of first row > sum of last row
-        sum_x = np.sum(data, axis=2)
-        flip_loc = np.argwhere(sum_x[:, 0, :] > sum_x[:, st_sz[1]-1, :])
-        data[flip_loc] = np.flip(data[flip_loc], axis=2)
-        # '''
         data[rot0f] = np.transpose(data[rot0f], (0, 1, 3, 2, 4))
         
         data[rot90] = np.rot90(data[rot90], 1, axes=(2, 3))
@@ -318,12 +256,6 @@ class Rotate(BaseEstimator, TransformerMixin):
         if self.parameters['angle']:
             # Rotate angle_matrix if it should be included in output
             # angle_matrix[rotation0] = angle_matrix[rotation0]
-            '''
-            angle_matrix[rotation90] = np.rot90(angle_matrix[rotation90], 1, axes=(3, 2))
-            angle_matrix[rotation180] = np.rot90(angle_matrix[rotation180], 2, axes=(3, 2))
-            angle_matrix[rotation270] = np.rot90(angle_matrix[rotation270], 3, axes=(3, 2))
-            # '''
-            # '''
             angle_matrix[rotation90] = np.rot90(angle_matrix[rotation90], 1, axes=(3, 2))
             angle_matrix[rotation180] = np.flip(angle_matrix[rotation180], axis=3)
             angle_matrix[rotation270] = np.flip(np.rot90(angle_matrix[rotation270], 1, axes=(3, 2)), axis=3)
@@ -335,15 +267,6 @@ class Rotate(BaseEstimator, TransformerMixin):
             if self.parameters['angle']:
                 angle_matrix = np.reshape(angle_matrix, shape)
 
-        '''
-        # Test
-        # print(f'\ngradient[:,{ind}]: {gradient[:,ind]}')
-        # print(f'mid_angle[{ind}]: {mid_angle[ind]*180/np.pi}')
-        print(f'rotation[{ind}]:\t{rotation[ind]}')
-        print_data_rot = data[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'Data before:\n{print_data_nrt}')
-        print(f'Data after:\n{print_data_rot}')
-        # '''
         # return [dataset[0], data, dataset[2]]
         return [dataset[0], data, rotation]
 
@@ -370,17 +293,6 @@ class Shift(BaseEstimator, TransformerMixin):
             data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
             if self.parameters['angle']:
                 angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1], 1))
-
-        '''
-        # Test mit seed 43
-        # 1 shift up
-        # 4 shift down
-        # 21 shift left
-        # 9 shift right
-        ind = 8
-        print_data_nrt = data[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'Data before:\n{print_data_nrt}')
-        # '''
 
         for i in range(self.shift):
             # Data can only be shifted where the sum over one row/column is 0/the stencil size (which means there is no information on the interface in that row/column, only 1s or 0s.
@@ -421,11 +333,6 @@ class Shift(BaseEstimator, TransformerMixin):
             if self.parameters['angle']:
                 angle_matrix = np.reshape(angle_matrix, shape)
 
-        '''
-        # Test
-        print_data_rot = result[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'Data after:\n{print_data_rot}')
-        # '''
         return [dataset[0], data, dataset[2]]
 
 
@@ -443,7 +350,6 @@ class Edge(BaseEstimator, TransformerMixin):
         # Seperate dataset
         data = dataset[1]
 
-        ''' ENTFERNEN! '''
         '''
         # Test
         data = data[dataset[0] > 0.43]
@@ -485,7 +391,6 @@ class Edge(BaseEstimator, TransformerMixin):
 
         # 1. c < 0.5 -> 0; c > 0.5 -> 1
         # 2. Find 1 value above 0.5, 1 below (e.g. 0.1 0.3 0.6 0.9 -> 0.3, 0.6)
-        # 3. Where 
 
         mask = np.where(data < 0.5, 0, 1)
 
@@ -962,70 +867,6 @@ class Edge(BaseEstimator, TransformerMixin):
         # If second index = 0 -10 -10, just take the value, otherwise take the mean
         # mean -> on bigger/on smaller
 
-        # 4:    0 1 1 1 1 1 1 (sm = 1)          -> übernehmen (4818)
-        #         1 0 0 0 0
-
-        # 2:    0 0 0 0 1 1 1 (sm = 2, sam = 1) -> interpolieren (13276)
-        #         0 0 1 1 0 
-
-        # 34:   0 1 1 1 1 1 0 (sm = 2, sam = 0) -> übernehmen (242)
-        #         1 0 0 0 1
-
-        # 0:    0 0 1 1 1 1 0 (sm = 3, sam = 1) -> interpolieren & übernehmen (645)
-        #         1 1 0 0 1
-
-        # 76:   0 0 0 0 1 0 0 (sm = 3, sam = 2) -> 2x interpolieren, Mittelwert auf Mitte/beide Ränder (297)
-        #         0 0 1 1 1
-
-        # 35:   0 0 1 1 1 0 0 (sm = 4, sam = 2) -> in zwei aufteilen, interpolieren (178)
-        #         1 1 0 1 1
-
-        # 51:   0 0 0 1 1 0 0 (sm = 4, sam = 3) -> in zwei aufteilen, interpolieren (189)
-        #         0 1 1 1 1 
-
-        '''
-        ind = 51
-        print(f'\nINDEX = {ind}\n')
-        pdat1 = data[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'pdat1:\n{pdat1}')
-        pdat2 = mask[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'pdat2:\n{pdat2}')
-        pdat2 = mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
-        print(f'mask_x:\n{pdat2}')
-        pdat2 = mask_y[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-2)).copy()
-        print(f'mask_y:\n{pdat2}')
-        pdat2 = sum_mask_x[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_mask_x:\n{pdat2}')
-        pdat2 = sum_mask_y[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_mask_y:\n{pdat2}')
-        pdat2 = and_mask_x[:, :, :, :][ind].reshape((st_sz[0]-2, st_sz[0]-3)).copy()
-        print(f'and_mask_x:\n{pdat2}')
-        pdat2 = and_mask_y[:, :, :, :][ind].reshape((st_sz[0]-3, st_sz[0]-2)).copy()
-        print(f'and_mask_y:\n{pdat2}')
-        pdat2 = sum_and_mask_x[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_and_mask_x:\n{pdat2}')
-        pdat2 = sum_and_mask_y[ind].reshape((st_sz[0]-2)).copy()
-        print(f'sum_and_mask_y:\n{pdat2}')
-
-        print(f'np.unique(sum_mask_x):\t{np.unique(sum_mask_x)}')
-        print(f'np.unique(sum_mask_y):\t{np.unique(sum_mask_y)}')
-        print(f'np.unique(sum_and_mask_x):\t{np.unique(sum_and_mask_x)}')
-        print(f'np.unique(sum_and_mask_y):\t{np.unique(sum_and_mask_y)}')
-        print(f'\nINDEX = {ind}\n')
-        print(f'pairs_x:\n{pairs_x}')
-        print(f'pairs_x.shape:\t{pairs_x.shape}')
-        print(f'triplets_x.shape:\t{triplets_x.shape}')
-        print(f'singles_x.shape:\t{singles_x.shape}')
-        print(f'pairs_y:\n{pairs_y}')
-        print(f'pairs_y.shape:\t{pairs_y.shape}')
-        print(f'triplets_y.shape:\t{triplets_y.shape}')
-        print(f'singles_y.shape:\t{singles_y.shape}')
-        # '''
-
-        # Get vof values of points closest to 0.5
-        # data_x = np.multiply(mask_x, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
-        # data_y = np.multiply(mask_y, data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :])
-
         # Get inner stencil from data
         data_cut = data[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
 
@@ -1069,21 +910,6 @@ class Edge(BaseEstimator, TransformerMixin):
         interp_y[pairs_y[:, 0, 0], pairs_y[:, 0, 2], pairs_y[:, 0, 1], 0] = int_p1_y
         interp_y[pairs_y[:, 1, 0], pairs_y[:, 1, 2], pairs_y[:, 1, 1], 0] = int_p2_y
 
-        '''
-        # Debug output
-        tmp = np.stack((pairs1_x, pairs2_x, mean_x, on_bigger_x, on_smaller_x, p1_bigger_x, p1_smaller_x, int_p1_x, int_p2_x, pairs_x[:, 0, 0], pairs_x[:, 0, 1], pairs_x[:, 0, 2], pairs_x[:, 1, 0], pairs_x[:, 1, 1], pairs_x[:, 1, 2]), axis=1)
-        print('pairs1_x, pairs2_x, mean_x, on_bigger_x, on_smaller_x, p1_bigger_x, p1_smaller_x, int_p1_x, int_p2_x, pairs_x[:, 0, :], pairs_x[:, 1, :]')
-        with np.printoptions(threshold=np.inf):
-            print(f'{np.round(tmp[:20],3)}')
-        tmp = np.stack((pairs1_y, pairs2_y, mean_y, on_bigger_y, on_smaller_y, p1_bigger_y, p1_smaller_y, int_p1_y, int_p2_y, pairs_y[:, 0, 0], pairs_y[:, 0, 1], pairs_y[:, 0, 2], pairs_y[:, 1, 0], pairs_y[:, 1, 1], pairs_y[:, 1, 2]), axis=1)
-        print('pairs1_y, pairs2_y, mean_y, on_bigger_y, on_smaller_y, p1_bigger_y, p1_smaller_y, int_p1_y, int_p2_y, pairs_y[:, 0, :], pairs_y[:, 1, :]')
-        with np.printoptions(threshold=np.inf):
-            print(f'{np.round(tmp[:20],3)}')
-        # print(f'value_on_bigger[:10]:\n{value_on_bigger[:10]}')
-        print(f'tmp[tmp[:, 2] == 0]:\t{tmp[tmp[:, 2] == 0]}')  # should be empty
-        print(f'tmp[tmp[:, 1] == 0]:\t{tmp[tmp[:, 1] == 0]}')  # should be empty
-        print(f'tmp[tmp[:, 0] == 0]:\t{tmp[tmp[:, 0] == 0]}')  # should be empty
-        # '''
 
         # TRIPLETS
 
@@ -1138,14 +964,9 @@ class Edge(BaseEstimator, TransformerMixin):
         interp_y[triplets_y[:, 1, 0], triplets_y[:, 1, 2], triplets_y[:, 1, 1], 0] = int_t2_y
         interp_y[triplets_y[:, 2, 0], triplets_y[:, 2, 2], triplets_y[:, 2, 1], 0] = int_t3_y
 
-        '''
-        tmp = np.stack((triplets1_x, triplets2_x, triplets3_x, mean_x_1, mean_x_2, on_bigger_x_1, on_bigger_x_2, on_smaller_x_1, on_smaller_x_2, t1_bigger_x_1, t1_smaller_x_1, t2_bigger_x_2, t2_smaller_x_2, int_t1_x, int_t2_x_1, int_t2_x, int_t2_x_2, int_t3_x, ), axis=1)
-        print('triplets1_x, triplets2_x, triplets3_x, mean_x_1, mean_x_2, on_bigger_x_1, on_bigger_x_2, on_smaller_x_1, on_smaller_x_2, t1_bigger_x_1, t1_smaller_x_1, t2_bigger_x_2, t2_smaller_x_2, int_t1_x, int_t2_x_1, int_t2_x, int_t2_x_2, int_t3_x, ')
-        with np.printoptions(threshold=np.inf):
-            print(f'{np.round(tmp[:20],3)}')
-        # '''
 
-        # Singles
+        # SINGLES
+
         # Just copy single values from data to interp
         interp_x[singles_x[:, 0, 0], singles_x[:, 0, 2], singles_x[:, 0, 1], 0] = data_cut[singles_x[:, 0, 0], singles_x[:, 0, 2], singles_x[:, 0, 1], 0]
         interp_y[singles_y[:, 0, 0], singles_y[:, 0, 2], singles_y[:, 0, 1], 0] = data_cut[singles_y[:, 0, 0], singles_y[:, 0, 2], singles_y[:, 0, 1], 0]
@@ -1156,24 +977,7 @@ class Edge(BaseEstimator, TransformerMixin):
         interp_y = interp_y + mask[:, 1:st_sz[0]-1, 1:st_sz[1]-1, :]
         interp_y = np.where(interp_y > 1, interp_y-1, interp_y)
 
-        '''
-        ind = 35
-        pdat2 = data[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'data:\n{pdat2}')
-        pdat2 = mask[ind].reshape((st_sz[0], st_sz[1])).copy()
-        print(f'mask:\n{pdat2}')
-        pdat2 = data_cut[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'data_cut:\n{pdat2}')
-        pdat2 = mask_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'mask_x:\n{pdat2}')
-        pdat2 = interp_x[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'interp_x:\n{pdat2}')
-        pdat2 = mask_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'mask_y:\n{pdat2}')
-        pdat2 = interp_y[ind].reshape((st_sz[0]-2, st_sz[1]-2)).copy()
-        print(f'interp_y:\n{pdat2}')
-        # '''
-        
+
         # Flatten interp_x and interp_y
         interp_x = np.reshape (interp_x, (interp_x.shape[0], np.prod(interp_x.shape[1:3])))
         interp_y = np.reshape (interp_y, (interp_y.shape[0], np.prod(interp_y.shape[1:3])))
@@ -1216,17 +1020,89 @@ class Edge(BaseEstimator, TransformerMixin):
         print(f'T2y interp_y:\n{pdat2}')
         # '''
 
-
         # Glue them together (shape is data_length x 50 for 7x7 stencil, first 25 are x, second are y)
         data = np.concatenate((interp_x, interp_y), axis=1)
 
-        '''
-        # pdat2 = np.reshape(data[-3], (2, 7, 7))
-        pdat2 = list(np.reshape(data[-3], (data[-4].shape[0])))
-        print(f'data[-3]:\n{pdat2}')
-        for i in pdat2:
-            print(f'{i}')
-        # '''
+        return [dataset[0], data, dataset[2]]
+
+
+class UnsharpMask(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters, amount):
+        self.parameters = parameters
+        self.amount = amount
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate dataset
+        data = dataset[1]
+
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1]))
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1]))
+
+        # Initialize kernel for unsharp mask
+        kernel_mask = np.array([[
+            [1, 2, 1],
+            [2, 4, 2],
+            [1, 2, 1]
+        ]])
+        kernel_mask = kernel_mask/np.sum(kernel_mask)
+        # Initialize kernel for check mask
+        kernel_check = np.array([[
+            [0, 1, 0],
+            [1, 0, 1],
+            [0, 1, 0]
+        ]])
+
+        # Get mask: 1 where 0 < data < 1, else 0
+        mask = np.where(((data > 0) & (data < 1)), 1, 0)
+        # Convolve mask with check kernel to count neighbours where mask = 1
+        mask_conv = ndimage.convolve(mask, kernel_check, mode='constant', cval=0.0)
+        # Get indices where the stencil still has cells with more than 3 neighbours being between 0 and 1
+        mask_index = np.argwhere(np.amax(mask_conv, axis=(1, 2)) > 3)[:, 0]
+        # Get maximum neighbour count of every stencil
+        mask_max = mask_conv.max()
+
+        # Calculate unsharp mask for unsharp masking
+        unsharp_mask = ndimage.convolve(data, kernel_mask, mode='reflect')
+        # Initialize counter
+        counter = 0
+        # Repeat until every stencil is sharpened to a degree where no cell has more than 3 neighbours being between 0 and 1
+        while mask_max > 3:
+            # Calculate difference between data and unsharp mask for unsharp masking
+            difference = data - unsharp_mask
+            # Do unsharp masking in every stencil that still does not meet the requirement of containing only cells with 3 or less neighbours between 0 and 1
+            data[mask_index, :, :] = np.clip(data[mask_index, :, :] + difference[mask_index, :, :]*self.amount, a_min=0, a_max=1)
+
+            # Get mask: 1 where 0 < data < 1, else 0
+            mask = np.where(((data > 0) & (data < 1)), 1, 0)
+            # Convolve mask with check kernel to count neighbours where mask = 1
+            mask_conv = ndimage.convolve(mask, kernel_check, mode='constant', cval=0.0)
+            # Get indices where the stencil still has cells with more than 3 neighbours being between 0 and 1
+            mask_index = np.argwhere(np.amax(mask_conv, axis=(1, 2)) > 3)[:, 0]
+            # Get maximum neighbour count of every stencil
+            mask_max = mask_conv.max()
+
+            # Count so it does not get stuck inside this loop
+            counter = counter + 1
+            if counter > 1000:
+                print('Interface reconstruction: max number of steps exceeded')
+                break
+
+        if data.shape != shape:
+            # Reshape rotated data to original shape
+            data = np.reshape(data, shape)
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, shape)
 
 
         return [dataset[0], data, dataset[2]]
@@ -1350,29 +1226,6 @@ class CDS(BaseEstimator, TransformerMixin):
         )
         print(f'kappa_out.shape:\n{kappa_out.shape}')
 
-        '''
-        # Test
-        ind = 95912
-        datapoint = data[ind, 0, 5, 0]
-        print(f'datapoint:\n{datapoint}')
-        print_data_grad = data.transpose((0, 1, 3, 2))[ind]
-        print(f'\nData:\n{print_data_grad}')
-        print_data_sm = data_sm.transpose((0, 1, 3, 2))[ind]
-        print(f'print_data_sm:\n{print_data_sm}')
-        print_kappa = kappa.transpose((0, 1, 3, 2))[ind]
-        print(f'print_kappa:\n{print_kappa}')
-        print_kappa_sm = kappa_sm[ind]
-        print(f'print_kappa_sm:\n{print_kappa_sm}')
-        label = labels[ind]
-        print(f'label:\n{label}')
-        # '''
-
-        '''
-        prt_labels = labels[:10]
-        prt_kappas = kappa_sm[:10]
-        print(f'prt_labels:\n{prt_labels}')
-        print(f'prt_kappas:\n{prt_kappas}')
-        # '''
         # Reshape to tensor if angle matrix is needed, otherwise just output vectors
         if (data.shape != shape) & (self.parameters['angle']):
             # Reshape transformed data to original shape
@@ -1440,51 +1293,6 @@ class HF(BaseEstimator, TransformerMixin):
             2/Delta*h_xx/((1+np.multiply(h_x, h_x))**(3/2))
             , 5)
 
-        '''
-        labels = dataset[0][:10]
-        kappa_pr = kappa[:10]
-        h_x_pr = h_x[:10]
-        h_xx_pr = h_xx[:10]
-        h1_pr = h1[:10]
-        h2_pr = h2[:10]
-        h3_pr = h3[:10]
-        g_x_pr = g_x[:10]
-        g_y_pr = g_y[:10]
-
-        print(f'h_x_pr:\n{h_x_pr}')
-        print(f'h_xx_pr:\n{h_xx_pr}')
-        print(f'labels:\n{labels}')
-        print(f'kappa_pr:\n{kappa_pr}')
-        print(f'h1:\n{h1_pr}')
-        print(f'h2:\n{h2_pr}')
-        print(f'h3:\n{h3_pr}')
-        print(f'g_x:\n{g_x}')
-        print(f'g_y:\n{g_y}')
-        # '''
-
-        '''
-        # Test
-        ind = 4
-
-        # print_data_gradx = grad_x.transpose((0, 1, 3, 2))[ind]
-        # print_data_grady = grad_y.transpose((0, 1, 3, 2))[ind]
-        print_data = data.transpose((0, 1, 3, 2))[ind]
-        print_h1 = h1[ind]
-        print_h2 = h2[ind]
-        print_h3 = h3[ind]
-        prt_grad_x = grad_x[ind]
-        prt_grad_y = grad_y[ind]
-        prt_kappa = kappa[ind]
-        # print(f'\nGrad_x:\n{print_data_gradx}')
-        # print(f'\nGrad_y:\n{print_data_grady}')
-        print(f'\nData:\n{print_data}')
-        print(f'h1:\n{print_h1}')
-        print(f'h2:\n{print_h2}')
-        print(f'h3:\n{print_h3}')
-        print(f'prt_grad_x:\n{prt_grad_x}')
-        print(f'prt_grad_y:\n{prt_grad_y}')
-        print(f'prt_kappa:\n{prt_kappa}')
-        # '''
         # Reshape to tensor if angle matrix is needed, otherwise just output vectors
         if (data.shape != shape) & (self.parameters['angle']):
             # Reshape transformed data to original shape
@@ -1521,10 +1329,5 @@ class TwoLayers(BaseEstimator, TransformerMixin):
         kappa_array[:, i, j, 0] = kappa[:, 0]
 
         data = np.concatenate((data, kappa_array), axis=3)
-
-        '''
-        ind = 0
-        print(f'pd_out:\n{output_array[ind, :, :, :]}')
-        # '''
 
         return [dataset[0], data]

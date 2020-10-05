@@ -7,9 +7,6 @@ def gt(time0):
 
 
 def u(low=0.0, high=1.0, **kwargs):
-    # np.random.seed(11)
-    #np.random.seed(1)
-    # np.random.seed(4)
     if 'seed' in kwargs.keys():
         if kwargs['seed'] != 0:
             np.random.seed(kwargs['seed'])

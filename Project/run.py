@@ -5,10 +5,11 @@ from src.execution import exe_dg
 
 ''' Train '''
 # Network related
-epochs = [40]
+epochs = [250]
 batch_size = [128]
 # stencil = [[9, 9]]
-stencil = [[3, 3], [5, 5], [7, 7], [9, 9]]
+# stencil = [[3, 3], [5, 5], [7, 7], [9, 9]]
+stencil = [[7, 7]]
 activation = ['relu']
 learning_rate = [1e-4]
 hf = ['hf']
@@ -18,10 +19,10 @@ dropout = [0]
 angle = [False]
 rot = [True]
 flip = [False]
-cut = [False]
-shift = [0]
+cut = [True]
+shift = [1]
 bias = [True]
-edge = [0]
+edge = [1]
 custom_loss = [False]
 # seed = [1, 2]
 # seed = [1, 2]
@@ -50,15 +51,14 @@ neg = [True]
 # load_data = ['data_CVOFLS_7x7_f_eqk']
 load_data = ['']
 # interpolate = [0, 1, 1.5, 2]
-interpolate = [0]
+interpolate = [1]
 data = ['ellipse']
 plotdata = ['ellipse']
-smearing = [False]
-dshift = [0]  # 0, 1, '1b'
+smearing = [True]
+dshift = [1]  # 0, 1, '1b'
 gauss = [0]
 network = ['mlp']
-# layer = [[200, 150, 120]]
-layer = [[80]]
+layer = [[200, 150, 120]]
 
 if __name__ == '__main__':
    #  '''
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     for i in range(0, 2):
         if i == 0:
             plot = [False]
-            exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
+            # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
         if i == 1:
             plot = [True]
-            exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
+            # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
             exe_save(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
         # '''
     '''

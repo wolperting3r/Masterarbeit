@@ -60,12 +60,8 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     print(f'Generating data:\nGeometry:\t{geometry}\nStencil:\t{stencils}\nKappa:\t\t{ek}\nNeg. Values\t{neg}\nN_values:\t{int(N_values)}\nSmearing:\t{smearing}')
     time0 = time.time()
 
-    # print('NO EXPORT')
-
-    # Script
     N_values = int(N_values)
     visualize = True if (N_values == 1) else False
-    # visualize = False
     debug = False
 
     # Initialize progress bar
@@ -97,7 +93,6 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
     R_min = st_sz_kappa/2*Delta
     R_max = 0.5
 
-    # kappa_min = L*Delta*2/R_max
     kappa_min = 1e-5
     kappa_max = L*Delta*2/R_min
     equal_kappa = ek
@@ -146,17 +141,11 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
             # Get random side ratio
-            # e_max = e_maxmax + (curvature/(-kappa_max))**0.5*(e_maxmin - e_maxmax)
-            # e_max = 2
-            e = e_min+(u()**1)*(e_max-e_min)  # Bei e15 war der Exponent hier 1.5
+            e = e_min+(u()**1)*(e_max-e_min) 
             # Calculate geometry radius
-            # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
-            # '''
             r_min = max([2*L*Delta/(-curvature*e), (st_sz_kappa*Delta*e**2)/2])
             r_max = 2*e**2*L*Delta/(-curvature)
             r = r_min + u()**1* (r_max - r_min)
-            # '''
-            # r = -L*Delta*2/curvature*e**(-1 +(curvature/(-kappa_max)) + (3-(curvature/(-kappa_max)))*u()**1.5)
         elif geometry == 'circle':
             # Get random curvature
             curvature = -(kappa_min + u()*(kappa_max - kappa_min))
@@ -169,14 +158,6 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
 
         ''' Get random point on geometry '''
         if geometry == 'sinus':
-            '''
-            # Get random x 
-            pt_x = 0 + u()*2/f
-            # Get corresponding y
-            pt_y = a*np.sin(f*np.pi*pt_x)
-            # Calculate curvature 
-            curvature = -2*L*Delta*(f**2*np.pi**2*pt_y)/(((a*f*np.pi)**2*(np.cos(f*np.pi*pt_x))**2+1)**(3/2))
-            # '''
             # > Find approximation of x where the sine wave has the given curvature, then find the exact y value and the exact curvature
             # Solve equation for x
             func = lambda x_sol: curvature -2*L*Delta*(f**2*np.pi**2*a*np.sin(f*np.pi*x_sol))/(((a*f*np.pi)**2*(np.cos(f*np.pi*x_sol))**2+1)**(3/2))
@@ -495,7 +476,6 @@ def generate_data(N_values, stencils, ek, neg, silent, geometry, smearing, useno
         file_name = os.path.join(parent_path, 'data', 'datasets', 'data_'+str(st_sz[0])+'x'+str(st_sz[1])+('_eqk' if equal_kappa else '_eqr')+('_neg' if neg else '_pos')+geom_str+('_smr' if smearing else '_nsm')+('_shift1' if dshift else '')+('' if usenormal else 'b')+(f'_int{interpolate}' if interpolate else '')+('_g' if gauss else '')+'_eqkmax.feather')
         print(f'File:\n{file_name}')
         # Export file
-        # print('NO EXPORT')
         output_df.reset_index(drop=True).to_feather(file_name)
         # Print string with a summary
         print(f'Generated {output_df.shape[0]} tuples in {gt(time0)} with:\nGeometry:\t{geometry}\nGrid:\t\t{int(1/Delta)}x{int(1/Delta)}\nStencil size:\t{st_sz}\nVOF Grid:\t{int(1/Delta_vof)}x{int(1/Delta_vof)}\nVOF Accuracy:\t{np.round(100*Delta_vof**2,3)}%\nNeg. Values:\t{neg}\nSmearing:\t{smearing}')

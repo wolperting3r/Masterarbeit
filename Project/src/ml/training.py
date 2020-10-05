@@ -53,7 +53,6 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
     model.save(file_name)
     return model
 
-
 def load_model(parameters, **kwargs):
     if 'path' in kwargs:
         path = kwargs.get('path')

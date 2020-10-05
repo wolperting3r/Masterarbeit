@@ -57,9 +57,9 @@ def cal_ypos(path):
 
 if __name__ == '__main__':
     # ld = ['int0', 'int1', 'int2', 'fnb', 'cvofls', 'cvofls_edge', 'fnb_64', 'fnb_256', 'fnb_9x9_128', 'fnb_9x9_64', 'fnb_9x9_256', 'hfcv', '1680int', '1680g']
-    ld = ['fnb_9x9_256']
-    gridsize = 256
-    percentiles = True
+    ld = ['no']
+    gridsize = 128
+    percentiles = False
     testrun = False
     metrics = False # Calculate metrics (and do not plot)
     for loaddata in ld:
@@ -279,7 +279,7 @@ if __name__ == '__main__':
             if percentiles:
                 plt.plot(median, c=color_ml, lw=line_width, label='ANN Median')
             plt.plot(cvofls_pos, c=color_cvofls, lw=line_width, label='CVOFLS')
-            plt.plot(hf_pos, c=color_hf, lw=line_width, label='CDS')
+            plt.plot(hf_pos, c=color_hf, lw=line_width, label='HF')
 
 
             '''

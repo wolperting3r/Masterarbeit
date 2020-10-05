@@ -3,17 +3,16 @@ from src.d.data_generation import generate_data
 from src.ml.machine_learning import learning, saving
 from src.ml.utils import param_filename
 
-# Suppress tensorflow logging
-import logging
-import os
 from itertools import product as itpd
 from multiprocessing import Process
 
-# import threading
+# Suppress tensorflow logging
+import logging
+import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # FATAL
 logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
-
+# Execute machine learning
 def ml(
     plot,
     network,
@@ -83,7 +82,6 @@ def ml(
         #'addstring': '_dshift1b_shift_kappa',
     }
 
-    # print(f'parameters:\n{parameters}')
     # Generate filename string
     parameters['filename'] = param_filename(parameters) + parameters['addstring']
 
@@ -92,6 +90,7 @@ def ml(
         learning(parameters, silent=True, plot=plot)
 
     elif parameters['network'] == 'auto':
+        # Autoencoder
         if not plot:
             parameters['network'] = 'autoencdec'
             parameters['epochs'] = int(parameters['epochs']*2)
@@ -103,6 +102,7 @@ def ml(
     parameters = None
 
 
+# Save model to text file
 def save(
     plot,
     network,
@@ -180,8 +180,7 @@ def save(
 
     parameters = None
 
-
-
+# Data generation
 def exe_dg(**kwargs):
     print(f'kwargs:\n{kwargs}')
     # Sort input keyword arguments
@@ -199,7 +198,7 @@ def exe_dg(**kwargs):
         # Execute job
         generate_data(**dict(zip(kwargs.keys(), job_list[0])))
 
-
+# Machine Learning
 def exe_ml(**kwargs):
     # Sort input keyword arguments
     order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'seed', 'addstring',]
@@ -224,7 +223,7 @@ def exe_ml(**kwargs):
             ml(**dict(zip(kwargs.keys(), job)))
     # '''
 
-
+# Save model
 def exe_save(**kwargs):
     # Sort input keyword arguments
     order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'seed', 'addstring',]

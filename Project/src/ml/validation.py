@@ -29,6 +29,7 @@ def validate_model_loss(model, train_data, train_labels, test_data, test_labels,
 
 
 def as_si(x, ndp):
+    # Number formatting
     s = '{x:0.{ndp:d}e}'.format(x=x, ndp=ndp)
     if 'e' in s:
         m, e = s.split('e')
@@ -120,8 +121,6 @@ def create_plot(labels, predictions, color, file_name, parameters, hf, hf_labels
 
 def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=False, test_k_labels=False):
 
-    # parameters['filename'] = param_filename(parameters)
-
     # Get predictions for test data
     test_predictions = model.predict(test_data, batch_size=parameters['batch_size']).flatten()
 
@@ -147,15 +146,8 @@ def validate_model_plot(model, test_data, test_labels, parameters, test_kappa=Fa
 
         # Blend the two plots with image magick
         file_name = os.path.join(path, 'models', 'figures', 'fig' + param_str + '.png')
-        # os.system(f"convert {file_name_ml} {file_name_hf} -average {file_name}")
-        blend = 'darken'
-        blend = 'luminize'
         blend = 'stamp'
         os.system(f"convert {file_name_ml} {file_name_hf} -compose {blend} -composite {file_name}")
-        '''
-        # Test (set dpi to 30)
-        os.system(f"for b in $(identify -list compose); do convert -gravity center -pointsize 72 -label \"$b\" {file_name_ml} {file_name_hf} -compose $b -composite  miff:- ; done | montage -geometry +0+0 miff: {file_name}")
-        # '''
         # Delete temp files
         os.system(f"rm {file_name_ml}")
         os.system(f"rm {file_name_hf}")
