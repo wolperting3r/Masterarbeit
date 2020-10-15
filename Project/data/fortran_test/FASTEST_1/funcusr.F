@@ -60,7 +60,7 @@ call setzero(cold,nxyzac,1,nxyzac)
 
 loop_counter = 1
 open(unit=142,file=&
-  'model_mlp_250_200-150-120_7x7_nrt_ellipse_nfp_nct_dshift1_bia_ned_ncl_s1',&
+  'matlab_modell_160',&
   action='read',status='old',iostat=stat)
 if (stat == 0) then
         allocate(ml_tmp_curv(128, 128))
@@ -110,6 +110,8 @@ if (stat == 0) then
         read(142,*) ml_bias_on
         ! Read edge switch
         read(142,*) ml_edge_on
+        ! Read unsharp masking switch
+        read(142,*) ml_mask_on
         ! read(142,*) ml_out_bias_on
 
         ! Allocate variables needed for edge
@@ -136,6 +138,14 @@ if (stat == 0) then
           allocate(ml_data_y((stz-2), (stz-2)))
           allocate(ml_row((stz-2)))
           allocate(ml_and_row((stz-3)))
+        else if (ml_mask_on == 1) then
+          ! Variables needed for unsharp masking
+          ! allocate(ml_stencil(stz, stz))
+          ! allocate(ml_interface_mask(stz+2, stz+2))
+          ! allocate(ml_nb_mask(stz, stz))
+          ! allocate(ml_unsharp_mask(stz, stz))
+          ! allocate(ml_difference(stz, stz))
+          ! allocate(ml_padded_stencil(stz+2, stz+2))
         end if
 
         ! Calculate number of layer weights

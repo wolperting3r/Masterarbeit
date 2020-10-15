@@ -5,7 +5,7 @@ import sys
 import time
 
 from sklearn.pipeline import Pipeline
-from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF, TwoLayers, Shift, Edge, UnsharpMask
+from src.d.transformators import TransformData, FindGradient, FindAngle, Rotate, CDS, HF, TwoLayers, Shift, Edge, Edge2, UnsharpMask
 
 
 # Enable full width output for numpy (https://stackoverflow.com/questions/43514106/python-terminal-output-width)
@@ -257,90 +257,51 @@ def process_kappa(dataset, parameters, reshape):
 
 
 def process_data(dataset, parameters, reshape):
-    if parameters['hf'] == 'hf':
-        # Calculate kappa with HF
-        # Create pipeline
-        # '''
-        data_pipeline = Pipeline([
-            ('transform', TransformData(parameters=parameters, reshape=reshape)),
-            ('findgradient', FindGradient(parameters=parameters)),
-            ('findkappahf', HF(parameters=parameters)),
-        ])
-        # '''
-        # Execute pipeline
-        [labels, features, kappa] = data_pipeline.fit_transform(dataset)
-    else:
-        kappa = 0
-
 
     # Pre-Processing
+
+    # Initialize pipeline list
+    pipeline_list = []
+
+    # Add steps to pipeline
+    # Transform data to required format
+    pipeline_list.append(('transform', TransformData(parameters=parameters, reshape=reshape)))
+    # Find gradient in middle cell
+    pipeline_list.append(('findgradient', FindGradient(parameters=parameters)))
+    if parameters['hf']:
+        # Calculate kappa with HF (angle in output = kappa) ! Needs adjustments !
+        pipeline_list.append(('findkappahf', HF(parameters=parameters)))
+    if parameters['angle']:
+        # Calculate normal vector angle ! Needs adjustments !
+        pipeline_list.append(('findangle', FindAngle(parameters=parameters)))
+    if parameters['shift']:
+        # Shift stencils
+        pipeline_list.append(('shift', Shift(parameters=parameters, shift=parameters['shift'])))
     if parameters['rotate']:
-        # Create pipeline
-        if parameters['shift'] == 0:
-            if parameters['edge']:
-                data_pipeline = Pipeline([
-                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                    ('findgradient', FindGradient(parameters=parameters)),
-                    ('findangle', FindAngle(parameters=parameters)),
-                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                    # ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                    ('unsharp', UnsharpMask(parameters=parameters, amount=0.1)),  # Output: [labels, data, angle_matrix]
-                ])
-            else:
-                data_pipeline = Pipeline([
-                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                    ('findgradient', FindGradient(parameters=parameters)),
-                    ('findangle', FindAngle(parameters=parameters)),
-                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                ])
-        else:
-            if parameters['edge']:
-                data_pipeline = Pipeline([
-                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                    ('findgradient', FindGradient(parameters=parameters)),
-                    ('findangle', FindAngle(parameters=parameters)),
-                    ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
-                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                    # ('edge', Edge(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                    ('unsharp', UnsharpMask(parameters=parameters, amount=0.1)),  # Output: [labels, data, angle_matrix]
-                ])
-            else:
-                data_pipeline = Pipeline([
-                    ('transform', TransformData(parameters=parameters, reshape=reshape)),
-                    ('findgradient', FindGradient(parameters=parameters)),
-                    ('findangle', FindAngle(parameters=parameters)),
-                    ('shift', Shift(parameters=parameters, shift=parameters['shift'])),  # Die Reihenfolge von shift und rotate war ursprünglich anders rum
-                    ('rotate', Rotate(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-                ])
-        # Execute pipeline
-        [labels, features, angle] = data_pipeline.fit_transform(dataset)
-        # print(f'np.reshape(features[5], (7, 7)):\n{np.reshape(features[5], (7, 7))}')
+        # Rotate stencils
+        pipeline_list.append(('rotate', Rotate(parameters=parameters)))
+    if parameters['edge']:
+        # Interface reconstruction with interpolation
+        pipeline_list.append(('edge', Edge(parameters=parameters)))
+    if parameters['edge2']:
+        # Interface reconstruction with interpolation
+        pipeline_list.append(('edge2', Edge2(parameters=parameters)))
+    if parameters['unsharp_mask']:
+        # Interface reconstruction with unsharp mask
+        pipeline_list.append(('unsharp', UnsharpMask(parameters=parameters, amount=parameters['amount'])))
 
-    elif (parameters['angle'] & (not parameters['rotate'])):
-        # Create pipeline
-        data_pipeline = Pipeline([
-            ('transform', TransformData(parameters=parameters, reshape=reshape)),
-            ('findgradient', FindGradient(parameters=parameters)),
-            ('findangle', FindAngle(parameters=parameters)),  # Output: [labels, data, angle_matrix]
-        ])
-        # Execute pipeline
-        [labels, features, angle] = data_pipeline.fit_transform(dataset)
-
-    else:
-        # Create pipeline
-        data_pipeline = Pipeline([
-            ('transform', TransformData(parameters=parameters, reshape=reshape)),  # Output: [labels, data]
-        ])
-        # Execute pipeline
-        [labels, features] = data_pipeline.fit_transform(dataset)
-        # Dummy angle
-        angle = np.zeros(features.shape)
+    # Build pipeline
+    data_pipeline = Pipeline(pipeline_list)
+    # Execute pipeline
+    [labels, features, angle] = data_pipeline.fit_transform(dataset)
 
     if parameters['angle']:
         # Stack features and angles
         features = np.hstack((features, angle))
 
     if parameters['hf_correction']:
+        # Kappa is given in angle output.
+        kappa = angle 
         if parameters['network'] == 'cvn':
             # Write kappa into second layer on 3rd axis
             data_pipeline = Pipeline([

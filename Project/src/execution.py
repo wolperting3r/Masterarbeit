@@ -38,8 +38,11 @@ def ml(
     bias=True,
     interpolate=0,
     edge=0,
+    edge2=False,
     custom_loss=0,
     gauss=0,
+    unsharp_mask=False,
+    amount=0.1,
     load_data='',
     seed=False,
     addstring=False,
@@ -74,8 +77,11 @@ def ml(
         'bias': bias,
         'interpolate': interpolate,
         'edge': edge,
+        'edge2': edge2,
         'custom_loss': custom_loss,
         'gauss': gauss,
+        'unsharp_mask': unsharp_mask,
+        'amount': amount,
         'load_data': load_data,
         'seed': seed,
         'addstring': addstring,
@@ -128,8 +134,11 @@ def save(
     bias=True,
     interpolate=0,
     edge=0,
+    edge2=False,
     custom_loss=0,
     gauss=0,
+    unsharp_mask=False,
+    amount=0.1,
     load_data='',
     seed=False,
     addstring=False,
@@ -164,8 +173,11 @@ def save(
         'bias': bias,
         'interpolate': interpolate,
         'edge': edge,
+        'edge2': edge2,
         'custom_loss': custom_loss,
         'gauss': gauss,
+        'unsharp_mask': unsharp_mask,
+        'amount': amount,
         'load_data': load_data,
         'seed': seed,
         'addstring': addstring,
@@ -201,7 +213,7 @@ def exe_dg(**kwargs):
 # Machine Learning
 def exe_ml(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'seed', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'edge2', 'custom_loss', 'gauss', 'unsharp_mask', 'amount', 'load_data',  'seed', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     plot = kwargs.get('plot')
     # Execute machine learning
@@ -226,7 +238,7 @@ def exe_ml(**kwargs):
 # Save model
 def exe_save(**kwargs):
     # Sort input keyword arguments
-    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'custom_loss', 'gauss', 'load_data', 'seed', 'addstring',]
+    order = ['plot', 'network', 'stencil', 'layer', 'activation', 'batch_size', 'epochs', 'learning_rate', 'neg', 'angle', 'rot', 'data', 'smearing', 'hf', 'hf_correction', 'dropout', 'plotdata', 'flip', 'cut', 'dshift', 'shift', 'bias', 'interpolate', 'edge', 'edge2', 'custom_loss', 'gauss', 'unsharp_mask', 'amount', 'load_data',  'seed', 'addstring',]
     kwargs = {k: kwargs[k] for k in order}
     # Execute saving job list with multithreading
     for job in list(itpd(*kwargs.values())):

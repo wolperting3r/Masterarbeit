@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow import keras
 
+from tensorflow_graphics.math import optimizer as op
+
 import os
 import sys
 
@@ -101,7 +103,9 @@ def build_model(parameters, shape):
     # Create tensorflow model
     model = create_model(parameters, shape)
     # Compile model with optimizer and loss function
-    model.compile(optimizer=tf.keras.optimizers.Adam(parameters['learning_rate']),
+    optimizer = tf.keras.optimizers.Adam(parameters['learning_rate'])
+    # optimizer = op.levenberg_marquardt
+    model.compile(optimizer=optimizer,
                   loss= (custom_loss if parameters['custom_loss'] else 'mse'),
                   metrics=['mae', 'mse'])
     # Print summary

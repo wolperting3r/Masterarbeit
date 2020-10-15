@@ -32,7 +32,13 @@ def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
         elif ((key == 'shift') and (parameters['shift'] != 0)):
             filename_string = filename_string + '_' + 'shift' + str(value)
         elif key == 'edge':
-            filename_string = filename_string + '_' + ('edg' if value else 'ned')
+            if not parameters['edge2']:
+                filename_string = filename_string + '_' + ('edg' if value else 'ned')
+        elif key == 'edge2':
+            if not parameters['edge']:
+                filename_string = filename_string + '_' + ('ed2' if value else 'ne2')
+        elif key == 'unsharp_mask':
+            filename_string = filename_string + '_' + ('usm' if value else 'num')
         elif (key == 'batch_size') and (parameters['batch_size'] != 128):
             filename_string = filename_string + '_' + 'bs' + str(value)
         elif (key == 'seed') and (parameters['seed']):
@@ -41,6 +47,10 @@ def param_filename(parameters, include_plotdata=False, plotdata_as_data=False):
             filename_string = filename_string + '_' + ('flp' if value else 'nfp')
         elif key == 'stencil_size':
             filename_string = filename_string + '_' + str(value[0]) + 'x' + str(value[1])
+        elif key == 'learning_rate':
+            filename_string = filename_string + '_' + str(value)
+        elif key == 'amount':
+            filename_string = filename_string + '_a' + str(value)
         else:
             filename_string = filename_string
 

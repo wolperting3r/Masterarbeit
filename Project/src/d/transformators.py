@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import sys
+import pandas as pd
 from scipy import ndimage
 from sklearn.base import (
     BaseEstimator,  # for get_params, set_params
@@ -326,6 +327,149 @@ class Shift(BaseEstimator, TransformerMixin):
 
             # Overwrite data
             data = result
+
+        if data.shape != shape:
+            # Reshape rotated data to original shape
+            data = np.reshape(data, shape)
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, shape)
+
+        return [dataset[0], data, dataset[2]]
+
+class Edge2(BaseEstimator, TransformerMixin):
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fit(self, dataset):
+        return self
+
+    def transform(self, dataset):
+        time0 = time.time()
+        # Get stencil size
+        st_sz = self.parameters['stencil_size']
+        # Seperate dataset
+        data = dataset[1]
+
+        # Get shape of data
+        shape = data.shape
+        # Check if data was transformed (shape = 4) or not (shape = 2), reshape data that was not transformed
+        if len(shape) == 2:
+            data = np.reshape(data, (shape[0], st_sz[0], st_sz[1], 1))
+            if self.parameters['angle']:
+                angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1], 1))
+
+        # Zwei Probleme noch:
+        # 1. Rand wird nicht berücksichtigt, auch wenn es die Richtung erlauben würde (z.B. oben/unten bei east/west)
+        # 2. Irgendwas ist noch nicht richtig, nochmal überprüfen
+
+        print(f'data[1, :, :, 0]:\n{data[1, :, :, 0]}')
+
+        # Initialize dicts
+        upper_index = {
+            'north': np.empty((4,0)).astype(int),
+            'south': np.empty((4,0)).astype(int),
+            'east': np.empty((4,0)).astype(int),
+            'west': np.empty((4,0)).astype(int)
+        }
+        temp = {}
+        lower_index = {}
+        pair_values = {}
+        interpolated_concentration = {}
+        overwrite_values = {}
+
+        # Iterate over stencil, find pairs
+        # Iterate over columns
+        for j in range(st_sz[1]-2): 
+            # Iterate over rows
+            for i in range(st_sz[1]-2): 
+                # Iterate over directions (north, south, east, west)
+                for direction in upper_index.keys():
+                    # Find indices of values where concentration > 0.5 and the neighbours concentration is < 0.5 (pair). The indices refer to the higher value, the index of the lower value depends on the position (north, south, east, west).
+                    temp[direction] = np.argwhere((data[:, j+1, i+1, 0] > 0.5) &
+                                                  (data[:, j+1+\
+                                                           (1 if direction == 'north' else (-1 if direction == 'south' else 0)),
+                                                           i+1+(1 if direction == 'east' else (-1 if direction == 'west' else 0)),
+                                                           0] <= 0.5)
+                                                 ).T
+                    # Expand by three more rows
+                    temp[direction] = np.concatenate((temp[direction], np.zeros((3, temp[direction].shape[1]))), axis = 0).astype(int)
+                    # Write index (i+1, j+1) in second and third row
+                    temp[direction][1, :] = j+1 
+                    temp[direction][2, :] = i+1 
+                    # Update index array with new values
+                    upper_index[direction] = np.concatenate((upper_index[direction], temp[direction]), axis=1)
+        
+        for direction in upper_index.keys():
+            # Get indices of lower values
+            lower_index[direction] = np.stack((upper_index[direction][0, :],
+                                               upper_index[direction][1, :]+\
+                                               (1 if direction == 'north' else (-1 if direction == 'south' else 0)),
+                                               upper_index[direction][2, :]+\
+                                               (1 if direction == 'east' else (-1 if direction == 'west' else 0)),
+                                               upper_index[direction][3, :]), axis = 0).astype(int)
+        
+            # Get values of pairs
+            pair_values[direction] = np.stack((
+                    data[tuple(upper_index[direction])],
+                    data[tuple(lower_index[direction])]
+                ), axis=1)
+
+
+            # Interpolate pairs
+            interpolated_concentration[direction] = (0.5 - pair_values[direction][:, 1])/(pair_values[direction][:, 0] - pair_values[direction][:, 1])
+
+        # pos_x < 0.5 & p1 > p2: write 0.5+pos_x on p1 and 0 on p2
+        # pos_x >= 0.5 & p1 <= p2: write 1.5-pos_x on p2 and 0 on p1
+        # pos_x < 0.5 & p1 <= p2: write 0.5-pos_x on p1 and 1 on p2
+        # pos_x >= 0.5 & p1 > p2: write pos_x-0.5 on p2 and 1 on p1
+
+            # Initialize array with interpolated concentration values
+            overwrite_values[direction] = np.zeros((interpolated_concentration[direction].shape[0], 2)) 
+            # Where the interpolated value is >= 0.5, the value of the cell with higher concentration should be the interpolated value - 0.5 (indices are in upper_index)
+            overwrite_values[direction][:, 0] = np.where(interpolated_concentration[direction] < 0.5, interpolated_concentration[direction]+0.5, 0)
+            # Where the interpolated value is < 0.5, the value of the cell with lower concentration should be the interpolated value + 0.5 (indices are in lower_index)
+            overwrite_values[direction][:, 1] = np.where(interpolated_concentration[direction] >=  0.5, interpolated_concentration[direction]-0.5, 0)
+
+            # Overwrite_values: value
+            # upper_index/lower_index: index
+
+        # Collect interpolated values and corresponding indices in one array with (stencil, j, i, concentration)
+        overwrite_list = {}
+        for direction in upper_index.keys():
+            # Get indices and values of all cells with c > 0.5 that should be overwritten with interpolated data
+            overwrite_list[direction] = np.concatenate((
+                upper_index[direction].T[np.argwhere(overwrite_values[direction][:, 0] != 0)[:, 0], :3],
+                overwrite_values[direction][np.argwhere(overwrite_values[direction][:, 0] != 0), 0]),
+            axis = 1)
+            # Add indices and values of all cells with c < 0.5 that should be overwritten with interpolated data
+            overwrite_list[direction] = np.concatenate((
+                    overwrite_list[direction],
+                    np.concatenate((
+                        lower_index[direction].T[np.argwhere(overwrite_values[direction][:, 1] != 0)[:, 0], :3],
+                        overwrite_values[direction][np.argwhere(overwrite_values[direction][:, 1] != 0), 1]),
+                    axis = 1)),
+            axis = 0)
+
+        # Now glue all directions together to get one array with indices and interpolated concentration
+        interpolated = np.empty((0, 4))
+        for direction in upper_index.keys():
+            interpolated = np.concatenate((interpolated, overwrite_list[direction]), axis = 0)
+
+        # Find indices that occur multiple times in interpolated and resolve them by taking the mean
+        interpolated = pd.DataFrame(interpolated).groupby(by=[0, 1, 2], sort=False).mean().reset_index().values
+
+        # Initialize output array
+        interpolated_stencil = data.copy()
+        interpolated_stencil[:] = 0
+
+        # Write interpolated values output array
+        interpolated_stencil[interpolated[:, 0].astype(int), interpolated[:, 1].astype(int), interpolated[:, 2].astype(int), 0] =  interpolated[:, 3]
+
+        # Add mask that is 1 where the concentration is >= 0.5 and 0 elsewhere
+        interpolated_stencil = interpolated_stencil + np.where(data>=0.5, 1, 0)
+        interpolated_stencil = np.where(interpolated_stencil > 1, interpolated_stencil-1, interpolated_stencil)
+
+        print(f'interpolated_stencil[1, :, :, 0]:\n{interpolated_stencil[1, :, :, 0]}')
 
         if data.shape != shape:
             # Reshape rotated data to original shape
@@ -1049,12 +1193,34 @@ class UnsharpMask(BaseEstimator, TransformerMixin):
             if self.parameters['angle']:
                 angle_matrix = np.reshape(angle_matrix, (shape[0], st_sz[0], st_sz[1]))
 
+        '''
+        # Test stencil
+        test_stencil = np.array([[
+            [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 0.97900391, 0.89648437, 0.85823568, 0.8585612],
+            [1.0, 1.0, 0.95654297, 0.70166016, 0.46354167, 0.30485026, 0.2672526],
+            [1.0, 0.97753906, 0.68391927, 0.31754557, 0.07698568, 0.02490234, 0.02522786],
+            [1.0, 0.86051432, 0.40820312, 0.06217448, 0.0, 0.0, 0.0],
+            [0.97884115, 0.77050781, 0.19580078, 0.00065104, 0.0, 0.0, 0.0]
+        ]])
+        data = np.concatenate((test_stencil, test_stencil), axis=0)
+        # '''
+
         # Initialize kernel for unsharp mask
+        '''
         kernel_mask = np.array([[
             [1, 2, 1],
             [2, 4, 2],
             [1, 2, 1]
         ]])
+        '''
+        kernel_mask = np.array([[
+            [0, 1, 0],
+            [1, 4, 1],
+            [0, 1, 0]
+        ]])
+        # '''
         kernel_mask = kernel_mask/np.sum(kernel_mask)
         # Initialize kernel for check mask
         kernel_check = np.array([[
@@ -1064,7 +1230,7 @@ class UnsharpMask(BaseEstimator, TransformerMixin):
         ]])
 
         # Get mask: 1 where 0 < data < 1, else 0
-        mask = np.where(((data > 0) & (data < 1)), 1, 0)
+        mask = np.where(((data > 0.0) & (data < 1.0)), 1, 0)
         # Convolve mask with check kernel to count neighbours where mask = 1
         mask_conv = ndimage.convolve(mask, kernel_check, mode='constant', cval=0.0)
         # Get indices where the stencil still has cells with more than 3 neighbours being between 0 and 1
@@ -1072,19 +1238,31 @@ class UnsharpMask(BaseEstimator, TransformerMixin):
         # Get maximum neighbour count of every stencil
         mask_max = mask_conv.max()
 
+        # '''
         # Calculate unsharp mask for unsharp masking
         unsharp_mask = ndimage.convolve(data, kernel_mask, mode='reflect')
+        # '''
+        '''
+        # Calculate difference between data and unsharp mask for unsharp masking
+        difference = data - unsharp_mask
+        # '''
         # Initialize counter
         counter = 0
         # Repeat until every stencil is sharpened to a degree where no cell has more than 3 neighbours being between 0 and 1
         while mask_max > 3:
+            '''
+            # Calculate unsharp mask for unsharp masking every step
+            unsharp_mask = ndimage.convolve(data, kernel_mask, mode='reflect')
+            # '''
+            # '''
             # Calculate difference between data and unsharp mask for unsharp masking
             difference = data - unsharp_mask
+            # '''
             # Do unsharp masking in every stencil that still does not meet the requirement of containing only cells with 3 or less neighbours between 0 and 1
-            data[mask_index, :, :] = np.clip(data[mask_index, :, :] + difference[mask_index, :, :]*self.amount, a_min=0, a_max=1)
+            data[mask_index, :, :] = np.round(np.clip((data[mask_index, :, :] + difference[mask_index, :, :]*self.amount), a_min=0, a_max=1), 6)
 
             # Get mask: 1 where 0 < data < 1, else 0
-            mask = np.where(((data > 0) & (data < 1)), 1, 0)
+            mask = np.where(((data > 0.0) & (data < 1.0)), 1, 0)
             # Convolve mask with check kernel to count neighbours where mask = 1
             mask_conv = ndimage.convolve(mask, kernel_check, mode='constant', cval=0.0)
             # Get indices where the stencil still has cells with more than 3 neighbours being between 0 and 1
@@ -1097,6 +1275,7 @@ class UnsharpMask(BaseEstimator, TransformerMixin):
             if counter > 1000:
                 print('Interface reconstruction: max number of steps exceeded')
                 break
+        print(f'counter:\t{counter}')
 
         if data.shape != shape:
             # Reshape rotated data to original shape
@@ -1104,8 +1283,8 @@ class UnsharpMask(BaseEstimator, TransformerMixin):
             if self.parameters['angle']:
                 angle_matrix = np.reshape(angle_matrix, shape)
 
-
-        return [dataset[0], data, dataset[2]]
+        # return [dataset[0], data, dataset[2]]
+        return [dataset[0], data, np.amax(mask_conv, axis=(1, 2))]
 
 
 class CDS(BaseEstimator, TransformerMixin):

@@ -22,7 +22,7 @@ def train_model(model, train_data, train_labels, val_data, val_labels, parameter
     # Early stopping callback
     early_stopping_callback = keras.callbacks.EarlyStopping(monitor='val_loss',
                                                             min_delta=10e-8, # war 10e-8
-                                                            patience=25, # war 5, dann 15
+                                                            patience=50, # war 5, dann 15
                                                             restore_best_weights=True,
                                                             verbose=0,
                                                             mode='auto',

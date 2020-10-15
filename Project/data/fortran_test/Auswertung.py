@@ -12,26 +12,18 @@ fig, ax = plt.subplots(1, 1, figsize=(10,5))
 # '''
 # Fastest Auswertung
 paths = [
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s1',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s2',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s3',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s4',
-    # 'FASTEST_1',
-    'FASTEST_2',
+    'FASTEST_1',
+    # 'FASTEST_2',
     # 'FASTEST_3',
     # 'FASTEST_4',
     '2006031403 CVOFLS',
     '2006022000 cds Vergleich',
 ]
 labels = [
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s1',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s2',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s3',
-    '2008120839 Edge neu Relaxation FNB Ellipse 256 9x9 s4',
-    # 'F1',
-    'F2',
-    # 'F3',
-    # 'F4',
+    'FASTEST_1',
+    # 'FASTEST_2',
+    # 'FASTEST_3',
+    # 'FASTEST_4',
     'CVOFLS',
     'CDS Vergleich',
 ]
@@ -153,6 +145,7 @@ reds = ['red', 'peru', 'darkviolet', 'green',
        ]
 # '''
 reds = ['tomato', 'red', 'maroon', 'brown']
+reds = iter(reds)
 j=0
 k=0
 endtime = 2 # in s
@@ -219,8 +212,9 @@ for i in range(len(paths)):
         alpha = 0.5
     linewidth = 1.5
 
-    if (re.match(r'F\d', label) or ('altes' in label)):
-        color = reds[j]
+    if (re.match(r'F\d', label) or ('altes' in label) or re.match(r'FASTEST.\d', label)):
+        # color = reds[j]
+        color = next(reds)
         # color = 'gold'
         j = j+1
         linewidth = 2

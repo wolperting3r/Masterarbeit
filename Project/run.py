@@ -5,13 +5,13 @@ from src.execution import exe_dg
 
 ''' Train '''
 # Network related
-epochs = [250]
+epochs = [500]
 batch_size = [128]
 # stencil = [[9, 9]]
-# stencil = [[3, 3], [5, 5], [7, 7], [9, 9]]
-stencil = [[7, 7]]
+# stencil = [[3, 3], [5, 5], [7, 7], [9, 9]] 
+stencil = [[7, 7]] 
 activation = ['relu']
-learning_rate = [1e-4]
+learning_rate = [1e-5]
 hf = ['hf']
 hf_correction = [False]
 dropout = [0]
@@ -22,36 +22,21 @@ flip = [False]
 cut = [True]
 shift = [1]
 bias = [True]
-edge = [1]
+edge = [0]
+edge2 = [True]
+unsharp_mask = [False]
+amount = [0.01]
 custom_loss = [False]
-# seed = [1, 2]
-# seed = [1, 2]
-# seed = [3, 4, 5, 6]
-# seed = [7, 8, 9, 10]
-# seed = [11, 12, 13, 14]
-# seed = [3, 4]
 seed = [1]
 # seed = [1, 2, 3, 4]
-# seed = [5, 6, 7, 8]
-# seed = [9, 10, 11, 12]
-# seed = [13, 14, 15, 16]
-# seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-# seed = [7, 8]
-# addstring = ['_1', '_2', '_3', '_4']
-# addstring = ['_cut0.37']
-# addstring = ['_1', '_2']
-# addstring = ['_4']
-# addstring = ['_cut0109']
-addstring = ['']
+addstring = ['_fkernel']
 
 # Data related
 neg = [True]
 # model_mlp_1000_200-150-120_7x7_rot_flp_cut_dshift1_shift1_bia_int2
-# load_data = ['data_CVOFLS_7x7_g2_eqk2']
 # load_data = ['data_CVOFLS_7x7_f_eqk']
 load_data = ['']
-# interpolate = [0, 1, 1.5, 2]
-interpolate = [1]
+interpolate = [2]
 data = ['ellipse']
 plotdata = ['ellipse']
 smearing = [True]
@@ -66,11 +51,11 @@ if __name__ == '__main__':
     for i in range(0, 2):
         if i == 0:
             plot = [False]
-            # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
+            exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, edge2=edge2, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate, unsharp_mask=unsharp_mask, amount=amount)
         if i == 1:
             plot = [True]
-            # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
-            exe_save(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate)
+            # exe_ml(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, edge2=edge2, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate, unsharp_mask=unsharp_mask, amount=amount)
+            # exe_save(plot=plot, network=network, stencil=stencil, layer=layer, batch_size=batch_size, activation=activation, epochs=epochs, learning_rate=learning_rate, neg=neg, angle=angle, rot=rot, data=data, smearing=smearing, hf=hf, hf_correction=hf_correction, dropout=dropout, plotdata=plotdata, addstring=addstring, flip=flip, cut=cut, dshift=dshift, shift=shift, bias=bias, edge=edge, edge2=edge2, custom_loss=custom_loss, gauss=gauss, load_data=load_data, seed=seed, interpolate=interpolate, unsharp_mask=unsharp_mask, amount=amount)
         # '''
     '''
     # CVN
